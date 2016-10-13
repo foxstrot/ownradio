@@ -105,36 +105,47 @@ namespace OwnRadio.Client.Desktop
 			{
 				foreach (var musicFile in uploadQueue.Where(s => !s.uploaded))
 				{
-					// Формируем полный путь к файлу
-					var fullFileName = musicFile.filePath + "\\" + musicFile.fileName;
-					// Открываем файловый поток
-					var fileStream = File.Open(fullFileName, FileMode.Open);
-					byte[] byteArray = new byte[fileStream.Length];
-					fileStream.Read(byteArray, 0, (int)fileStream.Length);
-					// Создаем Http клиент
-					HttpClient httpClient = new HttpClient();
-					// Создаем контент
-					MultipartFormDataContent form = new MultipartFormDataContent();
-					// Добавляем в заголовок идентификатор пользователя
-					form.Headers.Add("userId", settings.userId);
-					// Добавляем в тело данные о музыкальном файле
-					form.Add(new StringContent(musicFile.fileGuid.ToString()), "fileGuid");
-					form.Add(new StringContent(musicFile.fileName), "fileName");
-					form.Add(new StringContent(musicFile.filePath), "filePath");
-					form.Add(new StringContent(settings.userId), "userId");
-					// добавляем музыкальный файл
-					form.Add(new ByteArrayContent(byteArray, 0, byteArray.Count()), "musicFile", musicFile.fileGuid + ".mp3");
-					// Выполняем асинхронный запрос к серверу
-					HttpResponseMessage response = await httpClient.PostAsync(settings.serverAddress + "api/upload", form);
-					// Если код не успешный генерируем исключение
-					response.EnsureSuccessStatusCode();
-					httpClient.Dispose();
-					//string sd = response.Content.ReadAsStringAsync().Result;
-					// Помечаем файл как отправленный
-					dal.markAsUploaded(musicFile);
-					// отправляем в окно статистики сообщение об отправленном файле
-					progress.Report(musicFile);
-					log.Debug("Отправлен файл " + musicFile.fileName);
+					try
+					{
+						// Формируем полный путь к файлу
+						var fullFileName = musicFile.filePath + "\\" + musicFile.fileName;
+						// Открываем файловый поток
+						var fileStream = File.Open(fullFileName, FileMode.Open);
+						byte[] byteArray = new byte[fileStream.Length];
+						fileStream.Read(byteArray, 0, (int)fileStream.Length);
+						// Создаем Http клиент
+						HttpClient httpClient = new HttpClient();
+						// Создаем контент
+						MultipartFormDataContent form = new MultipartFormDataContent();
+						// Добавляем в заголовок идентификатор пользователя
+						form.Headers.Add("userId", settings.userId);
+						// Добавляем в тело данные о музыкальном файле
+						form.Add(new StringContent(musicFile.fileGuid.ToString()), "fileGuid");
+						form.Add(new StringContent(musicFile.fileName), "fileName");
+						form.Add(new StringContent(musicFile.filePath), "filePath");
+						form.Add(new StringContent(settings.userId), "userId");
+						// добавляем музыкальный файл
+						form.Add(new ByteArrayContent(byteArray, 0, byteArray.Count()), "musicFile", musicFile.fileGuid + ".mp3");
+						// Выполняем асинхронный запрос к серверу
+						HttpResponseMessage response = await httpClient.PostAsync(settings.serverAddress + "api/upload", form);
+						// Если код не успешный генерируем исключение
+						response.EnsureSuccessStatusCode();
+						httpClient.Dispose();
+						//string sd = response.Content.ReadAsStringAsync().Result;
+						// Помечаем файл как отправленный
+						dal.markAsUploaded(musicFile);
+						// отправляем в окно статистики сообщение об отправленном файле
+						musicFile.uploaded = true;
+						progress.Report(musicFile);
+						log.Debug("Отправлен файл " + musicFile.fileName);
+					}
+					catch (Exception ex)
+					{
+						log.Error(ex);
+						musicFile.uploaded = false;
+						musicFile.comment = ex.Message;
+						progress.Report(musicFile);
+					}
 				}
 				MessageBox.Show("Файлы успешно загружены!");
 			}
