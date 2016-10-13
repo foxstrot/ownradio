@@ -13,5 +13,7 @@ namespace OwnRadio.Client.Desktop
 		public Guid fileGuid { get; set; }
 		// Флаг "Загружен на сервер"
 		public bool uploaded { get; set; }
+		// Комментарий
+		public string comment { get; set; }
 	}
 }

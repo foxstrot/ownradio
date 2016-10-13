@@ -135,13 +135,16 @@ namespace OwnRadio.Client.Desktop
 						// Помечаем файл как отправленный
 						dal.markAsUploaded(musicFile);
 						// отправляем в окно статистики сообщение об отправленном файле
-						progress.Report(musicFile);
 						musicFile.uploaded = true;
+						progress.Report(musicFile);
 						log.Debug("Отправлен файл " + musicFile.fileName);
 					}
 					catch (Exception ex)
 					{
 						log.Error(ex);
+						musicFile.uploaded = false;
+						musicFile.comment = ex.Message;
+						progress.Report(musicFile);
 					}
 				}
 				MessageBox.Show("Файлы успешно загружены!");

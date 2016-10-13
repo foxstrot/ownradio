@@ -103,14 +103,19 @@ namespace OwnRadio.Client.Desktop
 		{
 			try
 			{
-				// получаем
-				var item = listViewFiles.FindItemWithText(file.fileGuid.ToString());
-				// закрашиваем отправленный файл зеленым цветом
-				if(item != null)
-					item.ForeColor = Color.Green;
-				// Возобновляем возможность нажимать кнопку загрузки, если есть что загружать.
-				toolStripButtonUpload.Enabled = (listViewFiles.Items.Count > 0);
-				textBoxLog.Text = "Добавлен файл " + file.fileName + Environment.NewLine + textBoxLog.Text;
+				if (file.uploaded)
+				{
+					// получаем
+					var item = listViewFiles.FindItemWithText(file.fileGuid.ToString());
+					// закрашиваем отправленный файл зеленым цветом
+					if (item != null)
+						item.ForeColor = Color.Green;
+					// Возобновляем возможность нажимать кнопку загрузки, если есть что загружать.
+					toolStripButtonUpload.Enabled = (listViewFiles.Items.Count > 0);
+					textBoxLog.Text = "Добавлен файл " + file.fileName + Environment.NewLine + textBoxLog.Text;
+				}
+				else
+					textBoxLog.Text = "НЕ УДАЛОСЬ добавить файл " + file.fileName +": " + file.comment + Environment.NewLine + textBoxLog.Text;
 			}
 			catch (Exception ex)
 			{
