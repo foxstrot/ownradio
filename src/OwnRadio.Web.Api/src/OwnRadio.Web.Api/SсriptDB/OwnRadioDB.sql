@@ -399,18 +399,23 @@ CREATE OR REPLACE FUNCTION public.registerdevice(
   RETURNS void AS
 $BODY$
 
+DECLARE 
+i_userid uuid = uuid_generate_v1mc();
 BEGIN
+
+-- Добавляет данные для новых устройства и пользователя
 
 -- Если ID устройства еще нет в БД
 IF NOT EXISTS(SELECT id FROM device WHERE id = i_deviceid) THEN
 
 -- Добавляем нового пользователя
 INSERT INTO ownuser (id, username)
-	VALUES(uuid_generate_v1mc(), i_username);
+	SELECT i_userid, i_username;
 
 -- Добавляем новое устройство
 INSERT INTO device (id, userid, devicename)
-	SELECT i_deviceid, (SELECT id FROM ownuser WHERE username = i_username), i_devicename;
+	SELECT i_deviceid, i_userid, i_devicename;
+
 END IF;
 
 END;
@@ -420,6 +425,7 @@ $BODY$
   COST 100;
 ALTER FUNCTION public.registerdevice(uuid, character varying, character varying)
   OWNER TO postgres;
+
 
 ----------------------------------------------------------------------------------------	
 ----------------------------------------------------------------------------------------
