@@ -1,0 +1,31 @@
+﻿<Window x:Class="OwnRadio.Client.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:OwnRadio.Client.Desktop"
+        mc:Ignorable="d"
+        Title="Own radio" Height="40" SnapsToDevicePixels="True" Background="Transparent" Width="525" WindowStyle="None" AllowsTransparency="True" Icon="Resources/icon.png">
+    <Border Name="OuterBorder" CornerRadius="20" Padding="5,0,5,0">
+        <Border.Background>
+            <LinearGradientBrush>
+                <GradientStop Color="#444444" Offset="0.1"></GradientStop>
+                <GradientStop Color="#666666" Offset="0.3"></GradientStop>
+                <GradientStop Color="#666666" Offset="0.8"></GradientStop>
+                <GradientStop Color="#444444" Offset="1"></GradientStop>
+            </LinearGradientBrush>
+        </Border.Background>
+        <StackPanel VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal">
+                <ToggleButton></ToggleButton>
+                <Button Style="{Binding Source={StaticResource NextButton}}"></Button>
+                <StackPanel Orientation="Horizontal" Width="380" ClipToBounds="True" Margin="20,0,20,0">
+                    <Canvas x:Name="Canvas" VerticalAlignment="Center" Height="20">
+                        <TextBlock></TextBlock>
+                    </Canvas>
+                </StackPanel>
+                <Button Name="BtnClose" Style="{Binding Source={StaticResource CloseButton}}"></Button>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>
