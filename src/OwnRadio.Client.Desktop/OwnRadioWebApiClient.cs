@@ -2,9 +2,11 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
+using System.Windows;
 using OwnRadio.Client.Desktop.Model;
 
 namespace OwnRadio.Client.Desktop
@@ -29,7 +31,10 @@ namespace OwnRadio.Client.Desktop
         /// <returns>Track info</returns>
         public async Task<Track> GetNextTrack(Guid deviceId)
         {
-            HttpResponseMessage response = await httpClient.GetAsync(new Uri(serviceUri, "track/GetNextTrackID/" + deviceId.ToString())).ConfigureAwait(false);
+            HttpResponseMessage response =
+                await
+                    httpClient.GetAsync(new Uri(serviceUri, "track/GetNextTrackID/" + deviceId.ToString()))
+                        .ConfigureAwait(false);
 
             Track track = new Track();
 
@@ -52,15 +57,16 @@ namespace OwnRadio.Client.Desktop
         public async void SendStatus(Guid deviceId, Track track)
         {
             HttpResponseMessage response = await httpClient.GetAsync(
-                new Uri(serviceUri, "track/SetStatusTrack/" + 
-                deviceId.ToString() + "," +
-                track.Id.ToString() + "," +
-                track.Status.ToString("D") + "," +
-                track.ListenEnd.ToString("dd.MM.yyyy H:mm")
-                )).ConfigureAwait(false);
+                new Uri(serviceUri, "track/SetStatusTrack/" +
+                                    deviceId.ToString() + "," +
+                                    track.Id.ToString() + "," +
+                                    track.Status.ToString("D") + "," +
+                                    track.ListenEnd.ToString("dd.MM.yyyy H:mm")
+                    )).ConfigureAwait(false);
 
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
-                throw new HttpRequestException("Failed to get send track status [" + response.StatusCode.ToString() + "]");
+                throw new HttpRequestException("Failed to get send track status [" + response.StatusCode.ToString() +
+                                               "]");
         }
     }
 }

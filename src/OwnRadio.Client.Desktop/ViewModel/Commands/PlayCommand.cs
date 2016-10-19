@@ -20,7 +20,7 @@ namespace OwnRadio.Client.Desktop.ViewModel.Commands
 
         public bool CanExecute(object parameter)
         {
-            return true;
+	        return true;
         }
 
         public void Execute(object parameter)

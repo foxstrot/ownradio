@@ -5,7 +5,13 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OwnRadio.Client.Desktop"
         mc:Ignorable="d"
-        Title="Own radio" Height="40" SnapsToDevicePixels="True" Background="Transparent" Width="525" WindowStyle="None" AllowsTransparency="True" Icon="Resources/icon.png">
+        Title="Own radio" Height="40" SnapsToDevicePixels="True" Background="Transparent" Width="560" WindowStyle="None" AllowsTransparency="True" Icon="Resources/icon.png">
+	<Window.InputBindings>
+		<KeyBinding Key="P" Modifiers="Control" Command="{Binding PlayCommand, Source={StaticResource ViewModelPlayer}}"/>
+		<KeyBinding Key="S" Modifiers="Control" Command="{Binding PauseCommand, Source={StaticResource ViewModelPlayer}}"/>
+		<KeyBinding Key="U" Modifiers="Control" Command="{Binding UploadCommand, Source={StaticResource ViewModelUploader}}"/>
+		<KeyBinding Key="N" Modifiers="Control" Command="{Binding NextCommand, Source={StaticResource ViewModelPlayer}}"/>
+	</Window.InputBindings>
     <Border Name="OuterBorder" CornerRadius="20" Padding="5,0,5,0">
         <Border.Background>
             <LinearGradientBrush>
@@ -16,16 +22,27 @@
             </LinearGradientBrush>
         </Border.Background>
         <StackPanel VerticalAlignment="Center">
-            <StackPanel Orientation="Horizontal">
-                <ToggleButton></ToggleButton>
-                <Button Style="{Binding Source={StaticResource NextButton}}"></Button>
-                <StackPanel Orientation="Horizontal" Width="380" ClipToBounds="True" Margin="20,0,20,0">
-                    <Canvas x:Name="Canvas" VerticalAlignment="Center" Height="20">
-                        <TextBlock></TextBlock>
-                    </Canvas>
-                </StackPanel>
-                <Button Name="BtnClose" Style="{Binding Source={StaticResource CloseButton}}"></Button>
-            </StackPanel>
-        </StackPanel>
+			<StackPanel Orientation="Horizontal">
+				<ToggleButton></ToggleButton>
+				<Button Style="{Binding Source={StaticResource NextButton}}"></Button>
+				<StackPanel Orientation="Vertical" Width="380" ClipToBounds="True" Margin="15,0,20,0">
+					<Canvas x:Name="Canvas" VerticalAlignment="Center" Height="20">
+						<TextBlock Style="{Binding Source={StaticResource TrackName}}"></TextBlock>
+					</Canvas>
+					<Grid>
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="Auto"></ColumnDefinition>
+							<ColumnDefinition Width="*"></ColumnDefinition>
+							<ColumnDefinition Width="Auto"></ColumnDefinition>
+						</Grid.ColumnDefinitions>
+						<TextBlock Grid.Column="0" Foreground="WhiteSmoke" FontSize="11" Text="OwnRadio"/>
+						<TextBlock Grid.Column="1" Foreground="WhiteSmoke" FontSize="11" Text="{Binding Message, Source={StaticResource ViewModelUploader}}" TextAlignment="Center"/>
+						<TextBlock Grid.Column="2" Foreground="WhiteSmoke" FontSize="11" Text="{Binding Status, Source={StaticResource ViewModelUploader}}" TextAlignment="Right"/>
+					</Grid>
+				</StackPanel>
+				<Button Name="BtnUpload" Style="{Binding Source={StaticResource UploadButton}}"></Button>
+				<Button Name="BtnClose" Style="{Binding Source={StaticResource CloseButton}}"></Button>
+			</StackPanel>
+		</StackPanel>
     </Border>
 </Window>

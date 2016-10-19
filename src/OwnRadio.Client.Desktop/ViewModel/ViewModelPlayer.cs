@@ -17,7 +17,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
         public PlayCommand PlayCommand { get; set; }
         public NextCommand NextCommand { get; set; }
         public PauseCommand PauseCommand { get; set; }
-        
+
         public Track CurrentTrack
         {
             get { return (Track)GetValue(CurrentTrackProperty); }
