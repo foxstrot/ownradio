@@ -25,18 +25,6 @@ namespace OwnRadio.Client.Desktop.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://test.egspace.ru:5000/api/")]
-        public string ServiceUri {
-            get {
-                return ((string)(this["ServiceUri"]));
-            }
-            set {
-                this["ServiceUri"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("00000000-0000-0000-0000-000000000000")]
         public global::System.Guid DeviceId {
             get {
@@ -44,6 +32,18 @@ namespace OwnRadio.Client.Desktop.Properties {
             }
             set {
                 this["DeviceId"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://ownradio.ru/api/")]
+        public string ServiceUri {
+            get {
+                return ((string)(this["ServiceUri"]));
+            }
+            set {
+                this["ServiceUri"] = value;
             }
         }
     }

@@ -4,27 +4,28 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Forms;
 
 namespace OwnRadio.Client.Desktop.ViewModel.Commands
 {
-    public class PauseCommand : ICommand
+    public class UploadCommand : ICommand
     {
         public event EventHandler CanExecuteChanged;
-        private ViewModelPlayer Player { get; set; }
+        public ViewModelUploader Uploader { get; set; }
 
-        public PauseCommand(ViewModelPlayer player)
+        public UploadCommand(ViewModelUploader uploader)
         {
-            Player = player;
+            Uploader = uploader;
         }
 
         public bool CanExecute(object parameter)
         {
-	        return true;
+	        return !Uploader.IsUploading;
         }
 
         public void Execute(object parameter)
         {
-            Player.Pause();
+            Uploader.Upload();
         }
     }
 }
