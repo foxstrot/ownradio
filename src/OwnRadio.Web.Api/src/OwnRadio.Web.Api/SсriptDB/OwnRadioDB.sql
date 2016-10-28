@@ -207,10 +207,12 @@ CREATE OR REPLACE FUNCTION registertrack(
     i_trackid uuid,
     i_localdevicepathupload character varying,
     i_path character varying,
-    i_userid uuid)
+    i_deviceid uuid)
   RETURNS void AS
 $BODY$
 
+DECLARE
+i_userid uuid;
 BEGIN
 
 -- 
@@ -219,10 +221,11 @@ BEGIN
 -- нет в базе, то он добавляется в таблицу пользователей.
 --
 
--- Добавляем пользователя, если его еще не существует
-INSERT INTO ownuser (id, username)
-	SELECT i_userid, 'Anonymous new user'
-		WHERE NOT EXISTS(SELECT * FROM ownuser WHERE id = i_userid);
+-- Добавляем устройство, если его еще не существует
+PERFORM registerdevice(i_deviceid, 'New user name', 'New device name');
+
+-- Получаем ID пользователя устройства
+SELECT getuserid(i_deviceid) into i_userid;
 
 -- Добавляем трек в базу данных
 INSERT INTO track(id, localdevicepathupload, path, uploaduserid) 
@@ -263,9 +266,7 @@ BEGIN
 
 
 -- Добавляем устройство, если его еще не существует
-INSERT INTO device (id, userid, devicename)
-	SELECT i_deviceid, '12345678-1234-1234-1234-123456789012', 'Test user device'
-		WHERE NOT EXISTS(SELECT id FROM device WHERE id = i_deviceid);
+PERFORM registerdevice(i_deviceid, 'New user name', 'New device name');
 
 -- Получаем id пользователя устройства
 i_userid = getuserid(i_deviceid);
@@ -415,7 +416,7 @@ CREATE OR REPLACE FUNCTION registerdevice(
 $BODY$
 
 DECLARE 
-i_userid uuid = uuid_generate_v1mc();
+i_userid uuid = i_deviceid;
 BEGIN
 
 -- Добавляет данные для новых устройства и пользователя
@@ -423,13 +424,13 @@ BEGIN
 -- Если ID устройства еще нет в БД
 IF NOT EXISTS(SELECT id FROM device WHERE id = i_deviceid) THEN
 
--- Добавляем нового пользователя
-INSERT INTO ownuser (id, username)
-	SELECT i_userid, i_username;
+	-- Добавляем нового пользователя
+	INSERT INTO ownuser (id, username)
+		SELECT i_userid, i_username;
 
--- Добавляем новое устройство
-INSERT INTO device (id, userid, devicename)
-	SELECT i_deviceid, i_userid, i_devicename;
+	-- Добавляем новое устройство
+	INSERT INTO device (id, userid, devicename)
+		SELECT i_deviceid, i_userid, i_devicename;
 
 END IF;
 
