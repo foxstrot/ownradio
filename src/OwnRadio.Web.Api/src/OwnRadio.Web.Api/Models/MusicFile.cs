@@ -13,7 +13,7 @@ namespace OwnRadio.Web.Api.Models
 		// Путь хранения файлана сервере
 		public string path { get; set; }
 		// Идентификатор пользователя		
-		public Guid userId { get; set; }
+		public Guid deviceId { get; set; }
 		// Строка подключения к БД
 		private string connectionString;
 
@@ -40,7 +40,7 @@ namespace OwnRadio.Web.Api.Models
 				npgSqlCommand.Parameters.AddWithValue("i_trackid", id);
 				npgSqlCommand.Parameters.AddWithValue("i_localdevicepathupload", localDevicePathUpload);
 				npgSqlCommand.Parameters.AddWithValue("i_path", path);
-				npgSqlCommand.Parameters.AddWithValue("i_userid", userId);
+				npgSqlCommand.Parameters.AddWithValue("i_deviceid", deviceId);
 				// Открываем соединение
 				npgSqlConnection.Open();
 				// Выполняем хранимую процедуру (функцию)
