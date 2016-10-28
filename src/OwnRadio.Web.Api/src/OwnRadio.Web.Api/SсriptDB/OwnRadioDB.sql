@@ -210,6 +210,9 @@ CREATE OR REPLACE FUNCTION registertrack(
     i_userid uuid)
   RETURNS void AS
 $BODY$
+
+BEGIN
+
 -- 
 -- Функция добавляет запись о треке в таблицу треков и делает сопутствующие записи в
 -- таблицу статистики прослушивания и рейтингов. Если пользователя, загружающего трек 
@@ -233,11 +236,14 @@ INSERT INTO history(userid, trackid, islisten)
 INSERT INTO rating(userid, trackid, ratingsum)
 	VALUES(i_userid, i_trackid, 1);
 
+END;
+
 $BODY$
-  LANGUAGE sql VOLATILE
+  LANGUAGE plpgsql VOLATILE
   COST 100;
 ALTER FUNCTION registertrack(uuid, character varying, character varying, uuid)
   OWNER TO postgres;
+
 
 ----------------------------------------------------------------------------------------	
 ----------------------------------------------------------------------------------------
@@ -247,9 +253,12 @@ ALTER FUNCTION registertrack(uuid, character varying, character varying, uuid)
 -- DROP FUNCTION getnexttrackid(uuid);
 
 CREATE OR REPLACE FUNCTION getnexttrackid(i_deviceid uuid)
-  RETURNS uuid AS
+  RETURNS SETOF uuid AS
 $BODY$
 
+DECLARE
+i_userid uuid;
+BEGIN
 -- Получает id следующего трэка для пользователя по DeviceID
 
 
@@ -258,16 +267,25 @@ INSERT INTO device (id, userid, devicename)
 	SELECT i_deviceid, '12345678-1234-1234-1234-123456789012', 'Test user device'
 		WHERE NOT EXISTS(SELECT id FROM device WHERE id = i_deviceid);
 
+-- Получаем id пользователя устройства
+i_userid = getuserid(i_deviceid);
 
--- На данный момент возвращает случайный id трэка
-SELECT id 
-	FROM track 
-	ORDER BY RANDOM()
-	LIMIT 1
+-- На данный момент возвращает id трэка, имеющий неотрицательный рейтинг или еще ни разу не прослушанный пользователем устройства
+ RETURN QUERY SELECT track.id
+		FROM track
+		LEFT JOIN 
+		rating
+		ON track.id = rating.trackid AND rating.userid = i_userid
+		WHERE rating.ratingsum >=0 OR rating.ratingsum is null
+		ORDER BY RANDOM()
+		LIMIT 1;
+RETURN;
+END;
 
 $BODY$
-  LANGUAGE sql VOLATILE
-  COST 100;
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
 ALTER FUNCTION getnexttrackid(uuid)
   OWNER TO postgres;
 ----------------------------------------------------------------------------------------	
@@ -322,18 +340,23 @@ ALTER FUNCTION setstatustrack(uuid, uuid, integer, timestamp with time zone)
 -- DROP FUNCTION gettrackpathbyid(uuid);
 
 CREATE OR REPLACE FUNCTION gettrackpathbyid(i_trackid uuid)
-  RETURNS character varying AS
+  RETURNS SETOF character varying AS
 $BODY$
+
+BEGIN
 
 -- Возвращает путь к треку с заданным идентификатором 
 
-SELECT path 
+ RETURN QUERY SELECT path 
 	FROM track
-	WHERE id = i_trackid
+	WHERE id = i_trackid;
+RETURN;
+END;
 
 $BODY$
-  LANGUAGE sql VOLATILE
-  COST 100;
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
 ALTER FUNCTION gettrackpathbyid(uuid)
   OWNER TO postgres;
 ----------------------------------------------------------------------------------------	
@@ -346,11 +369,11 @@ INSERT INTO device (id, userid, devicename) VALUES ('00000000-0000-0000-0000-000
 ----------------------------------------------------------------------------------------	
 ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------	
--- Function: public.mergeuserid(uuid, uuid)
+-- Function: mergeuserid(uuid, uuid)
 
--- DROP FUNCTION public.mergeuserid(uuid, uuid);
+-- DROP FUNCTION mergeuserid(uuid, uuid);
 
-CREATE OR REPLACE FUNCTION public.mergeuserid(
+CREATE OR REPLACE FUNCTION mergeuserid(
     i_useridold uuid,
     i_useridnew uuid)
   RETURNS void AS
@@ -378,21 +401,20 @@ INSERT INTO rating (userid, trackid, lastlistendatetime, ratingsum)
 		GROUP BY trackid;
 END;
 
-
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION public.mergeuserid(uuid, uuid)
+ALTER FUNCTION mergeuserid(uuid, uuid)
   OWNER TO postgres;
 
 ----------------------------------------------------------------------------------------	
 ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------	
--- Function: public.registerdevice(uuid, character varying, character varying)
+-- Function: registerdevice(uuid, character varying, character varying)
 
--- DROP FUNCTION public.registerdevice(uuid, character varying, character varying);
+-- DROP FUNCTION registerdevice(uuid, character varying, character varying);
 
-CREATE OR REPLACE FUNCTION public.registerdevice(
+CREATE OR REPLACE FUNCTION registerdevice(
     i_deviceid uuid,
     i_username character varying,
     i_devicename character varying)
@@ -423,50 +445,58 @@ END;
 $BODY$
   LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION public.registerdevice(uuid, character varying, character varying)
+ALTER FUNCTION registerdevice(uuid, character varying, character varying)
   OWNER TO postgres;
 
 
 ----------------------------------------------------------------------------------------	
 ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------
--- Function: public.renameuser(uuid, character varying)
+-- Function: renameuser(uuid, character varying)
 
--- DROP FUNCTION public.renameuser(uuid, character varying);
+-- DROP FUNCTION renameuser(uuid, character varying);
 
-CREATE OR REPLACE FUNCTION public.renameuser(
+CREATE OR REPLACE FUNCTION renameuser(
     i_userid uuid,
     i_newusername character varying)
   RETURNS void AS
 $BODY$
 
+BEGIN
+
 -- Переименовывает пользователя
 UPDATE ownuser SET username = i_newusername
 	WHERE id = i_userid;
 
-	$BODY$
-  LANGUAGE sql VOLATILE
+END;
+
+$BODY$
+  LANGUAGE plpgsql VOLATILE
   COST 100;
-ALTER FUNCTION public.renameuser(uuid, character varying)
+ALTER FUNCTION renameuser(uuid, character varying)
   OWNER TO postgres;
   
 ----------------------------------------------------------------------------------------	
 ----------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------
--- Function: public.getuserid(uuid)
+-- Function: getuserid(uuid)
 
--- DROP FUNCTION public.getuserid(uuid);
+-- DROP FUNCTION getuserid(uuid);
 
-CREATE OR REPLACE FUNCTION public.getuserid(i_deviceid uuid)
-  RETURNS uuid AS
+CREATE OR REPLACE FUNCTION getuserid(i_deviceid uuid)
+  RETURNS SETOF uuid AS
 $BODY$
+
+BEGIN
 
 -- Получает ID пользователя по DeviceID
-SELECT userid FROM device WHERE id = i_deviceid;
+RETURN QUERY SELECT userid FROM device WHERE id = i_deviceid;
+RETURN;
+END;
 
 $BODY$
-  LANGUAGE sql VOLATILE
-  COST 100;
-ALTER FUNCTION public.getuserid(uuid)
+  LANGUAGE plpgsql VOLATILE
+  COST 100
+  ROWS 1000;
+ALTER FUNCTION getuserid(uuid)
   OWNER TO postgres;
-  
