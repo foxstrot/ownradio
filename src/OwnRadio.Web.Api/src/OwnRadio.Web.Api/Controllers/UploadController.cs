@@ -23,13 +23,13 @@ namespace OwnRadio.Web.Api.Controllers
 		// POST api/upload
 		[MimeMultipart]
 		// Получение и сохранение файла
-		public async Task<FileUploadResult> Post(IFormFile musicFile, string fileGuid, string fileName, string filePath, string userId)
+		public async Task<FileUploadResult> Post(IFormFile musicFile, string fileGuid, string fileName, string filePath, string deviceId)
 		{
 			FileUploadResult result = null;
 			try
 			{
 				// Формируем путь для загрузки файлов пользователя
-				var uploadPath = Path.Combine(settings.uploadFolder, userId);
+				var uploadPath = Path.Combine(settings.uploadFolder, deviceId);
 				// Если директория не существует, то создает ее
 				if (!Directory.Exists(uploadPath))
 					Directory.CreateDirectory(uploadPath);
@@ -56,7 +56,7 @@ namespace OwnRadio.Web.Api.Controllers
 						id = Guid.Parse(fileGuid),
 						localDevicePathUpload = Path.Combine(filePath,fileName),
 						path = fullFileName,
-						userId = Guid.Parse(userId)
+						deviceId = Guid.Parse(deviceId)
 					};
 					// Добавляем в БД информацию о принятом файле
 					newMusicFile.registerTrack();
