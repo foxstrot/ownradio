@@ -37,6 +37,10 @@ public class ExecuteProcedurePostgreSQL {
     //Сохраняет нового пользователя и устройство
     public void RegisterDevice(String deviceID, String userName, String deviceName)
     {
+        CheckConnection checkConnection = new CheckConnection();
+        boolean inetConnect = checkConnection.CheckInetConnection(MainContext);
+        if(!inetConnect)
+            return; // "Подключение к интернету отсутствует";
         try
         {
             URL URLRequest = new URL("http://ownradio.ru/api/ExecuteProcedurePostgreSQL/RegisterDevice/" + deviceID + "," + userName + "," + deviceName);
@@ -49,6 +53,10 @@ public class ExecuteProcedurePostgreSQL {
 
     //Выполняет слияние статистики прослушивания треков на разных устройствах по двум User ID одного пользователя
     public String MergeUserID(String userIDOld, String userIDNew) {
+        CheckConnection checkConnection = new CheckConnection();
+        boolean inetConnect = checkConnection.CheckInetConnection(MainContext);
+        if(!inetConnect)
+            return "Подключение к интернету отсутствует";
         try {
             URL URLRequest = new URL("http://ownradio.ru/api/ExecuteProcedurePostgreSQL/MergeUserID/" + userIDOld + "," + userIDNew);
             String result = new GetRequest().execute(URLRequest).get();
@@ -65,10 +73,14 @@ public class ExecuteProcedurePostgreSQL {
     //Получает ID пользователя по DeviceID
     public String GetUserId(String deviceID)
     {
+        CheckConnection checkConnection = new CheckConnection();
+        boolean inetConnect = checkConnection.CheckInetConnection(MainContext);
+        if(!inetConnect)
+            return "Подключение к интернету отсутствует";
         try {
             URL URLRequest = new URL("http://ownradio.ru/api/ExecuteProcedurePostgreSQL/GetUserId/" + deviceID);
-            String userID = new GetRequest().execute(URLRequest).get();
-//            userID = UUID.fromString(str.substring(1, 36)); //сделать адекватный парсинг
+            String result = new GetRequest().execute(URLRequest).get();
+            String userID = result.substring(1, 37); //сделать адекватный парсинг
             return userID;
 //            return deviceID;
         } catch (MalformedURLException | InterruptedException | ExecutionException ex) {
@@ -81,6 +93,10 @@ public class ExecuteProcedurePostgreSQL {
     //Переименовывает пользователя
     public String RenameUser(String userID, String newUserName)
     {
+        CheckConnection checkConnection = new CheckConnection();
+        boolean inetConnect = checkConnection.CheckInetConnection(MainContext);
+        if(!inetConnect)
+            return "Подключение к интернету отсутствует";
         try {
             URL URLRequest = new URL("http://ownradio.ru/api/ExecuteProcedurePostgreSQL/RenameUser/" + userID + "," + newUserName);
             String result = new GetRequest().execute(URLRequest).get();
@@ -95,6 +111,10 @@ public class ExecuteProcedurePostgreSQL {
     //Получает ID следующего трека
     public String GetNextTrackID(String deviceId)
     {
+        CheckConnection checkConnection = new CheckConnection();
+        boolean wifiConnect = checkConnection.CheckWifiConnection(MainContext);
+        if(!wifiConnect)
+            return "Подключение к интернету отсутствует";
         try {
             URL URLRequest = new URL("http://ownradio.ru/api/track/GetNextTrackID/" + deviceId);
 String result = new GetRequest().execute(URLRequest).get();
@@ -108,14 +128,16 @@ String result = new GetRequest().execute(URLRequest).get();
     }
 
     //Отправляет статистику на сервер
-    public String SetStatusTrack(String deviceId, String trackId, int IsListen, Date DateTimeListen)
+    public String SetStatusTrack(String deviceId, String trackId, int IsListen, String DateTimeListen)
     {
-        if (trackId == "-1") return null;
-
+        CheckConnection checkConnection = new CheckConnection();
+        boolean inetConnect = checkConnection.CheckInetConnection(MainContext);
+        if(!inetConnect)
+            return "Подключение к интернету отсутствует";
         try {
-            URL URLRequest = new URL("http://ownradio.ru/api/track/SetStatusTrack/" + deviceId + "," + trackId + "," + IsListen + "," + DateTimeListen.toString());//("dd.MM.yyyy HH:mm:sszz"));
+            URL URLRequest = new URL("http://ownradio.ru/api/track/SetStatusTrack/" + deviceId + "," + trackId + "," + IsListen + "," + DateTimeListen);//("dd.MM.yyyy HH:mm:sszz"));
             String result = new GetRequest().execute(URLRequest).get();
-            String trackID = result.substring(1, 36); //сделать адекватный парсинг
+            String trackID = result.substring(1, 37); //сделать адекватный парсинг
             return trackID;
         } catch (MalformedURLException | InterruptedException | ExecutionException ex) {
             return ex.getLocalizedMessage();
@@ -123,5 +145,4 @@ String result = new GetRequest().execute(URLRequest).get();
             return ex.getLocalizedMessage();
         }
     }
-
 }

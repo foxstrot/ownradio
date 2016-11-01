@@ -1,254 +1,199 @@
 package ru.netvoxlab.ownradio;
 
-
-import android.annotation.TargetApi;
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
-import android.os.Build;
-import android.os.Bundle;
-import android.preference.ListPreference;
-import android.preference.Preference;
-import android.preference.PreferenceActivity;
-import android.support.v7.app.ActionBar;
-import android.preference.PreferenceFragment;
+import android.content.SharedPreferences;
+import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
-import android.text.TextUtils;
+import android.support.v4.app.NavUtils;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.TextView;
 
-import java.util.List;
+import java.io.File;
+import java.util.UUID;
 
-/**
- * A {@link PreferenceActivity} that presents a set of application settings. On
- * handset devices, settings are presented as a single list. On tablets,
- * settings are split by category, with category headers shown to the left of
- * the list of settings.
- * <p>
- * See <a href="http://developer.android.com/design/patterns/settings.html">
- * Android Design: Settings</a> for design guidelines and the <a
- * href="http://developer.android.com/guide/topics/ui/settings.html">Settings
- * API Guide</a> for more information on developing a Settings UI.
- */
-public class SettingsActivity extends AppCompatPreferenceActivity {
-    /**
-     * A preference value change listener that updates the preference's summary
-     * to reflect its new value.
-     */
-    private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
-        @Override
-        public boolean onPreferenceChange(Preference preference, Object value) {
-            String stringValue = value.toString();
-
-            if (preference instanceof ListPreference) {
-                // For list preferences, look up the correct display value in
-                // the preference's 'entries' list.
-                ListPreference listPreference = (ListPreference) preference;
-                int index = listPreference.findIndexOfValue(stringValue);
-
-                // Set the summary to reflect the new value.
-                preference.setSummary(
-                        index >= 0
-                                ? listPreference.getEntries()[index]
-                                : null);
-
-            } else if (preference instanceof RingtonePreference) {
-                // For ringtone preferences, look up the correct display value
-                // using RingtoneManager.
-                if (TextUtils.isEmpty(stringValue)) {
-                    // Empty values correspond to 'silent' (no ringtone).
-                    preference.setSummary(R.string.pref_ringtone_silent);
-
-                } else {
-                    Ringtone ringtone = RingtoneManager.getRingtone(
-                            preference.getContext(), Uri.parse(stringValue));
-
-                    if (ringtone == null) {
-                        // Clear the summary if there was a lookup error.
-                        preference.setSummary(null);
-                    } else {
-                        // Set the summary to reflect the new ringtone display
-                        // name.
-                        String name = ringtone.getTitle(preference.getContext());
-                        preference.setSummary(name);
-                    }
-                }
-
-            } else {
-                // For all other preferences, set the summary to the value's
-                // simple string representation.
-                preference.setSummary(stringValue);
-            }
-            return true;
-        }
-    };
-
-    /**
-     * Helper method to determine if the device has an extra-large screen. For
-     * example, 10" tablets are extra-large.
-     */
-    private static boolean isXLargeTablet(Context context) {
-        return (context.getResources().getConfiguration().screenLayout
-                & Configuration.SCREENLAYOUT_SIZE_MASK) >= Configuration.SCREENLAYOUT_SIZE_XLARGE;
-    }
-
-    /**
-     * Binds a preference's summary to its value. More specifically, when the
-     * preference's value is changed, its summary (line of text below the
-     * preference title) is updated to reflect the value. The summary is also
-     * immediately updated upon calling this method. The exact display format is
-     * dependent on the type of preference.
-     *
-     * @see #sBindPreferenceSummaryToValueListener
-     */
-    private static void bindPreferenceSummaryToValue(Preference preference) {
-        // Set the listener to watch for value changes.
-        preference.setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
-
-        // Trigger the listener immediately with the preference's
-        // current value.
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
-                PreferenceManager
-                        .getDefaultSharedPreferences(preference.getContext())
-                        .getString(preference.getKey(), ""));
-    }
+public class SettingsActivity extends AppCompatActivity {
+    String DeviceID;
+    String UserID;
+    TextView textSettingsInfo;
+    TextView textViewLocalTrackCount;
+    TextView textViewCurrentCacheSize;
+    SharedPreferences sp;
+    TrackDataAccess trackDataAccess;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setupActionBar();
-    }
+        setContentView(R.layout.activity_settings);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-    /**
-     * Set up the {@link android.app.ActionBar}, if the API is available.
-     */
-    private void setupActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            // Show the Up button in the action bar.
-            actionBar.setDisplayHomeAsUpEnabled(true);
+        trackDataAccess = new TrackDataAccess(getApplicationContext());
+        sp = PreferenceManager.getDefaultSharedPreferences(this);
+        DeviceID = sp.getString("DeviceID", "");
+        UserID = sp.getString("UserID", "");
+
+        EditText editTextMaxCacheSize = (EditText) findViewById(R.id.editTextMaxCacheSize);
+        editTextMaxCacheSize.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if ( !editable.toString().isEmpty() && !editable.toString().equals("null"))
+                   sp.edit().putString("MaxCacheSize", editable.toString()).commit();
+            }
+        });
+
+        EditText countTrackToCache = (EditText) findViewById(R.id.editTextCountTrackToDownload);
+        countTrackToCache.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if ( !editable.toString().isEmpty() && !editable.toString().equals("null"))
+                    sp.edit().putString("CountTrackToCache", editable.toString()).commit();
+            }
+        });
+
+        textSettingsInfo = (TextView) findViewById(R.id.textViewInfo2);
+
+        countTrackToCache.setText(sp.getString("CountTrackToCache",""));
+        if (countTrackToCache.getText().toString().isEmpty())
+        {
+            countTrackToCache.setText("100");
+            sp.edit().putString("CountTrackToCache", countTrackToCache.getText().toString()).commit();
         }
+
+        editTextMaxCacheSize.setText(sp.getString("MaxCacheSize", ""));
+        if (editTextMaxCacheSize.getText().toString().isEmpty())
+        {
+            editTextMaxCacheSize.setText("100");
+            sp.edit().putString("MaxCacheSize", editTextMaxCacheSize.getText().toString()).commit();
+        }
+
+//        textViewLocalTrackCount = (TextView) findViewById(R.id.textViewLocalTrackCount);
+//        textViewLocalTrackCount.setText("The count of local track: " +  trackDataAccess.GetExistTracksCount() + ".");
+//
+//        TrackToCache trackToCache = new TrackToCache();
+//        textViewCurrentCacheSize = (TextView)findViewById(R.id.textViewCurrentCacheSize);
+//        textViewCurrentCacheSize.setText("Cache size: " + trackToCache.FolderSize(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " (MB).");
+
+        Button btnMerge = (Button) findViewById(R.id.btnMergeUsers);
+        btnMerge.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(getApplicationContext());
+                EditText editTextUserID = (EditText) findViewById(R.id.editTextUserID);
+                if (editTextUserID.getText().toString().isEmpty())
+                {
+                    textSettingsInfo.append("Введите новый User ID для объединения пользователей \n");
+                    return;
+                }
+                UUID UserIDNew = UUID.fromString(editTextUserID.getText().toString());
+                if (!UserIDNew.equals("null"))
+                {
+                    String resMerge = executeProcedurePostgreSQL.MergeUserID(UserID, UserIDNew.toString());
+                    if (resMerge != "-1")
+                        textSettingsInfo.append("Невозможно произвести объединение пользователей по ID. Введеный UserID не существует. \n");
+                }
+                else
+                    textSettingsInfo.append("Невозможно произвести объединение пользователей по ID. Введеный UserID имеет неверный формат. \n");
+            }
+        });
+
+        Button btnDownloadTracks = (Button) findViewById(R.id.btnDownloadTrackToCache);
+        btnDownloadTracks.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText countTrackToDownload = (EditText) findViewById(R.id.editTextCountTrackToDownload);
+                int countTracks = Integer.parseInt(countTrackToDownload.getText().toString());
+                TrackToCache trackToCache = new TrackToCache();
+
+                textSettingsInfo.append(trackToCache.SaveTrackToCache(getApplicationContext(), DeviceID.toString(), countTracks) + "\n");
+                textViewLocalTrackCount.setText("The count of local track: " +  trackDataAccess.GetExistTracksCount() + ".");
+
+            }
+        });
+
+        Button btnClearCache = (Button) findViewById(R.id.btnClearCache);
+        btnClearCache.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                File dir = new File(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC).getPath());
+                if (dir.isDirectory())
+                {
+                    String[] children = dir.list();
+                    for (int i = 0; i < children.length; i++)
+                    {
+                        new File(dir, children[i]).delete();
+                    }
+                }
+                TrackDataAccess trackDataAccess = new TrackDataAccess(getApplicationContext());
+                trackDataAccess.CleanTrackTable();
+            }
+        });
+
+
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public boolean onIsMultiPane() {
-        return isXLargeTablet(this);
-    }
+    protected void onResume(){
+        super.onResume();
 
-    /**
-     * {@inheritDoc}
-     */
+        textViewLocalTrackCount = (TextView) findViewById(R.id.textViewLocalTrackCount);
+        textViewLocalTrackCount.setText("The count of local track: " +  trackDataAccess.GetExistTracksCount() + ".");
+
+        TrackToCache trackToCache = new TrackToCache();
+        textViewCurrentCacheSize = (TextView)findViewById(R.id.textViewCurrentCacheSize);
+        textViewCurrentCacheSize.setText("Cache size: " + trackToCache.FolderSize(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
+    }
     @Override
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public void onBuildHeaders(List<Header> target) {
-        loadHeadersFromResource(R.xml.pref_headers, target);
+    public  boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.menu, menu);
+        return super.onCreateOptionsMenu(menu);
     }
 
-    /**
-     * This method stops fragment injection in malicious applications.
-     * Make sure to deny any unknown fragments here.
-     */
-    protected boolean isValidFragment(String fragmentName) {
-        return PreferenceFragment.class.getName().equals(fragmentName)
-                || GeneralPreferenceFragment.class.getName().equals(fragmentName)
-                || DataSyncPreferenceFragment.class.getName().equals(fragmentName)
-                || NotificationPreferenceFragment.class.getName().equals(fragmentName);
-    }
-
-    /**
-     * This fragment shows general preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class GeneralPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_general);
-            setHasOptionsMenu(true);
-
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            bindPreferenceSummaryToValue(findPreference("example_text"));
-            bindPreferenceSummaryToValue(findPreference("example_list"));
-        }
-
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        switch (item.getItemId()){
+            case android.R.id.home:
+//                Intent intent = new Intent(this, MainActivity.class);
+//                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//                NavUtils.navigateUpTo(SettingsActivity.this, intent);//.navigateUpFromSameTask(this);
+                finish();
                 return true;
-            }
-            return super.onOptionsItemSelected(item);
-        }
-    }
 
-    /**
-     * This fragment shows notification preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class NotificationPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_notification);
-            setHasOptionsMenu(true);
-
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
-        }
-
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
+            case R.id.action_settings:
+//                startActivity(new Intent(this, SettingsActivity.class));
                 return true;
-            }
-            return super.onOptionsItemSelected(item);
-        }
-    }
 
-    /**
-     * This fragment shows data and sync preferences only. It is used when the
-     * activity is showing a two-pane settings UI.
-     */
-    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
-    public static class DataSyncPreferenceFragment extends PreferenceFragment {
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_data_sync);
-            setHasOptionsMenu(true);
-
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
-            bindPreferenceSummaryToValue(findPreference("sync_frequency"));
-        }
-
-        @Override
-        public boolean onOptionsItemSelected(MenuItem item) {
-            int id = item.getItemId();
-            if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
+            case R.id.action_exit:
+                System.exit(0);
                 return true;
-            }
-            return super.onOptionsItemSelected(item);
         }
+        return super.onOptionsItemSelected(item);
     }
+
 }
