@@ -26,7 +26,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
                         //отключение наушников
                         if (isHSConnected) {
                             isHSConnected = false;
-                            action = MediaPlayerService.ActionStop;
+                            action = MediaPlayerService.ActionPause;
                         }
                         break;
                     case 1:
@@ -42,7 +42,9 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
             //сигнал остановки сервиса
             action = MediaPlayerService.ActionStop;
 
+        Intent intent1 = new Intent(context, MediaPlayerService.class);
+        intent1.setAction(action);
         Intent remoteIntent = new Intent(action);
-        context.startService(remoteIntent);
+        context.startService(intent1);
     }
 }

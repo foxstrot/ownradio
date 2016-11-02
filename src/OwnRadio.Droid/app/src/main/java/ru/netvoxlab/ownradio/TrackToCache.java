@@ -56,7 +56,7 @@ public class TrackToCache {
         }
 
         ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(context);
-        GetTrack getTrack = new GetTrack();
+//        GetTrack getTrack = new GetTrack();
 
         for(int i = 0; i < trackCount; i++) {
             cacheSize = FolderSize(context.getExternalFilesDir(Environment.DIRECTORY_MUSIC));
@@ -73,8 +73,11 @@ public class TrackToCache {
 
             if (availableSpace > minAvailableSpace && cacheSize < Integer.parseInt(maxCacheSize)* 1048576) {
                 try {
+                    GetTrack getTrack = new GetTrack();
                     trackId = executeProcedurePostgreSQL.GetNextTrackID(deviceId);
-                    //Загружаем трек и сохраняем информацию о нем в БД
+                    if(trackDataAccess.CheckTrackExistInDB(trackId))
+                        return "Трек был загружен ранее";
+                        //Загружаем трек и сохраняем информацию о нем в БД
                     getTrack.GetTrackDM(context, trackId);
 
                 } catch (Exception ex) {

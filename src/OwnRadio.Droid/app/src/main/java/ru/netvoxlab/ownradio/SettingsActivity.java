@@ -78,6 +78,7 @@ public class SettingsActivity extends AppCompatActivity {
         });
 
         textSettingsInfo = (TextView) findViewById(R.id.textViewInfo2);
+        textSettingsInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
         countTrackToCache.setText(sp.getString("CountTrackToCache",""));
         if (countTrackToCache.getText().toString().isEmpty())

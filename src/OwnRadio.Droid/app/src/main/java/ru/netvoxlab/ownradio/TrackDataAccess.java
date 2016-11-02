@@ -24,14 +24,28 @@ public class TrackDataAccess {
     public void CleanTrackTable(){
         db = trackDB.getWritableDatabase();
         db.execSQL("DELETE FROM " + TrackTableName);
-        db.close();
+//        db.close();
     }
 
     public void SaveTrack(ContentValues trackInstance)
     {
         db = trackDB.getWritableDatabase();
         long rowID = db.insert(TrackTableName, null, trackInstance);
-        db.close();
+//        db.close();
+    }
+
+    public boolean CheckTrackExistInDB(String trackId)
+    {
+        db = trackDB.getWritableDatabase();
+        Cursor userCursor = db.rawQuery("SELECT * FROM track WHERE id = ?", new String[]{String.valueOf(trackId)});
+        boolean result = true;
+//        db.close();
+        if(userCursor.moveToFirst())
+            result = true;
+        else
+            result = false;
+        userCursor.close();
+        return result;
     }
 
     public ContentValues GetMostOldTrack()
@@ -41,12 +55,12 @@ public class TrackDataAccess {
         Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE isexist = ? ORDER BY datetimelastlisten", new String[]{String.valueOf(1)});
         if(userCursor.moveToFirst()) {
 
-            result.put("trackid", userCursor.getString(0));
+            result.put("id", userCursor.getString(0));
             result.put("trackurl", userCursor.getString(1));
         }else {
             result = null;
         }
-        db.close();
+//        db.close();
         userCursor.close();
         return result;
     }
@@ -62,7 +76,7 @@ public class TrackDataAccess {
         }else {
             result = null;
         }
-        db.close();
+//        db.close();
         userCursor.close();
         return result;
     }
@@ -77,7 +91,7 @@ public class TrackDataAccess {
         }else {
             result = 0;
         }
-        db.close();
+//        db.close();
         userCursor.close();
         return result;
     }
@@ -90,9 +104,10 @@ public class TrackDataAccess {
         if(userCursor.moveToFirst()){
             isListen += userCursor.getInt(0);
         }
+        trackInstance.put("islisten", isListen);
         long rowID = db.update(TrackTableName, trackInstance, "trackurl = ?", new String[]{String.valueOf(trackInstance.get("trackurl"))});
         userCursor.close();
-        db.close();
+//        db.close();
     }
 
     public void DeleteTrackFromCache(ContentValues trackInstance)
@@ -101,6 +116,6 @@ public class TrackDataAccess {
         trackInstance.put("isexist", isExist);
         db = trackDB.getWritableDatabase();
         db.update(TrackTableName, trackInstance, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
-        db.close();
+//        db.close();
     }
 }

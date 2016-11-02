@@ -82,7 +82,7 @@
     <TextView
         android:id="@+id/textViewInfo2"
         android:layout_weight="1"
-        android:freezesText="true"
+        android:gravity="bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <EditText

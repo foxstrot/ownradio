@@ -7,11 +7,13 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -58,7 +60,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
     public static final String ActionSaveCurrentPosition = "ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION";
 
 
-    private MediaPlayer player = null;
+    public MediaPlayer player = null;
     private AudioManager audioManager;
     private WifiManager wifiManager;
     private WifiManager.WifiLock wifiLock;
@@ -108,7 +110,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 if (player == null)
                     InitializePlayer();
 
-                if (!player.isPlaying()) {
+                //проверить возобновление проигрывания при переключении фокуса
+                if (!player.isPlaying() && GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
                     player.start();
                 }
 
@@ -223,10 +226,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         String action = intent.getAction();
 
         switch(action){
-            case ActionPlay :
-                Play();
-//                StartNotification();
-                break;
+            case ActionPlay : Play(); break;
             case ActionPause: Pause(); break;
             case ActionNext: Next(); break;
             case ActionStop: Stop(); break;
@@ -248,7 +248,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     private void InitializePlayer()
     {
-        //Intent iStatus = Application.Context.RegisterReceiver(HSReceiver, new IntentFilter(Intent.ActionHeadsetPlug));
         player = new MediaPlayer();
 
         //Tell our player to stream music
@@ -261,12 +260,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //        player.setOnErrorListener (this);
         player.setOnPreparedListener (this);
     }
-
-    //When we have prepared the song start playback
-//    public void onPrepared(MediaPlayer mediaPlayer)
-//    {
-//        mediaPlayer.start();
-//    }
 
     public  void onCompletion(MediaPlayer mediaPlayer)
     {
@@ -295,9 +288,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             PlayNext ();
         }
 
-
-
-    private void Play()
+    public void Play()
     {
 //        Toast.makeText(getApplicationContext(), "Play", Toast.LENGTH_SHORT).show();
         if (player != null && GetMediaPlayerState() == PlaybackStateCompat.STATE_PAUSED){
@@ -348,13 +339,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             ContentValues track = trackDataAccess.GetMostOldTrack();
             if (track != null) {
                 FlagDownloadTrack = false;
-                TrackID = track.getAsString("trackid");
+                TrackID = track.getAsString("id");
                 trackURL = track.getAsString("trackurl");
-                //                    if (!new File(trackURL).exists()) {
-                //                        trackDataAccess.DeleteTrackFromCache(track);
-                //                        Play();
-                //                    }
-                ////            MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever ();
+                if (!new File(trackURL).exists()) {
+                    trackDataAccess.DeleteTrackFromCache(track);
+                    Play();
+                }
                 player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
 
                 metaRetriever.setDataSource(trackURL);//, new Dictionary<String,String>());
@@ -364,19 +354,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
                 }
 
                 UpdatePlaybackState(PlaybackStateCompat.STATE_BUFFERING);
-                //                    player.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                //                        public void onPrepared(MediaPlayer mp) {
-                //                            mp.start();
-                //                            UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
-                //                        }
-                //                    });
 
                 player.prepareAsync();
 //                if (startTrackID == TrackID) {
 //                    player.seekTo(startPosition);
 //                    startPosition = 0;
 //                }
-                //                AcquireWifiLock ();
+                AcquireWifiLock();
                 //                UpdateMediaMetadataCompat (metaRetriever);
                 StartNotification();
 
@@ -401,7 +385,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //        }
     }
 
-    private void Pause()
+    public void Pause()
     {
 //        Toast.makeText(getApplicationContext(), "Pause", Toast.LENGTH_LONG).show();
         if(player == null)
@@ -411,7 +395,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             player.pause();
         UpdatePlaybackState(PlaybackStateCompat.STATE_PAUSED);
     }
-    private void Stop()
+    public void Stop()
     {
         if (player == null)
             return;
@@ -428,7 +412,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         UnregisterMediaSessionCompat ();
     }
 
-    private void Next()
+    public void Next()
     {
 //        Toast.makeText(getApplicationContext(), "Next", Toast.LENGTH_LONG).show();
         int ListedTillTheEnd = -1;
@@ -537,7 +521,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
     private void StartNotification()
     {
-        ////                MediaMetadataCompat currentTrack = mediaControllerCompat.getMediaMetadata();
+        //                MediaMetadataCompat currentTrack = mediaControllerCompat.getMediaMetadata();
         android.support.v7.app.NotificationCompat.MediaStyle style = new android.support.v7.app.NotificationCompat.MediaStyle();
                 style.setMediaSession(mediaSessionCompat.getSessionToken());
 
@@ -548,15 +532,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
         String trackTitle = TrackID;
         String trackArtist = "Ownradio";
-//        String trackDuration
 
         Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
         intent.setAction(ActionPlay);
-//        PendingIntent pendingIntent1 = PendingIntent.getService(getApplicationContext(), 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         RemoteViews contentView = new RemoteViews(getApplicationContext().getPackageName(), R.layout.notification);
-//        NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
-//        inboxStyle.setBigContentTitle("Big content title");
-
 
         contentView.setViewVisibility(R.id.viewsIcon, View.VISIBLE);
 
@@ -590,70 +569,23 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
         contentView.setOnClickPendingIntent(R.id.viewsNext, pnextIntent);
         contentView.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
 
-//        Notification status = new Notification.Builder(getApplicationContext()).build();
-//        status.contentView = contentView;
-//        status.flags = Notification.FLAG_ONGOING_EVENT;
-//        status.icon = R.drawable.icon;
-//        status.contentIntent = pendingIntent;
-//        startForeground(5, status);
-//
-//        NotificationCompat.Builder status = new NotificationCompat.Builder(getApplicationContext())
-//                .setStyle(style)
-//                .setShowWhen(false)
-//                .setCustomContentView(contentView)
-//                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-//        NotificationManagerCompat.from(getApplicationContext()).notify(NotificationId, status.build());
-
-
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
-//                .setStyle(style)
-//                .setContentTitle(titleNotification)
-//                .setContentText(textNotification)
-//                .setContentInfo(infoNotification)
-//                .setSubText(subtextNotificaton)
                 .setSmallIcon(R.drawable.icon)
                 .setContentIntent(pendingIntent)
                 .setCustomContentView(contentView)
                 .setShowWhen(false)
-//                .setContentIntent(pendingIntent1)
-//                .setOngoing(true)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
         if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
             builder.setOngoing(true);
         else
             builder.setOngoing(false);
-
-//        AddPlayPauseActionCompat(builder);
-//        builder.addAction(GenerateActionCompat(android.R.drawable.ic_media_next, "Next", ActionNext));
 //        style.setShowActionsInCompactView(0,1,2);
         NotificationManagerCompat.from(getApplicationContext()).notify(NotificationId, builder.build());
 
 //        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
 //        notificationManager.notify(2, notification);
-    }
-
-    private NotificationCompat.Action GenerateActionCompat(int icon, String title, String intentAction)
-    {
-        Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
-        intent.setAction(intentAction);
-
-        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (intentAction.equals(ActionStop))
-            flags = PendingIntent.FLAG_CANCEL_CURRENT;
-
-        PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, flags);
-
-        return new NotificationCompat.Action.Builder(icon, title, pendingIntent).build();
-    }
-
-    private void AddPlayPauseActionCompat(NotificationCompat.Builder builder)
-    {
-        if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-            builder.addAction(GenerateActionCompat(android.R.drawable.ic_media_pause, "Pause", ActionPause));
-        else
-            builder.addAction(GenerateActionCompat(android.R.drawable.ic_media_play, "Play", ActionPlay));
     }
 
     public void StopNotification()
@@ -681,12 +613,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
             player.release ();
             player = null;
         }
-
         String deviceId = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID","");
         TrackToCache trackToCache = new TrackToCache();
         trackToCache.SaveTrackToCache(getApplicationContext(), deviceId, 2);
         UpdatePlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT);
-//        StartNotification();
         Play();
     }
 

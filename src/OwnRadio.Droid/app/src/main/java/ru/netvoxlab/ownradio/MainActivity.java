@@ -1,42 +1,30 @@
 package ru.netvoxlab.ownradio;
 
-import android.annotation.SuppressLint;
-import android.app.Application;
-import android.app.DownloadManager;
-import android.app.Notification;
-import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
-import android.support.v7.app.ActionBar;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
-import  android.preference.PreferenceManager;
-import android.widget.RemoteViews;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
 
-import java.io.File;
-import java.lang.reflect.Method;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
@@ -46,26 +34,25 @@ public class MainActivity extends AppCompatActivity {
     String DeviceId;
     String UserId;
     SharedPreferences sp;
-    String trackId;
-
+    BroadcastReceiver headSetReceiver = new MusicBroadcastReceiver();
+    BroadcastReceiver remoteControlReceiver = new RemoteControlReceiver();
     boolean isBound = false;
     private MediaPlayerService.MediaPlayerServiceBinder binder;
-//    MediaPlayerServiceConnection mediaPlayerServiceConnection;
+    MediaPlayerServiceConnection mediaPlayerServiceConnection;
     private Intent mediaPlayerServiceIntent;
 
-    private long enqueue;
-    private DownloadManager dm;
-
     TrackDB trackDB;
-    SQLiteDatabase db;
-    Cursor userCursor;
-    SimpleCursorAdapter userAdapter;
+    final String TAG = "ownRadio";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Intent iStatus = this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
+        Intent iStatus2 = this.registerReceiver(remoteControlReceiver, new IntentFilter(Intent.ACTION_MEDIA_BUTTON));
 
+        if(mediaPlayerServiceConnection == null)
+            InitilizeMedia();
         // Приложение запущено впервые или восстановлено из памяти?
         if ( savedInstanceState == null )   // приложение запущено впервые
         {
@@ -74,33 +61,31 @@ public class MainActivity extends AppCompatActivity {
         {
         }
 
-
 //        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
-
 
         trackDB = new TrackDB(getApplicationContext(),1);
         sp = PreferenceManager.getDefaultSharedPreferences(this);
 //         полная очистка настроек
 //         sp.edit().clear().commit();
 
+
+
         TextView textInfo = (TextView) findViewById(R.id.textViewInfo);
         textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
-//        ToggleButton btnPlayPause = (ToggleButton) findViewById(R.id.btnPlayPause);
-//        btnPlayPause.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//
-//            }
-//        });
         ImageButton btnPlay = (ImageButton) findViewById(R.id.imgBtnPlay);
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d(TAG, "Press Play");
                 Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
                 intent.setAction("ru.netvoxlab.ownradio.action.PLAY");
                 startService(intent);
+//                if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+//                    binder.GetMediaPlayerService().Pause();
+//                else
+//                    binder.GetMediaPlayerService().Play();
             }
         });
 
@@ -108,6 +93,7 @@ public class MainActivity extends AppCompatActivity {
         btnPause.setOnClickListener((new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d(TAG, "Press Pause");
                 Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
                 intent.setAction("ru.netvoxlab.ownradio.action.PAUSE");
                 startService(intent);
@@ -118,21 +104,21 @@ public class MainActivity extends AppCompatActivity {
         btnNext.setOnClickListener((new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d(TAG, "Press Next");
                 Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
                 intent.setAction("ru.netvoxlab.ownradio.action.NEXT");
                 startService(intent);
+//                if(binder.GetMediaPlayerService().player != null)
+//                    binder.GetMediaPlayerService().PlayNext();
             }
         }));
+    }
 
-//        Button btnShowDownload = (Button) findViewById(R.id.btnShowDownload);
-//        btnShowDownload.setOnClickListener(((new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Intent i = new Intent();
-//                i.setAction(DownloadManager.ACTION_VIEW_DOWNLOADS);
-//                startActivity(i);
-//            }
-//        })));
+    private void InitilizeMedia()
+    {
+        mediaPlayerServiceIntent = new Intent(this, MediaPlayerService.class);
+        mediaPlayerServiceConnection = new MediaPlayerServiceConnection (this);
+        bindService (mediaPlayerServiceIntent, mediaPlayerServiceConnection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -205,6 +191,14 @@ public class MainActivity extends AppCompatActivity {
                 return true;
 
             case R.id.action_exit:
+                try{
+                    unregisterReceiver(headSetReceiver);
+                    unregisterReceiver(remoteControlReceiver);
+                }
+                catch(Exception ex){
+                    Log.e(TAG, ex.getLocalizedMessage());
+                }
+//                stopService(new Intent(this, MediaPlayerService.class));
 //                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
 //                intent.setAction("ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION");
 //                startService(intent);
@@ -215,92 +209,54 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-//    class MediaPlayerServiceConnection extends java.lang.Object implements ServiceConnection
-//    {
-//        MainActivity instance;
-//
-//        public MediaPlayerServiceConnection (MainActivity pl)
-//        {
-//            this.instance = player;
-//        }
 
-//    public void OnServiceConnected (ComponentName name, IBinder service)
-//    {
-//        MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder = service  MediaPlayerService.MediaPlayerServiceBinder;
-//        if (mediaPlayerServiceBinder != null) {
-//            MediaPlayerService.MediaPlayerServiceBinder binder = (MediaPlayerService.MediaPlayerServiceBinder)service;
-//            instance.binder = binder;
-//            instance.isBound = true;
+    public void LogToTextView(){
+        try {
+            Process process = Runtime.getRuntime().exec("logcat -d");
+            BufferedReader bufferedReader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()));
 
-//            binder.GetMediaPlayerService().CoverReloaded += (object sender, EventArgs e) => { if (instance.CoverReloaded != null) instance.CoverReloaded(sender, e); };
-//            binder.GetMediaPlayerService().StatusChanged += (object sender, EventArgs e) => { if (instance.StatusChanged != null) instance.StatusChanged(sender, e); };
-//            binder.GetMediaPlayerService().Playing += (object sender, EventArgs e) => { if (instance.Playing != null) instance.Playing(sender, e); };
-//            binder.GetMediaPlayerService().Buffering += (object sender, EventArgs e) => { if (instance.Buffering != null) instance.Buffering(sender, e); };
-//        }
-//    }
-
-
-//        @Override
-//        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-//
-//        }
-//
-//        @Override
-//        public void onServiceDisconnected(ComponentName componentName) {
-//            instance.isBound = false;
-//        }
-//    }
-
-    @SuppressLint("NewApi")
-    public void AddNotification (){
-        Context context = getApplicationContext();
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(context.NOTIFICATION_SERVICE);
-        Notification.Builder builder = new Notification.Builder(context);
-        @SuppressWarnings("deprecation")
-        Notification notification = builder.getNotification();
-        notification.when = System.currentTimeMillis();
-        notification.tickerText = "TrackID";
-        notification.icon = R.drawable.icon;
-
-        RemoteViews contentView = new RemoteViews(context.getPackageName(), R.layout.notification);
-//        setListeners(contentView);
-        notification.contentView = contentView;
-      //  notification.flags |= Notification.FLAG_ONGOING_EVENT;
-        notificationManager.notify(3, notification);
+            StringBuilder log = new StringBuilder();
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                if(line.contains(TAG))
+                    log.append(line + "\n");
+            }
+            TextView textInfo = (TextView) findViewById(R.id.textViewInfo);
+            textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+            textInfo.setText(log.toString());
+        } catch (IOException e) {
+        }
     }
-//
-//    public void setListeners(RemoteViews view){
-//        Context context = getApplicationContext();
-//
-//        //radio listener
-//        Intent radio=new Intent(context,HelperActivity.class);
-//        radio.putExtra("DO", "radio");
-//        PendingIntent pRadio = PendingIntent.getActivity(ctx, 0, radio, 0);
-//        view.setOnClickPendingIntent(R.id.radio, pRadio);
-//
-//        //volume listener
-//        Intent volume=new Intent(ctx, HelperActivity.class);
-//        volume.putExtra("DO", "volume");
-//        PendingIntent pVolume = PendingIntent.getActivity(ctx, 1, volume, 0);
-//        view.setOnClickPendingIntent(R.id.volume, pVolume);
-//
-//        //reboot listener
-//        Intent reboot=new Intent(ctx, HelperActivity.class);
-//        reboot.putExtra("DO", "reboot");
-//        PendingIntent pReboot = PendingIntent.getActivity(ctx, 5, reboot, 0);
-//        view.setOnClickPendingIntent(R.id.reboot, pReboot);
-//
-//        //top listener
-//        Intent top=new Intent(ctx, HelperActivity.class);
-//        top.putExtra("DO", "top");
-//        PendingIntent pTop = PendingIntent.getActivity(ctx, 3, top, 0);
-//        view.setOnClickPendingIntent(R.id.top, pTop);*/
-//
-//        //app listener
-//        Intent app=new Intent(ctx, com.example.demo.HelperActivity.class);
-//        app.putExtra("DO", "app");
-//        PendingIntent pApp = PendingIntent.getActivity(ctx, 4, app, 0);
-//        view.setOnClickPendingIntent(R.id.btn1, pApp);
-//    }
+
+    class MediaPlayerServiceConnection extends java.lang.Object implements ServiceConnection
+    {
+        MainActivity instance;
+
+        public MediaPlayerServiceConnection (MainActivity player)
+        {
+            this.instance = player;
+        }
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder service) {
+            MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder = ( MediaPlayerService.MediaPlayerServiceBinder)service;
+            if (mediaPlayerServiceBinder != null) {
+                MediaPlayerService.MediaPlayerServiceBinder binder = (MediaPlayerService.MediaPlayerServiceBinder) service;
+                instance.binder = binder;
+                instance.isBound = true;
+
+//                binder.GetMediaPlayerService().CoverReloaded += (object sender, EventArgs e) => { if (instance.CoverReloaded != null) instance.CoverReloaded(sender, e); };
+//                binder.GetMediaPlayerService().StatusChanged += (object sender, EventArgs e) => { if (instance.StatusChanged != null) instance.StatusChanged(sender, e); };
+//                binder.GetMediaPlayerService().Playing += (object sender, EventArgs e) => { if (instance.Playing != null) instance.Playing(sender, e); };
+//                binder.GetMediaPlayerService().Buffering += (object sender, EventArgs e) => { if (instance.Buffering != null) instance.Buffering(sender, e); };
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            instance.isBound = false;
+        }
+    }
 }
 

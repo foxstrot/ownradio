@@ -100,7 +100,7 @@ public class GetTrack {
 
                         String uriString = c
                                 .getString(c
-                                        .getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));
+                                        .getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME));
 
 
 //доработать сохранение пути загрузки
