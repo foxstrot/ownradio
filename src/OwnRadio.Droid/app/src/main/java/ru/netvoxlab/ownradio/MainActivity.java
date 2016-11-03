@@ -1,228 +1,287 @@
 package ru.netvoxlab.ownradio;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.media.MediaPlayer;
-import android.net.Uri;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.design.widget.FloatingActionButton;
-import android.support.v4.media.MediaMetadataCompat;
+import android.os.IBinder;
+import android.preference.PreferenceManager;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
-import android.support.v4.media.session.MediaSessionCompat;
-import  android.preference.PreferenceManager;
-import android.widget.Toast;
+import android.widget.TextView;
 
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.Thing;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-//    private GoogleApiClient client;
-    private ExecuteProcedurePostgreSQL executeProcedurePostgreSQL;
-    private MediaSessionCompat mediaSessionCompat;
-    public MediaMetadataCompat mediaControllerCompat;
+	private ExecuteProcedurePostgreSQL executeProcedurePostgreSQL;
 
-    String DeviceId;
-    String UserId;
-    SharedPreferences sp;
+	String DeviceId;
+	String UserId;
+	SharedPreferences sp;
+	BroadcastReceiver headSetReceiver = new MusicBroadcastReceiver();
+	BroadcastReceiver remoteControlReceiver = new RemoteControlReceiver();
+	boolean isBound = false;
+	private MediaPlayerService.MediaPlayerServiceBinder binder;
+	MediaPlayerServiceConnection mediaPlayerServiceConnection;
+	private Intent mediaPlayerServiceIntent;
 
-    String path;
+	TrackDB trackDB;
+	final String TAG = "ownRadio";
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.activity_main);
 
-        sp = PreferenceManager.getDefaultSharedPreferences(this);
-        // полная очистка настроек
+		Intent iStatus = this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
+		Intent iStatus2 = this.registerReceiver(remoteControlReceiver, new IntentFilter(Intent.ACTION_MEDIA_BUTTON));
+
+//		startService(new Intent(this, MediaPlayerService.class));
+
+		if (mediaPlayerServiceConnection == null)
+			InitilizeMedia();
+
+		trackDB = new TrackDB(getApplicationContext(), 1);
+		sp = PreferenceManager.getDefaultSharedPreferences(this);
+
+//         полная очистка настроек
 //         sp.edit().clear().commit();
 
+		TextView textInfo = (TextView) findViewById(R.id.textViewInfo);
+		textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
-        /////
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent settingsIntent = new Intent(MainActivity.this, SettingsActivity.class);
-                startActivity(settingsIntent);  //startActivityForResult(settingsIntent, 1);
+//		Button btnPlayPause = (Button) findViewById(R.id.btnPlayPause);
+//		btnPlayPause.setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View view) {
+//				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+//				{
+////					btnPlayPause.setActivated(true);
+//					binder.GetMediaPlayerService().Pause();
+//				}
+//				else
+//				{
+////					btnPlayPause.setActivated(true);
+//					binder.GetMediaPlayerService().Play();
+//				}
+//			}
+//		});
 
+		ImageButton btnPlay = (ImageButton) findViewById(R.id.imgBtnPlay);
+		btnPlay.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Log.d(TAG, "Press Play");
+//				if (!(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING))
+////					binder.GetMediaPlayerService().Pause();
+////				else
+//					binder.GetMediaPlayerService().Play();
+				Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
+				intent.setAction("ru.netvoxlab.ownradio.action.PLAY");
+				startService(intent);
+			}
+		});
+
+		ImageButton btnPause = (ImageButton) findViewById(R.id.imgBtnPause);
+		btnPause.setOnClickListener((new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+//				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+//					binder.GetMediaPlayerService().Pause();
+				Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
+				intent.setAction("ru.netvoxlab.ownradio.action.PAUSE");
+				startService(intent);
+			}
+		}));
+
+		ImageButton btnNext = (ImageButton) findViewById(R.id.imgBtnNext);
+		btnNext.setOnClickListener((new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+//                if(binder.GetMediaPlayerService().player != null)
+//                    binder.GetMediaPlayerService().Next();
+				Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
+				intent.setAction("ru.netvoxlab.ownradio.action.NEXT");
+				startService(intent);
+			}
+		}));
+	}
+
+	private void InitilizeMedia() {
+		mediaPlayerServiceIntent = new Intent(this, MediaPlayerService.class);
+		mediaPlayerServiceConnection = new MediaPlayerServiceConnection(this);
+		bindService(mediaPlayerServiceIntent, mediaPlayerServiceConnection, BIND_AUTO_CREATE);
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+
+
+
+
+		TextView textVersionName = (TextView) findViewById(R.id.versionName);
+		TextView textDeviceID = (TextView) findViewById(R.id.deviceID);
+		TextView textUserID = (TextView) findViewById(R.id.userID);
+
+		try {
+			String info = this.getPackageManager().getPackageInfo(this.getPackageName(), PackageManager.GET_META_DATA).versionName;
+			textVersionName.setText("Version name: " + info);
+		} catch (PackageManager.NameNotFoundException e) {
+			e.printStackTrace();
+		}
+
+		executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(MainActivity.this);
+		try {
+			DeviceId = sp.getString("DeviceID", "");
+			if (DeviceId.isEmpty()) {
+				DeviceId = UUID.randomUUID().toString();
+				String UserName = "NewUser";
+				String DeviceName = Build.BRAND;
+				executeProcedurePostgreSQL.RegisterDevice(DeviceId, UserName, DeviceName);
+				UserId = executeProcedurePostgreSQL.GetUserId(DeviceId);
+				sp.edit().putString("DeviceID", DeviceId).commit();
+				sp.edit().putString("UserID", UserId);
+				sp.edit().putString("UserName", UserName);
+				sp.edit().putString("DeviceName", DeviceName);
+				sp.edit().commit();
+			} else {
+				UserId = sp.getString("UserID", "");
+				if (UserId.isEmpty()) {
+					UserId = executeProcedurePostgreSQL.GetUserId(DeviceId);
+					sp.edit().putString("UserID", UserId).commit();
+				}
+			}
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			ex.getLocalizedMessage();
+		}
+		textDeviceID.setText("Device ID: " + DeviceId);
+		textUserID.setText("User ID: " + UserId);
+	}
 //
+//	@Override
+//	public void onStop() {
+////		super.onStop();
+//	}
+
+	@Override
+	public void onDestroy(){
+		try {
+			unregisterReceiver(headSetReceiver);
+			unregisterReceiver(remoteControlReceiver);
+		} catch (Exception ex) {
+			Log.e(TAG, ex.getLocalizedMessage());
+		}
+		binder.GetMediaPlayerService().SaveLastPosition();
+		binder.GetMediaPlayerService().StopNotification();
+//				unbindService(mediaPlayerServiceConnection);
+		stopService(new Intent(this, MediaPlayerService.class));
 //                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
-//                intent.setAction("ru.netvoxlab.ownradio.action.PLAY");
-//
+//                intent.setAction("ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION");
 //                startService(intent);
+		android.os.Process.killProcess(android.os.Process.myPid());
+		super.onDestroy();
+	}
 
-               // startService(new Intent(MainActivity.this, MediaPlayerService.class));
-//                MusicPlayerService.StartN
-            }
-        });
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.menu, menu);
+		return super.onCreateOptionsMenu(menu);
+	}
 
-        ImageButton btnPlay = (ImageButton) findViewById(R.id.imgBtnPlay);
-        btnPlay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
-                intent.setAction("ru.netvoxlab.ownradio.action.PLAY");
-                startService(intent);
-            }
-        });
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+			case android.R.id.home:
+				NavUtils.navigateUpFromSameTask(this);
+				return true;
 
-        ImageButton btnPause = (ImageButton) findViewById(R.id.imgBtnPause);
-        btnPause.setOnClickListener((new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
-                intent.setAction("ru.netvoxlab.ownradio.action.PAUSE");
-                startService(intent);
-            }
-        }));
+			case R.id.action_settings:
+				startActivity(new Intent(this, SettingsActivity.class));
+				return true;
 
-        ImageButton btnNext = (ImageButton) findViewById(R.id.imgBtnNext);
-        btnNext.setOnClickListener((new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
-                intent.setAction("ru.netvoxlab.ownradio.action.NEXT");
-                startService(intent);
-            }
-        }));
+			case R.id.action_exit:
+				try {
+					unregisterReceiver(headSetReceiver);
+					unregisterReceiver(remoteControlReceiver);
+				} catch (Exception ex) {
+					Log.e(TAG, ex.getLocalizedMessage());
+				}
+				binder.GetMediaPlayerService().SaveLastPosition();
+				binder.GetMediaPlayerService().StopNotification();
+//				unbindService(mediaPlayerServiceConnection);
+                stopService(new Intent(this, MediaPlayerService.class));
+//                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
+//                intent.setAction("ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION");
+//                startService(intent);
+				android.os.Process.killProcess(android.os.Process.myPid());
+//                System.exit(0);
+				return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 
-        Button btnDownloadTrack = (Button) findViewById(R.id.btnDownload);
-        btnDownloadTrack.setOnClickListener((new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                GetTrack getTrack = new GetTrack();
-               path = getTrack.GetTrackByID(MainActivity.this, "00119cc6-2d9d-4f77-b05a-d5ab9c92c894");
-                List<String> paths = new ArrayList<String>();
-                File directory = new File(path);
 
-                File[] files = directory.listFiles();
+	public void LogToTextView() {
+		try {
+			Process process = Runtime.getRuntime().exec("logcat -d");
+			BufferedReader bufferedReader = new BufferedReader(
+					new InputStreamReader(process.getInputStream()));
 
-                for (int i = 0; i < files.length; ++i) {
-                    paths.add(files[i].getAbsolutePath());
-                }
+			StringBuilder log = new StringBuilder();
+			String line;
+			while ((line = bufferedReader.readLine()) != null) {
+				if (line.contains(TAG))
+					log.append(line + "\n");
+			}
+			TextView textInfo = (TextView) findViewById(R.id.textViewInfo);
+			textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+			textInfo.setText(log.toString());
+		} catch (IOException e) {
+		}
+	}
 
-//
-//                File file = new File(path);
-                Toast.makeText(MainActivity.this, "File exists: "  + files[0].exists(), Toast.LENGTH_LONG).show();
-            }
-        }));
+	class MediaPlayerServiceConnection extends java.lang.Object implements ServiceConnection {
+		MainActivity instance;
 
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-//        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
-    }
+		public MediaPlayerServiceConnection(MainActivity player) {
+			this.instance = player;
+		}
 
-    public void onPrepared(MediaPlayer player) {
-        player.start();
-    }
+		@Override
+		public void onServiceConnected(ComponentName componentName, IBinder service) {
+			MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder = (MediaPlayerService.MediaPlayerServiceBinder) service;
+			if (mediaPlayerServiceBinder != null) {
+				MediaPlayerService.MediaPlayerServiceBinder binder = (MediaPlayerService.MediaPlayerServiceBinder) service;
+				instance.binder = binder;
+				instance.isBound = true;
 
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    public Action getIndexApiAction() {
-        Thing object = new Thing.Builder()
-                .setName("Main Page") // TODO: Define a title for the content shown.
-                // TODO: Make sure this auto-generated URL is correct.
-                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
-                .build();
-        return new Action.Builder(Action.TYPE_VIEW)
-                .setObject(object)
-                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-                .build();
-    }
+//                binder.GetMediaPlayerService().CoverReloaded += (object sender, EventArgs e) => { if (instance.CoverReloaded != null) instance.CoverReloaded(sender, e); };
+//                binder.GetMediaPlayerService().StatusChanged += (object sender, EventArgs e) => { if (instance.StatusChanged != null) instance.StatusChanged(sender, e); };
+//                binder.GetMediaPlayerService().Playing += (object sender, EventArgs e) => { if (instance.Playing != null) instance.Playing(sender, e); };
+//                binder.GetMediaPlayerService().Buffering += (object sender, EventArgs e) => { if (instance.Buffering != null) instance.Buffering(sender, e); };
+			}
+		}
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-//         ATTENTION: This was auto-generated to implement the App Indexing API.
-//         See https://g.co/AppIndexing/AndroidStudio for more information.
-//        client.connect();
-//        AppIndex.AppIndexApi.start(client, getIndexApiAction());
-        executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(MainActivity.this);
-      //  sp = PreferenceManager.getDefaultSharedPreferences(this);
-
-        try {
-            DeviceId = sp.getString("DeviceID", "");
-            if(DeviceId.isEmpty()){
-//                DeviceId == UUID.fromString( "00000000-0000-0000-0000-000000000000")) {
-                DeviceId = UUID.randomUUID().toString();
-                String UserName = "NewUser";
-                String DeviceName= Build.BRAND;
-                executeProcedurePostgreSQL.RegisterDevice(DeviceId, UserName, DeviceName);
-                UserId = executeProcedurePostgreSQL.GetUserId(DeviceId);
-                sp.edit().putString("DeviceID", DeviceId).commit();
-                sp.edit().putString("UserID", UserId);
-                sp.edit().putString("UserName", UserName);
-                sp.edit().putString("DeviceName", DeviceName);
-                sp.edit().commit();
-            }
-            else
-            {
-                UserId = sp.getString("UserID", "");
-                if (UserId.isEmpty()) {
-                    UserId = executeProcedurePostgreSQL.GetUserId(DeviceId);
-                    sp.edit().putString("UserID", UserId).commit();
-                }
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            ex.getLocalizedMessage();
-        }
-    }
-
-//    protected void onResume() {
-//
-//    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-//        AppIndex.AppIndexApi.end(client, getIndexApiAction());
-//        client.disconnect();
-    }
-//
-//    class MediaPlayerServiceConnection extends Object, ServiceConnection
-//    {
-//        MainActivity instance;
-//
-//        public MediaPlayerServiceConnection (MainActivity mediaPlayer)
-//        {
-//            this.instance = mediaPlayer;
-//        }
-//
-//        public void OnServiceConnected (ComponentName name, IBinder service)
-//        {
-//
-//        }
-//
-//        public void OnServiceDisconnected(ComponentName name)
-//        {
-//            instance.isBound = false;
-//        }
-//    }
-
+		@Override
+		public void onServiceDisconnected(ComponentName componentName) {
+			instance.isBound = false;
+		}
+	}
 }
 
