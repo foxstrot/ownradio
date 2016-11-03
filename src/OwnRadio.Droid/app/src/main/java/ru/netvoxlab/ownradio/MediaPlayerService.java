@@ -2,6 +2,7 @@ package ru.netvoxlab.ownradio;
 
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -25,6 +26,7 @@ import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
@@ -64,6 +66,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	String DeviceID;
 	String TrackID;
 	Boolean FlagDownloadTrack = true;
+	final String TAG = "ownRadio";
 
 	int startPosition = 0;
 	String startTrackID = "";
@@ -75,14 +78,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	@Override
 	public void onCreate() {
 		super.onCreate();
+		trackDataAccess = new TrackDataAccess(getApplicationContext());
 		audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 		wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
 		remoteComponentName = new ComponentName(getPackageName(), new RemoteControlReceiver().ComponentName());
-		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-		startPosition = settings.getInt("LastPosition", 0);
-		startTrackID = settings.getString("LastTrackID", "");
-		if (settings.getBoolean("StatePlay", false))
-			Play();
+//		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+//		startPosition = settings.getInt("LastPosition", 0);
+//		startTrackID = settings.getString("LastTrackID", "");
+//		if (settings.getBoolean("StatePlay", false))
+//			Play();
 	}
 
 	@Override
@@ -100,7 +104,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				player.setVolume(1.0f, 1.0f);
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS:
-				Stop();
+				Pause();//Stop();
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
 				//We have lost focus for a short time, but likely to resume so pause
@@ -131,9 +135,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			Album = album;
 			Duration = duration;
 		}
-	}
-
-	;
+	};
 
 	TrackInfo trackInfo = new TrackInfo();
 
@@ -193,6 +195,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	@Override
 	public boolean onUnbind(Intent intent) {
 		StopNotification();
+		stopForeground(true);
+		ReleaseWifiLock();
+		UnregisterMediaSessionCompat();
 		return super.onUnbind(intent);
 	}
 
@@ -319,6 +324,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //                alert.show();
 //            } else {
 		try {
+			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+			startPosition = settings.getInt("LastPosition", 0);
+			startTrackID = settings.getString("LastTrackID", "");
+//			if (settings.getBoolean("StatePlay", false))
+//				Play();
 			MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
 			ContentValues track = trackDataAccess.GetMostOldTrack();
 			if (track != null) {
@@ -340,9 +350,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				UpdatePlaybackState(PlaybackStateCompat.STATE_BUFFERING);
 
 				player.prepareAsync();
-//                if (startTrackID == TrackID) {
+//                if (startTrackID.equals(TrackID)) {
 //                    player.seekTo(startPosition);
-//                    startPosition = 0;
+//					startPosition = 0;
 //                }
 				AcquireWifiLock();
 				//                UpdateMediaMetadataCompat (metaRetriever);
@@ -387,6 +397,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			player.stop();
 		}
 
+		try{
+			BroadcastReceiver headSetReceiver = new MusicBroadcastReceiver();
+			BroadcastReceiver remoteControlReceiver = new RemoteControlReceiver();
+			unregisterReceiver(headSetReceiver);
+			unregisterReceiver(remoteControlReceiver);
+		}catch (Exception ex){
+			Log.d(TAG, ex.getLocalizedMessage());
+		}
 		UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
 		player.reset();
 		StopNotification();
@@ -433,10 +451,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 	public void onPrepared(MediaPlayer mp) {
 		//Mediaplayer is prepared start track playback
+		if (startTrackID.equals(TrackID)) {
+			player.seekTo(startPosition);
+			startPosition = 0;
+		}
 		mp.start();
 		UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 	}
-
 
 	public int Position() {
 		if (player == null
@@ -486,7 +507,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		} catch (Exception ex) {
 		}
 	}
-
 
 	private void StartNotification() {
 		//                MediaMetadataCompat currentTrack = mediaControllerCompat.getMediaMetadata();
@@ -602,10 +622,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 		@Override
 		public void onSkipToNext() {
-			mediaPlayerService.GetMediaPlayerService().PlayNext();
+			mediaPlayerService.GetMediaPlayerService().Next();
 			super.onSkipToNext();
 		}
-
 
 		@Override
 		public void onStop() {
@@ -647,7 +666,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			player = null;
 
 			StopNotification();
-			super.stopForeground(true);
+			stopForeground(true);
 			ReleaseWifiLock();
 			UnregisterMediaSessionCompat();
 		}

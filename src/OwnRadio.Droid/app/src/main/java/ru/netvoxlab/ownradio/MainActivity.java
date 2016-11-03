@@ -46,20 +46,14 @@ public class MainActivity extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
 		Intent iStatus = this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 		Intent iStatus2 = this.registerReceiver(remoteControlReceiver, new IntentFilter(Intent.ACTION_MEDIA_BUTTON));
 
+//		startService(new Intent(this, MediaPlayerService.class));
+
 		if (mediaPlayerServiceConnection == null)
 			InitilizeMedia();
-		// Приложение запущено впервые или восстановлено из памяти?
-		if (savedInstanceState == null)   // приложение запущено впервые
-		{
-		} else // приложение восстановлено из памяти
-		{
-		}
-
-//        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-//        setSupportActionBar(toolbar);
 
 		trackDB = new TrackDB(getApplicationContext(), 1);
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
@@ -67,22 +61,38 @@ public class MainActivity extends AppCompatActivity {
 //         полная очистка настроек
 //         sp.edit().clear().commit();
 
-
 		TextView textInfo = (TextView) findViewById(R.id.textViewInfo);
 		textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+
+//		Button btnPlayPause = (Button) findViewById(R.id.btnPlayPause);
+//		btnPlayPause.setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View view) {
+//				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+//				{
+////					btnPlayPause.setActivated(true);
+//					binder.GetMediaPlayerService().Pause();
+//				}
+//				else
+//				{
+////					btnPlayPause.setActivated(true);
+//					binder.GetMediaPlayerService().Play();
+//				}
+//			}
+//		});
 
 		ImageButton btnPlay = (ImageButton) findViewById(R.id.imgBtnPlay);
 		btnPlay.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				Log.d(TAG, "Press Play");
+//				if (!(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING))
+////					binder.GetMediaPlayerService().Pause();
+////				else
+//					binder.GetMediaPlayerService().Play();
 				Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
 				intent.setAction("ru.netvoxlab.ownradio.action.PLAY");
 				startService(intent);
-//                if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-//                    binder.GetMediaPlayerService().Pause();
-//                else
-//                    binder.GetMediaPlayerService().Play();
 			}
 		});
 
@@ -90,7 +100,8 @@ public class MainActivity extends AppCompatActivity {
 		btnPause.setOnClickListener((new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				Log.d(TAG, "Press Pause");
+//				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+//					binder.GetMediaPlayerService().Pause();
 				Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
 				intent.setAction("ru.netvoxlab.ownradio.action.PAUSE");
 				startService(intent);
@@ -101,12 +112,11 @@ public class MainActivity extends AppCompatActivity {
 		btnNext.setOnClickListener((new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				Log.d(TAG, "Press Next");
+//                if(binder.GetMediaPlayerService().player != null)
+//                    binder.GetMediaPlayerService().Next();
 				Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
 				intent.setAction("ru.netvoxlab.ownradio.action.NEXT");
 				startService(intent);
-//                if(binder.GetMediaPlayerService().player != null)
-//                    binder.GetMediaPlayerService().PlayNext();
 			}
 		}));
 	}
@@ -120,6 +130,9 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public void onStart() {
 		super.onStart();
+
+
+
 
 		TextView textVersionName = (TextView) findViewById(R.id.versionName);
 		TextView textDeviceID = (TextView) findViewById(R.id.deviceID);
@@ -160,11 +173,29 @@ public class MainActivity extends AppCompatActivity {
 		textDeviceID.setText("Device ID: " + DeviceId);
 		textUserID.setText("User ID: " + UserId);
 	}
+//
+//	@Override
+//	public void onStop() {
+////		super.onStop();
+//	}
 
 	@Override
-	public void onStop() {
-		super.onStop();
-
+	public void onDestroy(){
+		try {
+			unregisterReceiver(headSetReceiver);
+			unregisterReceiver(remoteControlReceiver);
+		} catch (Exception ex) {
+			Log.e(TAG, ex.getLocalizedMessage());
+		}
+		binder.GetMediaPlayerService().SaveLastPosition();
+		binder.GetMediaPlayerService().StopNotification();
+//				unbindService(mediaPlayerServiceConnection);
+		stopService(new Intent(this, MediaPlayerService.class));
+//                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
+//                intent.setAction("ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION");
+//                startService(intent);
+		android.os.Process.killProcess(android.os.Process.myPid());
+		super.onDestroy();
 	}
 
 	@Override
@@ -191,7 +222,10 @@ public class MainActivity extends AppCompatActivity {
 				} catch (Exception ex) {
 					Log.e(TAG, ex.getLocalizedMessage());
 				}
-//                stopService(new Intent(this, MediaPlayerService.class));
+				binder.GetMediaPlayerService().SaveLastPosition();
+				binder.GetMediaPlayerService().StopNotification();
+//				unbindService(mediaPlayerServiceConnection);
+                stopService(new Intent(this, MediaPlayerService.class));
 //                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
 //                intent.setAction("ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION");
 //                startService(intent);

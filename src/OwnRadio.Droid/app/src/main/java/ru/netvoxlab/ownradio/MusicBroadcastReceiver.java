@@ -40,7 +40,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 
 		if (intent.getAction() == AudioManager.ACTION_AUDIO_BECOMING_NOISY)
 			//сигнал остановки сервиса
-			action = MediaPlayerService.ActionStop;
+			action = MediaPlayerService.ActionPause;
 
 		Intent intent1 = new Intent(context, MediaPlayerService.class);
 		intent1.setAction(action);

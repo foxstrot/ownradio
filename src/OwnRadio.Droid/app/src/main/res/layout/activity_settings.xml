@@ -1,100 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/activity_settings"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="ru.netvoxlab.ownradio.SettingsActivity">
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/activity_settings"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	android:paddingBottom="@dimen/activity_vertical_margin"
+	android:paddingLeft="@dimen/activity_horizontal_margin"
+	android:paddingRight="@dimen/activity_horizontal_margin"
+	android:paddingTop="@dimen/activity_vertical_margin"
+	tools:context="ru.netvoxlab.ownradio.SettingsActivity">
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/linearLayout2">
-        <TextView
-            android:text="Count track to download"
-            android:id="@+id/textViewCountTrackToCache"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <EditText
-            android:text="10"
-            android:inputType="number"
-            android:digits="0123456789"
-            android:hint="Enter count track to download"
-            android:id="@+id/editTextCountTrackToDownload"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
+	<LinearLayout
+		android:id="@+id/linearLayout2"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal">
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/linearLayout3">
-        <TextView
-            android:text="Max cache size (MB): "
-            android:id="@+id/maxCacheSize"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <EditText
-            android:text="100"
-            android:inputType="number"
-            android:digits="0123456789"
-            android:hint="Enter max cache size"
-            android:id="@+id/editTextMaxCacheSize"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
+		<TextView
+			android:id="@+id/textViewCountTrackToCache"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="Count track to download" />
 
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/linearLayout4">
-        <Button
-            android:text="Download tracks"
-            android:id="@+id/btnDownloadTrackToCache"
-            android:layout_weight="1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        <Button
-            android:text="Clear cache"
-            android:id="@+id/btnClearCache"
-            android:layout_weight="1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-        </LinearLayout>
-    <TextView
-        android:text="The count of local track: "
-        android:id="@+id/textViewLocalTrackCount"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:text="Cache size: "
-        android:id="@+id/textViewCurrentCacheSize"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-    <TextView
-        android:id="@+id/textViewInfo2"
-        android:layout_weight="1"
-        android:gravity="bottom"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-    <EditText
-        android:id="@+id/editTextUserID"
-        android:hint="Enter new user ID, if you want merge it"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom" />
-    <Button
-        android:text="Merge users ID"
-        android:id="@+id/btnMergeUsers"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom" />
+		<EditText
+			android:id="@+id/editTextCountTrackToDownload"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:digits="0123456789"
+			android:hint="Enter count track to download"
+			android:inputType="number"
+			android:text="10" />
+	</LinearLayout>
+
+	<LinearLayout
+		android:id="@+id/linearLayout3"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal">
+
+		<TextView
+			android:id="@+id/maxCacheSize"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="Max cache size (MB): " />
+
+		<EditText
+			android:id="@+id/editTextMaxCacheSize"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:digits="0123456789"
+			android:hint="Enter max cache size"
+			android:inputType="number"
+			android:text="100" />
+	</LinearLayout>
+
+	<LinearLayout
+		android:id="@+id/linearLayout4"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal">
+
+		<Button
+			android:id="@+id/btnDownloadTrackToCache"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:text="Download tracks" />
+
+		<Button
+			android:id="@+id/btnClearCache"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:text="Clear cache" />
+	</LinearLayout>
+
+	<TextView
+		android:id="@+id/textViewLocalTrackCount"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="The count of local track: " />
+
+	<TextView
+		android:id="@+id/textViewCurrentCacheSize"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="Cache size: " />
+
+	<TextView
+		android:id="@+id/textViewInfo2"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_weight="1"
+		android:gravity="bottom" />
+
+	<EditText
+		android:id="@+id/editTextUserID"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_gravity="bottom"
+		android:hint="Enter new user ID, if you want merge it" />
+
+	<Button
+		android:id="@+id/btnMergeUsers"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_gravity="bottom"
+		android:text="Merge users ID" />
 </LinearLayout>

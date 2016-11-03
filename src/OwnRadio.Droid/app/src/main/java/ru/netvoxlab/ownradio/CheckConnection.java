@@ -15,28 +15,28 @@ public class CheckConnection {
 		ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(context.CONNECTIVITY_SERVICE);
 		NetworkInfo wifiInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
-//        if (!wifiInfo.isConnected()) {
-//            Toast.makeText(context, "Wifi disconnected", Toast.LENGTH_SHORT).show();
-////            Log.d("Wi-Fi", "Wifi disconnected.");
-////            AlertDialog.Builder builder = new AlertDialog.Builder(context.getApplicationContext());
-////            builder.setTitle("")
-////                    .setMessage("Wifi disconnected.")
-////                    .setCancelable(true)
-////                    .setNegativeButton("OK",
-////                            new DialogInterface.OnClickListener() {
-////                                @Override
-////                                public void onClick(DialogInterface dialogInterface, int i) {
-////                                    dialogInterface.cancel();
-////                                }
-////                            });
-////            AlertDialog alert = builder.create();
-////            try {alert.show();    }catch(Exception ex){
-////                ex.getLocalizedMessage();
-////            }
-//
-//            return false;
-//        }
-//        else
+        if (!wifiInfo.isConnected()) {
+            Toast.makeText(context, "Wifi disconnected", Toast.LENGTH_SHORT).show();
+//            Log.d("Wi-Fi", "Wifi disconnected.");
+//            AlertDialog.Builder builder = new AlertDialog.Builder(context.getApplicationContext());
+//            builder.setTitle("")
+//                    .setMessage("Wifi disconnected.")
+//                    .setCancelable(true)
+//                    .setNegativeButton("OK",
+//                            new DialogInterface.OnClickListener() {
+//                                @Override
+//                                public void onClick(DialogInterface dialogInterface, int i) {
+//                                    dialogInterface.cancel();
+//                                }
+//                            });
+//            AlertDialog alert = builder.create();
+//            try {alert.show();    }catch(Exception ex){
+//                ex.getLocalizedMessage();
+//            }
+
+            return false;
+        }
+        else
 		return true;
 	}
 

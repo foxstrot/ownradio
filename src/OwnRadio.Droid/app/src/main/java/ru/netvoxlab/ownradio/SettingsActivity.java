@@ -1,12 +1,16 @@
 package ru.netvoxlab.ownradio;
 
+import android.content.BroadcastReceiver;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -25,12 +29,15 @@ public class SettingsActivity extends AppCompatActivity {
 	TextView textViewCurrentCacheSize;
 	SharedPreferences sp;
 	TrackDataAccess trackDataAccess;
+	final String TAG = "ownRadio";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_settings);
 		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+		setTitle(getResources().getString(R.string.app_name) + " : " + getLocalClassName().replace("Activity",""));
 
 		trackDataAccess = new TrackDataAccess(getApplicationContext());
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
@@ -172,10 +179,10 @@ public class SettingsActivity extends AppCompatActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 			case android.R.id.home:
-//                Intent intent = new Intent(this, MainActivity.class);
-//                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-//                NavUtils.navigateUpTo(SettingsActivity.this, intent);//.navigateUpFromSameTask(this);
-				finish();
+                Intent intent = new Intent(this, MainActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                NavUtils.navigateUpTo(SettingsActivity.this, intent);//.navigateUpFromSameTask(this);
+//				finish();
 				return true;
 
 			case R.id.action_settings:
@@ -183,7 +190,23 @@ public class SettingsActivity extends AppCompatActivity {
 				return true;
 
 			case R.id.action_exit:
-				System.exit(0);
+				try {
+					BroadcastReceiver headSetReceiver = new MusicBroadcastReceiver();
+					BroadcastReceiver remoteControlReceiver = new RemoteControlReceiver();
+					unregisterReceiver(headSetReceiver);
+					unregisterReceiver(remoteControlReceiver);
+				} catch (Exception ex) {
+					Log.e(TAG, ex.getLocalizedMessage());
+				}
+//				binder.GetMediaPlayerService().SaveLastPosition();
+//				binder.GetMediaPlayerService().StopNotification();
+//				unbindService(mediaPlayerServiceConnection);
+				stopService(new Intent(this, MediaPlayerService.class));
+//                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
+//                intent.setAction("ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION");
+//                startService(intent);
+
+				android.os.Process.killProcess(android.os.Process.myPid());
 				return true;
 		}
 		return super.onOptionsItemSelected(item);
