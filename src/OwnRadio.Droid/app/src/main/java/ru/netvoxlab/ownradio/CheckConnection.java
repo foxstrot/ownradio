@@ -1,11 +1,8 @@
 package ru.netvoxlab.ownradio;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -14,9 +11,9 @@ import android.widget.Toast;
 
 public class CheckConnection {
 
-    public boolean CheckWifiConnection(Context context){
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(context.CONNECTIVITY_SERVICE);
-        NetworkInfo wifiInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+	public boolean CheckWifiConnection(Context context) {
+		ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(context.CONNECTIVITY_SERVICE);
+		NetworkInfo wifiInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
 //        if (!wifiInfo.isConnected()) {
 //            Toast.makeText(context, "Wifi disconnected", Toast.LENGTH_SHORT).show();
@@ -40,18 +37,17 @@ public class CheckConnection {
 //            return false;
 //        }
 //        else
-            return true;
-    }
+		return true;
+	}
 
-    public boolean CheckInetConnection(Context context){
-        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(context.CONNECTIVITY_SERVICE);
-        NetworkInfo inetInfo = connectivityManager.getActiveNetworkInfo();
+	public boolean CheckInetConnection(Context context) {
+		ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(context.CONNECTIVITY_SERVICE);
+		NetworkInfo inetInfo = connectivityManager.getActiveNetworkInfo();
 
-        if (!inetInfo.isConnected()) {
-            Toast.makeText(context, "Internet disconnected", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-        else
-            return true;
-    }
+		if (!inetInfo.isConnected()) {
+			Toast.makeText(context, "Internet disconnected", Toast.LENGTH_SHORT).show();
+			return false;
+		} else
+			return true;
+	}
 }
