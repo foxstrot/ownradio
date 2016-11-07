@@ -46,5 +46,17 @@ namespace OwnRadio.Client.Desktop.Properties {
                 this["ServiceUri"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("83886080")]
+        public int MaxTrackSize {
+            get {
+                return ((int)(this["MaxTrackSize"]));
+            }
+            set {
+                this["MaxTrackSize"] = value;
+            }
+        }
     }
 }

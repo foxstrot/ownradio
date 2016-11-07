@@ -8,5 +8,8 @@
     <Setting Name="ServiceUri" Type="System.String" Scope="User">
       <Value Profile="(Default)">http://ownradio.ru/api/</Value>
     </Setting>
+    <Setting Name="MaxTrackSize" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">83886080</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -15,17 +18,20 @@ namespace OwnRadio.Client.Desktop.ViewModel
     public class ViewModelUploader : DependencyObject
     {
         public UploadCommand UploadCommand { get; set; }
-        
-        public bool IsUploading
+		public ContinueUploadCommand ContinueUploadCommand { get; set; }
+		public HideInfoCommand HideInfoCommand { get; set; }
+		public ShowInfoCommand ShowInfoCommand { get; set; }
+
+		public bool IsUploading
         {
             get { return (bool)GetValue(IsUploadingProperty); }
-            set { SetValue(IsUploadingProperty, value); }
+	        set { SetValue(IsUploadingProperty, value); }
         }
-
+		
         public static readonly DependencyProperty IsUploadingProperty =
             DependencyProperty.Register("IsUploading", typeof(bool), typeof(ViewModelUploader), new PropertyMetadata(false));
 		
-		public bool IsUploaded
+	    public bool IsUploaded
 		{
 			get { return (bool)GetValue(IsUploadedProperty); }
 			set { SetValue(IsUploadedProperty, value); }
@@ -50,23 +56,35 @@ namespace OwnRadio.Client.Desktop.ViewModel
 		public static readonly DependencyProperty MessageProperty =
 			DependencyProperty.Register("Message", typeof(string), typeof(ViewModelUploader), new PropertyMetadata(""));
 		
-		private DataAccessLayer dal;
-        private List<MusicFile> uploadQueue;
+		public string Info
+		{
+			get { return (string)GetValue(InfoProperty); }
+			set { SetValue(InfoProperty, value); }
+		}
+		public static readonly DependencyProperty InfoProperty =
+			DependencyProperty.Register("Info", typeof(string), typeof(ViewModelUploader), new PropertyMetadata("Collapsed"));
+		
+		private readonly DataAccessLayer _dal;
+		
+		public ObservableCollection<MusicFile> UploadQueue { get; set; }
         
         public ViewModelUploader()
         {
-            this.UploadCommand = new UploadCommand(this);
-
-            try
+			UploadCommand = new UploadCommand(this);
+			ContinueUploadCommand = new ContinueUploadCommand(this);
+			HideInfoCommand = new HideInfoCommand(this);
+			ShowInfoCommand = new ShowInfoCommand(this);
+			
+			try
             {
-                dal = new DataAccessLayer();
-                uploadQueue = dal.GetNotUploaded();
+                _dal = new DataAccessLayer();
+                UploadQueue = _dal.GetNotUploaded();
             }
             catch (Exception ex)
 			{
 				ShowMessage(ex.Message);
 			}
-        }
+		}
 
         public void GetQueue(string path)
         {
@@ -79,16 +97,23 @@ namespace OwnRadio.Client.Desktop.ViewModel
 
                 foreach (var file in filenames)
                 {
+					var info = new FileInfo(file);
+	                if (info.Length > Properties.Settings.Default.MaxTrackSize)
+	                {
+						System.Windows.MessageBox.Show($"{file} exceeds maximum size - {Properties.Settings.Default.MaxTrackSize} bytes");
+						continue;
+	                }
+
                     var musicFile = new MusicFile
                     {
-                        fileName = Path.GetFileName(file),
-                        filePath = Path.GetDirectoryName(file),
-                        fileGuid = Guid.NewGuid()
+                        FileName = Path.GetFileName(file),
+                        FilePath = Path.GetDirectoryName(file),
+                        FileGuid = Guid.NewGuid()
                     };
 
-                    if (dal.AddToQueue(musicFile) > 0)
+                    if (_dal.AddToQueue(musicFile) > 0)
                     {
-                        uploadQueue.Add(musicFile);
+                        UploadQueue.Add(musicFile);
                     }
                 }
             }
@@ -119,57 +144,69 @@ namespace OwnRadio.Client.Desktop.ViewModel
 
         public async void UploadFiles()
         {
-            int queued = uploadQueue.Count(s => !s.uploaded);
+            int queued = UploadQueue.Count(s => !s.Uploaded);
             int uploaded = 0;
 			ShowMessage("Uploading..");
 			Status = $"Uploaded: {uploaded}/{queued}";
-            IsUploading = true;
-	        IsUploaded = false;
 
-            try
+			SetCurrentValue(IsUploadedProperty, false);
+			SetCurrentValue(IsUploadingProperty, true);
+			SetCurrentValue(InfoProperty, "Visible");
+
+			try
             {
-	            foreach (var musicFile in uploadQueue.Where(s => !s.uploaded))
+	            foreach (var musicFile in UploadQueue.Where(s => !s.Uploaded))
                 {
-                    var fullFileName = musicFile.filePath + "\\" + musicFile.fileName;
+	                if (await IsExist(musicFile.FileGuid))
+	                {
+						_dal.MarkAsUploaded(musicFile);
+						Status = $"Uploaded: {queued - UploadQueue.Count(s => !s.Uploaded)}/{queued}";
+						++uploaded;
+						continue;
+	                }
+					
+					var fullFileName = musicFile.FilePath + "\\" + musicFile.FileName;
                     
                     var fileStream = File.Open(fullFileName, FileMode.Open);
-                    byte[] byteArray = new byte[fileStream.Length];
+                    var byteArray = new byte[fileStream.Length];
                     fileStream.Read(byteArray, 0, (int)fileStream.Length);
-                    
-                    HttpClient httpClient = new HttpClient();
-                    MultipartFormDataContent form = new MultipartFormDataContent();
-                    
-                    form.Headers.Add("userId", ConfigurationManager.AppSettings["UserId"]);
-                    form.Add(new StringContent(musicFile.fileGuid.ToString()), "fileGuid");
-                    form.Add(new StringContent(musicFile.fileName), "fileName");
-                    form.Add(new StringContent(musicFile.filePath), "filePath");
-                    form.Add(new StringContent(ConfigurationManager.AppSettings["UserId"]), "userId");
-                    form.Add(new ByteArrayContent(byteArray, 0, byteArray.Count()), "musicFile", musicFile.fileGuid + ".mp3");
+                    fileStream.Close();
 					
-					HttpResponseMessage response = await httpClient.PostAsync(@"http://ownradio.ru/api/upload", form);
-                    
-                    response.EnsureSuccessStatusCode();
+                    var httpClient = new HttpClient();
+	                var form = new MultipartFormDataContent
+	                {
+		                {new StringContent(musicFile.FileGuid.ToString()), "fileGuid"},
+		                {new StringContent(musicFile.FileName), "fileName"},
+		                {new StringContent(musicFile.FilePath), "filePath"},
+		                {new StringContent(ConfigurationManager.AppSettings["DeviceId"]), "deviceId"},
+		                {new ByteArrayContent(byteArray, 0, byteArray.Count()), "musicFile", musicFile.FileGuid + ".mp3"}
+	                };
+					
+	                var response = await httpClient.PostAsync(@"http://java.ownradio.ru/api/v2/tracks", form);
+					
+					response.EnsureSuccessStatusCode();
                     httpClient.Dispose();
-                    
-                    dal.MarkAsUploaded(musicFile);
-					Status = $"Uploaded: {queued - uploadQueue.Count(s => !s.uploaded)}/{queued}";
+
+                    _dal.MarkAsUploaded(musicFile);
+					Status = $"Uploaded: {queued - UploadQueue.Count(s => !s.Uploaded)}/{queued}";
 	                ++uploaded;
                 }
-
-	            ShowMessage(uploaded > 0 ? "Files uploaded successfully" : "Empty queue");
+				
+				ShowMessage(uploaded > 0 ? "Files uploaded successfully" : "Empty queue");
             }
             catch (Exception ex)
             {
 				ShowMessage(ex.Message);
             }
-
-            IsUploading = false;
-			IsUploaded = true;
+			
+			SetCurrentValue(IsUploadedProperty, true);
+			SetCurrentValue(IsUploadingProperty, false);
 		}
         
         public void Upload()
         {
-            var dialog = new FolderBrowserDialog();
+			SetCurrentValue(InfoProperty, "Visible");
+			var dialog = new FolderBrowserDialog();
             if (dialog.ShowDialog() != DialogResult.OK)
             {
                 IsUploading = false;
@@ -181,9 +218,18 @@ namespace OwnRadio.Client.Desktop.ViewModel
 			UploadFiles();
         }
 
+	    private async Task<bool> IsExist(Guid guid)
+	    {
+			var httpClient = new HttpClient();
+
+		    var response = await httpClient.GetAsync($"http://java.ownradio.ru/api/v2/tracks/{guid}");
+
+		    return response.IsSuccessStatusCode;
+	    }
+
 	    private void ShowMessage(string message)
 	    {
 		    Message = message;
-	    }
+		}
     }
 }

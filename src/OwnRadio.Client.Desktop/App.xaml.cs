@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using OwnRadio.Client.Desktop.ViewModel;
 
 namespace OwnRadio.Client.Desktop
 {
@@ -15,10 +16,7 @@ namespace OwnRadio.Client.Desktop
     /// </summary>
     public partial class App : Application
     {
-        /// <summary>
-        /// WebClient object shared among whole app
-        /// </summary>
-        public static OwnRadioWebApiClient WebClient { get; private set; } = new OwnRadioWebApiClient();
+		public static OwnRadioRestClient RestClient { get; private set; } = new OwnRadioRestClient();
 
         /// <summary>
         /// Event handler fired then application started

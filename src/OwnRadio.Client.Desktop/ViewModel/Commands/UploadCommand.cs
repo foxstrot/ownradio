@@ -25,7 +25,7 @@ namespace OwnRadio.Client.Desktop.ViewModel.Commands
 
         public void Execute(object parameter)
         {
-            Uploader.Upload();
+			Uploader.Upload();
         }
     }
 }

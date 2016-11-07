@@ -76,6 +76,7 @@
     </Reference>
     <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -97,9 +98,13 @@
     <Compile Include="DataAccessLayer.cs" />
     <Compile Include="Model\Track.cs" />
     <Compile Include="MusicFile.cs" />
+    <Compile Include="OwnRadioRestClient.cs" />
+    <Compile Include="ViewModel\Commands\ContinueUploadCommand.cs" />
+    <Compile Include="ViewModel\Commands\HideInfoCommand.cs" />
     <Compile Include="ViewModel\Commands\NextCommand.cs" />
     <Compile Include="ViewModel\Commands\PauseCommand.cs" />
     <Compile Include="ViewModel\Commands\PlayCommand.cs" />
+    <Compile Include="ViewModel\Commands\ShowInfoCommand.cs" />
     <Compile Include="ViewModel\Commands\UploadCommand.cs" />
     <Compile Include="ViewModel\ViewModelPlayer.cs" />
     <Compile Include="ViewModel\ViewModelUploader.cs" />
@@ -117,7 +122,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="OwnRadioWebApiClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

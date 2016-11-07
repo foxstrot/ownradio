@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:OwnRadio.Client.Desktop"
+			 xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
              xmlns:viewModel="clr-namespace:OwnRadio.Client.Desktop.ViewModel"
              StartupUri="MainWindow.xaml" Startup="Application_Startup">
     <Application.Resources>
@@ -112,8 +113,7 @@
         </Style>
 
         <Style x:Key="UploadButton" TargetType="Button" BasedOn="{StaticResource MainButtonStyle}">
-			<Setter Property="IsEnabled" Value="{Binding IsUploaded, Source={StaticResource ViewModelUploader}}"></Setter>
-			<Setter Property="ToolTip" Value="Upload Ctrl+U"></Setter>
+			<Setter Property="IsEnabled" Value="{Binding IsUploaded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Source={StaticResource ViewModelUploader}}"></Setter>
 			<Setter Property="Command" Value="{Binding UploadCommand, Source={StaticResource ViewModelUploader}}"></Setter>
 			<Setter Property="Template">
 				<Setter.Value>
@@ -135,7 +135,8 @@
 					</ControlTemplate>
 				</Setter.Value>
 			</Setter>
-			<Style.Triggers>
+			<Setter Property="ToolTip" Value="Upload"></Setter>
+				<Style.Triggers>
 				<Trigger Property="IsEnabled" Value="False">
 					<Setter Property="Template">
 						<Setter.Value>
@@ -151,10 +152,10 @@
 						</Setter.Value>
 					</Setter>
 				</Trigger>
-			</Style.Triggers>
+				</Style.Triggers>
 		</Style>
 
-        <Style x:Key="TrackName" TargetType="TextBlock">
+		<Style x:Key="TrackName" TargetType="TextBlock">
             <Setter Property="Foreground" Value="WhiteSmoke"></Setter>
             <Setter Property="VerticalAlignment" Value="Center"></Setter>
             <Setter Property="HorizontalAlignment" Value="Center"></Setter>
@@ -176,3 +177,4 @@
         </Style>
     </Application.Resources>
 </Application>
+
