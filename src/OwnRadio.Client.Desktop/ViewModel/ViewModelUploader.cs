@@ -162,7 +162,6 @@ namespace OwnRadio.Client.Desktop.ViewModel
 						_dal.MarkAsUploaded(musicFile);
 						Status = $"Uploaded: {queued - UploadQueue.Count(s => !s.Uploaded)}/{queued}";
 						++uploaded;
-						System.Windows.MessageBox.Show("skip");
 						continue;
 	                }
 					
