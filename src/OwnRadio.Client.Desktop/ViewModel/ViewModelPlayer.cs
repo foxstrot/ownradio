@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using OwnRadio.Client.Desktop.Model;
@@ -51,9 +47,9 @@ namespace OwnRadio.Client.Desktop.ViewModel
                     Stop();
                     CurrentTrack.ListenEnd = DateTime.Now;
                     CurrentTrack.Status = Track.Statuses.Listened;
-                    App.WebClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
+					App.RestClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
 
-                    GetNextTrack();
+					GetNextTrack();
                     Play();
                 }
                 catch (Exception exception)
@@ -98,9 +94,10 @@ namespace OwnRadio.Client.Desktop.ViewModel
                 Stop();
                 CurrentTrack.ListenEnd = DateTime.Now;
                 CurrentTrack.Status = Track.Statuses.Skipped;
-                App.WebClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
 
-                GetNextTrack();
+				App.RestClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
+
+				GetNextTrack();
                 Play();
             }
             catch (Exception exception)
@@ -111,8 +108,8 @@ namespace OwnRadio.Client.Desktop.ViewModel
 
         private void GetNextTrack()
         {
-            CurrentTrack = App.WebClient.GetNextTrack(Properties.Settings.Default.DeviceId).Result;
-            Player.Source = CurrentTrack.Uri;
+			CurrentTrack = App.RestClient.GetNextTrack(Properties.Settings.Default.DeviceId).Result;
+			Player.Source = CurrentTrack.Uri;
         }
     }
 }

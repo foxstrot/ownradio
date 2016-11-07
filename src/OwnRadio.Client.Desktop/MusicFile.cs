@@ -1,17 +1,35 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace OwnRadio.Client.Desktop
 {
-	// Класс - информация о музыкальном файле
-	public class MusicFile
+	public class MusicFile : INotifyPropertyChanged
 	{
-		// Имя файла
-		public string fileName { get; set; }
-		// Путь к файлу
-		public string filePath { get; set; }
-		// Имя файла на сервере
-		public Guid fileGuid { get; set; }
-		// Флаг "Загружен на сервер"
-		public bool uploaded { get; set; }
+		private bool _uploaded;
+		public string FileName { get; set; }
+		public string FilePath { get; set; }
+
+		public string FullFilePath => $"{$"{FilePath}\\{FileName}"} - {(Uploaded ? "Загружено" : "В очереди")}";
+
+		public Guid FileGuid { get; set; }
+
+		public bool Uploaded
+		{
+			get { return _uploaded; }
+			set
+			{
+				_uploaded = value;
+				OnPropertyChanged();
+				OnPropertyChanged("FullFilePath");
+			}
+		}
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
 	}
 }

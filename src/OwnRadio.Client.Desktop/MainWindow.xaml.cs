@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Windows;
+using OwnRadio.Client.Desktop.ViewModel;
 
 namespace OwnRadio.Client.Desktop
 {

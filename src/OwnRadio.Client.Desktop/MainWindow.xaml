@@ -4,45 +4,79 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OwnRadio.Client.Desktop"
+        xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
         mc:Ignorable="d"
-        Title="Own radio" Height="40" SnapsToDevicePixels="True" Background="Transparent" Width="560" WindowStyle="None" AllowsTransparency="True" Icon="Resources/icon.png">
+        Title="Own radio" SnapsToDevicePixels="True" Background="Transparent" Width="560" WindowStyle="None" AllowsTransparency="True" Icon="Resources/icon.png">
 	<Window.InputBindings>
 		<KeyBinding Key="P" Modifiers="Control" Command="{Binding PlayCommand, Source={StaticResource ViewModelPlayer}}"/>
 		<KeyBinding Key="S" Modifiers="Control" Command="{Binding PauseCommand, Source={StaticResource ViewModelPlayer}}"/>
-		<KeyBinding Key="U" Modifiers="Control" Command="{Binding UploadCommand, Source={StaticResource ViewModelUploader}}"/>
 		<KeyBinding Key="N" Modifiers="Control" Command="{Binding NextCommand, Source={StaticResource ViewModelPlayer}}"/>
 	</Window.InputBindings>
-    <Border Name="OuterBorder" CornerRadius="20" Padding="5,0,5,0">
-        <Border.Background>
-            <LinearGradientBrush>
-                <GradientStop Color="#444444" Offset="0.1"></GradientStop>
-                <GradientStop Color="#666666" Offset="0.3"></GradientStop>
-                <GradientStop Color="#666666" Offset="0.8"></GradientStop>
-                <GradientStop Color="#444444" Offset="1"></GradientStop>
-            </LinearGradientBrush>
-        </Border.Background>
-        <StackPanel VerticalAlignment="Center">
-			<StackPanel Orientation="Horizontal">
-				<ToggleButton></ToggleButton>
-				<Button Style="{Binding Source={StaticResource NextButton}}"></Button>
-				<StackPanel Orientation="Vertical" Width="380" ClipToBounds="True" Margin="15,0,20,0">
-					<Canvas x:Name="Canvas" VerticalAlignment="Center" Height="20">
-						<TextBlock Style="{Binding Source={StaticResource TrackName}}"></TextBlock>
-					</Canvas>
-					<Grid>
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="Auto"></ColumnDefinition>
-							<ColumnDefinition Width="*"></ColumnDefinition>
-							<ColumnDefinition Width="Auto"></ColumnDefinition>
-						</Grid.ColumnDefinitions>
-						<TextBlock Grid.Column="0" Foreground="WhiteSmoke" FontSize="11" Text="OwnRadio"/>
-						<TextBlock Grid.Column="1" Foreground="WhiteSmoke" FontSize="11" Text="{Binding Message, Source={StaticResource ViewModelUploader}}" TextAlignment="Center"/>
-						<TextBlock Grid.Column="2" Foreground="WhiteSmoke" FontSize="11" Text="{Binding Status, Source={StaticResource ViewModelUploader}}" TextAlignment="Right"/>
-					</Grid>
+	<StackPanel>
+		<Border Name="OuterBorder" CornerRadius="20" Padding="5,0,5,0" Height="40">
+			<Border.Background>
+				<LinearGradientBrush>
+					<GradientStop Color="#444444" Offset="0.1"></GradientStop>
+					<GradientStop Color="#666666" Offset="0.3"></GradientStop>
+					<GradientStop Color="#666666" Offset="0.8"></GradientStop>
+					<GradientStop Color="#444444" Offset="1"></GradientStop>
+				</LinearGradientBrush>
+			</Border.Background>
+			<StackPanel VerticalAlignment="Center">
+				<StackPanel Orientation="Horizontal">
+					<ToggleButton></ToggleButton>
+					<Button Style="{Binding Source={StaticResource NextButton}}"></Button>
+					<StackPanel Orientation="Vertical" Width="380" ClipToBounds="True" Margin="15,0,20,0">
+						<Canvas x:Name="Canvas" VerticalAlignment="Center" Height="20">
+							<TextBlock Style="{Binding Source={StaticResource TrackName}}"></TextBlock>
+						</Canvas>
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="Auto"></ColumnDefinition>
+								<ColumnDefinition Width="*"></ColumnDefinition>
+								<ColumnDefinition Width="Auto"></ColumnDefinition>
+							</Grid.ColumnDefinitions>
+							<TextBlock Grid.Column="0" Foreground="WhiteSmoke" FontSize="11" Text="OwnRadio"/>
+							<TextBlock Grid.Column="2" Foreground="WhiteSmoke" FontSize="11" Cursor="Hand"
+									   Text="{Binding Status, Source={StaticResource ViewModelUploader}}" TextAlignment="Right">
+								<i:Interaction.Triggers>
+									<i:EventTrigger EventName="MouseLeftButtonDown">
+										<i:InvokeCommandAction Command="{Binding ShowInfoCommand, Source={StaticResource ViewModelUploader}}"/>
+									</i:EventTrigger>
+								</i:Interaction.Triggers>
+							</TextBlock>
+						</Grid>
+					</StackPanel>
+					<Button Name="BtnUpload" Style="{Binding Source={StaticResource UploadButton}}">
+						<i:Interaction.Triggers>
+							<i:EventTrigger EventName="Loaded">
+								<i:InvokeCommandAction Command="{Binding ContinueUploadCommand, Source={StaticResource ViewModelUploader}}"/>
+							</i:EventTrigger>
+						</i:Interaction.Triggers>
+					</Button>
+					<Button Name="BtnClose" Style="{Binding Source={StaticResource CloseButton}}"></Button>
 				</StackPanel>
-				<Button Name="BtnUpload" Style="{Binding Source={StaticResource UploadButton}}"></Button>
-				<Button Name="BtnClose" Style="{Binding Source={StaticResource CloseButton}}"></Button>
 			</StackPanel>
-		</StackPanel>
-    </Border>
+		</Border>
+		<Border Padding="20,15" CornerRadius="20" Background="LightGray" Margin="2" Visibility="{Binding Info, Source={StaticResource ViewModelUploader}}">
+			<StackPanel>
+				<TextBlock TextWrapping="Wrap" TextAlignment="Justify">Выберите директорию для загрузки mp3-файлов на сервер (включая поддиректории).
+					Максимальный размер загружаемого файла - 80 Мб</TextBlock>
+				<TextBlock Margin="0,5">Очередь загрузки</TextBlock>
+				<ListBox Height="100" Margin="0,5,0,0" Padding="0" ItemsSource="{Binding UploadQueue, Source={StaticResource ViewModelUploader}}">
+					<ListBox.ItemTemplate>
+						<DataTemplate>
+							<StackPanel Orientation="Horizontal">
+								<CheckBox IsEnabled="False" IsChecked="{Binding Uploaded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"></CheckBox>
+								<TextBlock Text="{Binding FullFilePath}" VerticalAlignment="Center"></TextBlock>
+							</StackPanel>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+				<TextBlock Text="{Binding Message, Source={StaticResource ViewModelUploader}}"></TextBlock>
+				<TextBlock Text="{Binding Status, Source={StaticResource ViewModelUploader}}"></TextBlock>
+				<Button Command="{Binding HideInfoCommand, Source={StaticResource ViewModelUploader}}">Hide</Button>
+			</StackPanel>
+		</Border>
+	</StackPanel>
 </Window>

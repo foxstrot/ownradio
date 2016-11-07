@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Configuration;
 using System.Data.SQLite;
 using System.Windows.Forms;
@@ -7,9 +8,9 @@ using System.IO;
 
 namespace OwnRadio.Client.Desktop
 {
-	class DataAccessLayer
+	internal class DataAccessLayer
 	{
-		SQLiteConnection connection;
+		private readonly SQLiteConnection _connection;
         
 		public DataAccessLayer()
 		{
@@ -21,17 +22,17 @@ namespace OwnRadio.Client.Desktop
 
 				if (File.Exists(databaseFileName))
 				{
-					connection = new SQLiteConnection(connectionString);
+					_connection = new SQLiteConnection(connectionString);
 				}
 				else
 				{
 					SQLiteConnection.CreateFile(databaseFileName);
-					connection = new SQLiteConnection(connectionString);
+					_connection = new SQLiteConnection(connectionString);
 
-					var command = new SQLiteCommand("CREATE TABLE \"Files\" ( `ID` TEXT NOT NULL, `FileName` TEXT NOT NULL, `SubPath` TEXT, `Uploaded` INTEGER DEFAULT 0, PRIMARY KEY(`ID`) );", connection);
-					connection.Open();
+					var command = new SQLiteCommand("CREATE TABLE \"Files\" ( `ID` TEXT NOT NULL, `FileName` TEXT NOT NULL, `SubPath` TEXT, `Uploaded` INTEGER DEFAULT 0, PRIMARY KEY(`ID`) );", _connection);
+					_connection.Open();
 					command.ExecuteNonQuery();
-					connection.Close();
+					_connection.Close();
 				}
 			}
 			catch(Exception ex)
@@ -42,23 +43,22 @@ namespace OwnRadio.Client.Desktop
         
 		public int AddToQueue(MusicFile musicFile)
 		{
-			int rowsAffected = 0;
+			var rowsAffected = 0;
 			try
 			{
-				connection.Open();
-				if (!Exist(musicFile.fileName))
+				_connection.Open();
+				if (!Exist(musicFile.FileName))
 				{
-					var commandSQL = string.Format("INSERT INTO Files (ID, FileName, SubPath) VALUES ($fileGuid, $fileName, $filePath)");
-
-					SQLiteCommand cmd = new SQLiteCommand(commandSQL, connection);
-					cmd.Parameters.AddWithValue("$fileGuid", musicFile.fileGuid.ToString());
-					cmd.Parameters.AddWithValue("$fileName", musicFile.fileName);
-					cmd.Parameters.AddWithValue("$filePath", musicFile.filePath);
+					var commandSql = string.Format("INSERT INTO Files (ID, FileName, SubPath) VALUES ($fileGuid, $fileName, $filePath)");
+					var cmd = new SQLiteCommand(commandSql, _connection);
+					cmd.Parameters.AddWithValue("$fileGuid", musicFile.FileGuid.ToString());
+					cmd.Parameters.AddWithValue("$fileName", musicFile.FileName);
+					cmd.Parameters.AddWithValue("$filePath", musicFile.FilePath);
 
 					rowsAffected += cmd.ExecuteNonQuery();
 				}
 
-				connection.Close();
+				_connection.Close();
 			}
 			catch (Exception ex)
             {
@@ -73,8 +73,8 @@ namespace OwnRadio.Client.Desktop
 			var count = 0;
 			try
 			{
-				var commandSQL = string.Format("SELECT count(*) FROM Files WHERE FileName LIKE $fileName");
-				SQLiteCommand cmd = new SQLiteCommand(commandSQL, connection);
+				var commandSql = string.Format("SELECT count(*) FROM Files WHERE FileName LIKE $fileName");
+				var cmd = new SQLiteCommand(commandSql, _connection);
 				cmd.Parameters.AddWithValue("$fileName", fileName);
 				var result = cmd.ExecuteScalar();
 				count = Convert.ToInt16(result);
@@ -87,31 +87,31 @@ namespace OwnRadio.Client.Desktop
 			return count > 0;
 		}
         
-		internal List<MusicFile> GetNotUploaded()
+		internal ObservableCollection<MusicFile> GetNotUploaded()
 		{
-			var files = new List<MusicFile>();
+			var files = new ObservableCollection<MusicFile>();
 
 			try
 			{
-				connection.Open();
-				var commandSQL = "SELECT * FROM Files";
-				SQLiteCommand cmd = new SQLiteCommand(commandSQL, connection);
+				_connection.Open();
+				var commandSql = "SELECT * FROM Files";
+				var cmd = new SQLiteCommand(commandSql, _connection);
 				var reader = cmd.ExecuteReader();
 
 				while (reader.Read())
 				{
 					var file = new MusicFile()
 					{
-						fileGuid = Guid.Parse((string)reader["ID"]),
-						fileName = (string)reader["FileName"],
-						filePath = (string)reader["SubPath"],
-						uploaded = (long)reader["Uploaded"] > 0
+						FileGuid = Guid.Parse((string)reader["ID"]),
+						FileName = (string)reader["FileName"],
+						FilePath = (string)reader["SubPath"],
+						Uploaded = (long)reader["Uploaded"] > 0
 					};
 
 					files.Add(file);
 				}
 
-				connection.Close();
+				_connection.Close();
 			}
 			catch (Exception ex)
             {
@@ -125,14 +125,14 @@ namespace OwnRadio.Client.Desktop
 			int count = 0;
 			try
 			{
-				connection.Open();
-				string commandSQL = string.Format("UPDATE Files SET Uploaded=1 WHERE ID LIKE $fileGuid");
-				SQLiteCommand cmd = new SQLiteCommand(commandSQL, connection);
-				cmd.Parameters.AddWithValue("$fileGuid", musicFile.fileGuid.ToString());
+				_connection.Open();
+				var commandSql = string.Format("UPDATE Files SET Uploaded=1 WHERE ID LIKE $fileGuid");
+				var cmd = new SQLiteCommand(commandSql, _connection);
+				cmd.Parameters.AddWithValue("$fileGuid", musicFile.FileGuid.ToString());
 				var result = cmd.ExecuteScalar();
-				connection.Close();
+				_connection.Close();
 
-				musicFile.uploaded = true;
+				musicFile.Uploaded = true;
 				count = Convert.ToInt16(result);
 			}
 			catch (Exception ex)
