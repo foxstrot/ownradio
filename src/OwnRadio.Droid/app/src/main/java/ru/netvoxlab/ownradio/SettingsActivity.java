@@ -130,9 +130,9 @@ public class SettingsActivity extends AppCompatActivity {
 			public void onClick(View view) {
 				EditText countTrackToDownload = (EditText) findViewById(R.id.editTextCountTrackToDownload);
 				int countTracks = Integer.parseInt(countTrackToDownload.getText().toString());
-				TrackToCache trackToCache = new TrackToCache();
+				TrackToCache trackToCache = new TrackToCache(getApplicationContext());
 
-				textSettingsInfo.append(trackToCache.SaveTrackToCache(getApplicationContext(), DeviceID.toString(), countTracks) + "\n");
+				textSettingsInfo.append(trackToCache.SaveTrackToCache(DeviceID.toString(), countTracks) + "\n");
 				textViewLocalTrackCount.setText("The count of local track: " + trackDataAccess.GetExistTracksCount() + ".");
 
 			}
@@ -164,7 +164,7 @@ public class SettingsActivity extends AppCompatActivity {
 		textViewLocalTrackCount = (TextView) findViewById(R.id.textViewLocalTrackCount);
 		textViewLocalTrackCount.setText("The count of local track: " + trackDataAccess.GetExistTracksCount() + ".");
 
-		TrackToCache trackToCache = new TrackToCache();
+		TrackToCache trackToCache = new TrackToCache(getApplicationContext());
 		textViewCurrentCacheSize = (TextView) findViewById(R.id.textViewCurrentCacheSize);
 		textViewCurrentCacheSize.setText("Cache size: " + trackToCache.FolderSize(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
 	}

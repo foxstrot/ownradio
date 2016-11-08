@@ -7,8 +7,6 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.media.AudioManager;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
@@ -58,12 +56,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	private Handler PlayingHandler;
 	private java.lang.Runnable PlayingHandlerRunnable;
 
-	SQLiteDatabase db;
-	Cursor userCursor;
-	TrackDB trackDB;
 	String trackURL;
 	TrackDataAccess trackDataAccess;
 	String DeviceID;
+	String UserID;
 	String TrackID;
 	Boolean FlagDownloadTrack = true;
 	final String TAG = "ownRadio";
@@ -82,11 +78,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 		wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
 		remoteComponentName = new ComponentName(getPackageName(), new RemoteControlReceiver().ComponentName());
-//		SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-//		startPosition = settings.getInt("LastPosition", 0);
-//		startTrackID = settings.getString("LastTrackID", "");
-//		if (settings.getBoolean("StatePlay", false))
-//			Play();
 	}
 
 	@Override
@@ -205,7 +196,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public int onStartCommand(Intent intent, int flags, int startId) {
 		trackDataAccess = new TrackDataAccess(getApplicationContext());
 		DeviceID = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID", "");
-
+		UserID = PreferenceManager.getDefaultSharedPreferences(this).getString("UserID", "");
 //        if((flags&START_FLAG_RETRY)==0){
 //        }
 //        else{
@@ -263,16 +254,26 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 		try {
 			//история прослушивания
-//                var DeviceID = Plugin.Settings.CrossSettings.Current.GetValueOrDefault<Guid>("DeviceID");
-			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String currentDateTime = dateFormat.format(new Date()); // Find todays date
-			ContentValues track = new ContentValues();
-			track.put("trackurl", trackURL);
-			track.put("datetimelastlisten", currentDateTime);
-			track.put("islisten", ListedTillTheEnd);
-			trackDataAccess.SetStatusTrack(track);
-			ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(getApplicationContext());
-			executeProcedurePostgreSQL.SetStatusTrack(DeviceID, TrackID, ListedTillTheEnd, currentDateTime);
+			//Добавление истории прослушивания в локальную БД
+			if(TrackID != null) {
+				SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+				String currentDateTime = dateFormat.format(new Date()); // Find todays date
+				ContentValues history = new ContentValues();
+				history.put("trackid", TrackID);
+				history.put("userid", UserID);
+				history.put("datetimelisten", currentDateTime);
+				history.put("islisten", ListedTillTheEnd);
+				history.put("method", "случайный");
+				HistoryDataAccess historyDataAccess = new HistoryDataAccess(getApplicationContext());
+				historyDataAccess.SaveHistoryRec(history);
+
+
+				ContentValues track = new ContentValues();
+				track.put("trackurl", trackURL);
+				track.put("datetimelastlisten", currentDateTime);
+				track.put("islisten", ListedTillTheEnd);
+				trackDataAccess.SetStatusTrack(track);
+			}
 		} catch (Exception ex) {
 		}
 		PlayNext();
@@ -362,8 +363,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				if (FlagDownloadTrack) {
 					startPosition = 0;
 					FlagDownloadTrack = false;
-					TrackToCache trackToCache = new TrackToCache();
-					trackToCache.SaveTrackToCache(getApplicationContext(), DeviceID, 2);
+					TrackToCache trackToCache = new TrackToCache(getApplicationContext());
+					trackToCache.SaveTrackToCache(DeviceID, 2);
 					Play();
 //                Log.d("MP", "DB is empty");
 //                return;
@@ -419,17 +420,36 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 		try {
 			//история прослушивания
-			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			String currentDateTime = dateFormat.format(new Date()); // Find todays date
-			ContentValues track = new ContentValues();
-			track.put("trackurl", trackURL);
-			track.put("datetimelastlisten", currentDateTime);
-			track.put("islisten", ListedTillTheEnd);
-			trackDataAccess.SetStatusTrack(track);
+			//Добавление истории прослушивания в локальную БД
+			if(TrackID != null) {
+				SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+				String currentDateTime = dateFormat.format(new Date()); // Find todays date
+				ContentValues history = new ContentValues();
+				history.put("trackid", TrackID);
+				history.put("userid", UserID);
+				history.put("datetimelisten", currentDateTime);
+				history.put("islisten", ListedTillTheEnd);
+				history.put("method", "случайный");
+				HistoryDataAccess historyDataAccess = new HistoryDataAccess(getApplicationContext());
+				historyDataAccess.SaveHistoryRec(history);
 
+
+				ContentValues track = new ContentValues();
+				track.put("id", TrackID);
+				track.put("datetimelastlisten", currentDateTime);
+				track.put("islisten", ListedTillTheEnd);
+				trackDataAccess.SetStatusTrack(track);
+			}
+			//Отправка на сервер накопленной истории прослушивания треков
 			ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(getApplicationContext());
-			executeProcedurePostgreSQL.SetStatusTrack(DeviceID, TrackID, ListedTillTheEnd, currentDateTime);
+			executeProcedurePostgreSQL.SendHistory(DeviceID);
+//			executeProcedurePostgreSQL.SetStatusTrack(DeviceID, TrackID, ListedTillTheEnd, currentDateTime);
+
+//			сканирование директории с треками для обнаружения и добавления треков, отсутствующих в бд
+//			new TrackToCache(getApplicationContext()).ScanTrackToCache();
+
 		} catch (Exception ex) {
+			ex.getLocalizedMessage();
 		}
 		PlayNext();
 	}
@@ -594,8 +614,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			player = null;
 		}
 		String deviceId = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID", "");
-		TrackToCache trackToCache = new TrackToCache();
-		trackToCache.SaveTrackToCache(getApplicationContext(), deviceId, 2);
+		TrackToCache trackToCache = new TrackToCache(getApplicationContext());
+		trackToCache.SaveTrackToCache(deviceId, 2);
 		UpdatePlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT);
 		Play();
 	}

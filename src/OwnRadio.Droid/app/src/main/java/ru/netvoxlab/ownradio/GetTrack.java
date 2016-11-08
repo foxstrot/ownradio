@@ -39,13 +39,14 @@ public class GetTrack {
 
 		try {
 			//Локальное имя трека
-			String fileName = "trackid_" + trackId + ".mp3";
+			String fileName = trackId + ".mp3";
 
 			downloadManager = (DownloadManager) context.getSystemService(context.DOWNLOAD_SERVICE);
 			context.registerReceiver(receiver, new IntentFilter(
 					DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 			DownloadManager.Request request = new DownloadManager.Request(
-					Uri.parse("http://ownradio.ru/api/track/GetTrackByID/" + trackId));
+					Uri.parse("http://java.ownradio.ru/api/v2/tracks/" + trackId));//Java
+//					Uri.parse("http://ownradio.ru/api/track/GetTrackByID/" + trackId));//Core
 			//Загрузка треков осуществляется только через Wi-Fi
 //            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
 			//Заголовок для вывода в уведомление

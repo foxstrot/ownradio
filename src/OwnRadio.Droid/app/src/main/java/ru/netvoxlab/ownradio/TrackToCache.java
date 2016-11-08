@@ -17,15 +17,18 @@ import java.io.File;
  */
 
 public class TrackToCache {
-	public TrackToCache() {
+	Context mContext;
+
+	public TrackToCache(Context context) {
+		mContext = context;
 	}
 
 //    public long GetAvailableSpace(Context context)
 
-	public String SaveTrackToCache(Context context, String deviceId, int trackCount) {
-		TrackDataAccess trackDataAccess = new TrackDataAccess(context);
+	public String SaveTrackToCache(String deviceId, int trackCount) {
+		TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
 		CheckConnection checkConnection = new CheckConnection();
-		boolean wifiConnect = checkConnection.CheckWifiConnection(context);
+		boolean wifiConnect = checkConnection.CheckWifiConnection(mContext);
 		if (!wifiConnect)
 			return "Подключение к интернету отсутствует";
 
@@ -34,14 +37,14 @@ public class TrackToCache {
 		long cacheSize = 0;
 		long availableSpace = 0;
 		long minAvailableSpace = 20 * 1048576;
-		File[] externalStoragesPaths = ContextCompat.getExternalFilesDirs(context, null);
+		File[] externalStoragesPaths = ContextCompat.getExternalFilesDirs(mContext, null);
 		File externalStoragePath;
 		if (externalStoragesPaths == null) {
 			return "Директория на карте памяти недоступна";
 		}
 		externalStoragePath = externalStoragesPaths[0];
 
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(mContext);
 
 		String maxCacheSize = sp.getString("MaxCacheSize", "");
 		if (maxCacheSize.isEmpty()) {
@@ -49,11 +52,11 @@ public class TrackToCache {
 			sp.edit().putString("MaxCacheSize", maxCacheSize).commit();
 		}
 
-		ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(context);
+		ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(mContext);
 //        GetTrack getTrack = new GetTrack();
 
 		for (int i = 0; i < trackCount; i++) {
-			cacheSize = FolderSize(context.getExternalFilesDir(Environment.DIRECTORY_MUSIC));
+			cacheSize = FolderSize(mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC));
 			if (Build.VERSION.SDK_INT <= 17) {
 				StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
 				availableSpace = (long) stat.getFreeBlocks() * (long) stat.getBlockSize();
@@ -72,7 +75,7 @@ public class TrackToCache {
 					if (trackDataAccess.CheckTrackExistInDB(trackId))
 						return "Трек был загружен ранее";
 					//Загружаем трек и сохраняем информацию о нем в БД
-					getTrack.GetTrackDM(context, trackId);
+					getTrack.GetTrackDM(mContext, trackId);
 
 				} catch (Exception ex) {
 					return ex.getLocalizedMessage();
@@ -81,11 +84,11 @@ public class TrackToCache {
 				ContentValues track = trackDataAccess.GetTrackForDel();
 				if (track != null) {
 					File file1 = new File(track.getAsString("trackurl"));
-					File file = new File(context.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + "/" + file1.getName());
+					File file = new File(mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + "/" + file1.getName());
 					if (file.exists()) {
 						if (file.delete()) {
 							trackDataAccess.DeleteTrackFromCache(track);
-							Toast.makeText(context, "File is deleted", Toast.LENGTH_SHORT).show();
+							Toast.makeText(mContext, "File is deleted", Toast.LENGTH_SHORT).show();
 						}
 					} else {
 						trackDataAccess.DeleteTrackFromCache(track);
@@ -114,5 +117,26 @@ public class TrackToCache {
 			return ex.hashCode();
 		}
 		return length;
+	}
+
+	public void ScanTrackToCache(){
+		try {
+			File directory = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+			if (directory.listFiles() != null) {
+				ContentValues track = new ContentValues();
+				for (File file : directory.listFiles()) {
+					if (file.isFile()) {
+						track.put("id", file.getName().substring(0,36));
+						track.put("trackurl", file.getAbsolutePath());
+						track.put("datetimelastlisten", "");
+						track.put("islisten", "0");
+						track.put("isexist", "1");
+						new TrackDataAccess(mContext).SaveTrack(track);
+					}
+				}
+			}
+		}catch (Exception ex){
+			ex.getLocalizedMessage();
+		}
 	}
 }
