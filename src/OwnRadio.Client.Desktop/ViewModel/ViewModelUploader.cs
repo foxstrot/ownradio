@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
+using OwnRadio.Client.Desktop.Properties;
 using OwnRadio.Client.Desktop.ViewModel.Commands;
 
 namespace OwnRadio.Client.Desktop.ViewModel
@@ -178,11 +179,11 @@ namespace OwnRadio.Client.Desktop.ViewModel
 						{new StringContent(musicFile.FileGuid.ToString()), "fileGuid"},
 						{new StringContent(musicFile.FileName), "fileName"},
 						{new StringContent(musicFile.FilePath), "filePath"},
-						{new StringContent(ConfigurationManager.AppSettings["DeviceId"]), "deviceId"},
+						{new StringContent(Settings.Default.DeviceId.ToString()), "deviceId"},
 						{new ByteArrayContent(byteArray, 0, byteArray.Count()), "musicFile", musicFile.FileGuid + ".mp3"}
 					};
 
-					var response = await httpClient.PostAsync(@"http://java.ownradio.ru/api/v2/tracks", form);
+					var response = await httpClient.PostAsync($"{Settings.Default.ServiceUri}api/v2/tracks", form);
 
 					response.EnsureSuccessStatusCode();
 					httpClient.Dispose();
@@ -222,7 +223,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
 		{
 			var httpClient = new HttpClient();
 
-			var response = await httpClient.GetAsync($"http://java.ownradio.ru/api/v2/tracks/{guid}");
+			var response = await httpClient.GetAsync($"{Settings.Default.ServiceUri}api/v2/tracks/{guid}");
 
 			return response.IsSuccessStatusCode;
 		}

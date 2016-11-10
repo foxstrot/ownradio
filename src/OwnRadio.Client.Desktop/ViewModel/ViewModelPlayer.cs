@@ -14,14 +14,14 @@ namespace OwnRadio.Client.Desktop.ViewModel
 		public NextCommand NextCommand { get; set; }
 		public PauseCommand PauseCommand { get; set; }
 
-		public Track CurrentTrack
+		public TrackInfo CurrentTrack
 		{
-			get { return (Track)GetValue(CurrentTrackProperty); }
+			get { return (TrackInfo)GetValue(CurrentTrackProperty); }
 			set { SetValue(CurrentTrackProperty, value); }
 		}
 
 		public static readonly DependencyProperty CurrentTrackProperty =
-			DependencyProperty.Register("CurrentTrack", typeof(Track), typeof(ViewModelPlayer), new PropertyMetadata(null));
+			DependencyProperty.Register("CurrentTrack", typeof(TrackInfo), typeof(ViewModelPlayer), new PropertyMetadata(null));
 
 		public bool IsRunning
 		{
@@ -40,14 +40,14 @@ namespace OwnRadio.Client.Desktop.ViewModel
 
 			Player.LoadedBehavior = MediaState.Manual;
 			Player.UnloadedBehavior = MediaState.Manual;
-			Player.MediaEnded += delegate
+			Player.MediaEnded += async delegate
 			{
 				try
 				{
 					Stop();
 					CurrentTrack.ListenEnd = DateTime.Now;
-					CurrentTrack.Status = Track.Statuses.Listened;
-					App.RestClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
+					CurrentTrack.Status = TrackInfo.Statuses.Listened;
+					await App.RestClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
 
 					GetNextTrack();
 					Play();
@@ -87,15 +87,15 @@ namespace OwnRadio.Client.Desktop.ViewModel
 			IsRunning = false;
 		}
 
-		public void Next()
+		public async void Next()
 		{
 			try
 			{
 				Stop();
 				CurrentTrack.ListenEnd = DateTime.Now;
-				CurrentTrack.Status = Track.Statuses.Skipped;
+				CurrentTrack.Status = TrackInfo.Statuses.Skipped;
 
-				App.RestClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
+				await App.RestClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
 
 				GetNextTrack();
 				Play();
@@ -108,8 +108,15 @@ namespace OwnRadio.Client.Desktop.ViewModel
 
 		private void GetNextTrack()
 		{
-			CurrentTrack = App.RestClient.GetNextTrack(Properties.Settings.Default.DeviceId).Result;
-			Player.Source = CurrentTrack.Uri;
+			try
+			{
+				CurrentTrack = App.RestClient.GetNextTrack(Properties.Settings.Default.DeviceId).Result;
+				Player.Source = CurrentTrack.Uri;
+			}
+			catch (Exception exception)
+			{
+				MessageBox.Show(exception.Message);
+			}
 		}
 	}
 }

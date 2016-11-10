@@ -5,7 +5,7 @@ namespace OwnRadio.Client.Desktop.Model
 	/// <summary>
 	/// Class keeps info about single track
 	/// </summary>
-	public class Track
+	public class TrackInfo
 	{
 		public enum Statuses
 		{
