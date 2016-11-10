@@ -8,24 +8,24 @@ using System.Windows.Input;
 
 namespace OwnRadio.Client.Desktop.ViewModel.Commands
 {
-    public class PlayCommand : ICommand
-    {
-        public event EventHandler CanExecuteChanged;
-        private ViewModelPlayer Player { get; set; }
+	public class PlayCommand : ICommand
+	{
+		public event EventHandler CanExecuteChanged;
+		private ViewModelPlayer Player { get; set; }
 
-        public PlayCommand(ViewModelPlayer player)
-        {
-            Player = player;
-        }
+		public PlayCommand(ViewModelPlayer player)
+		{
+			Player = player;
+		}
 
-        public bool CanExecute(object parameter)
-        {
-	        return true;
-        }
+		public bool CanExecute(object parameter)
+		{
+			return true;
+		}
 
-        public void Execute(object parameter)
-        {
-            Player.Play();
-        }
-    }
+		public void Execute(object parameter)
+		{
+			Player.Play();
+		}
+	}
 }

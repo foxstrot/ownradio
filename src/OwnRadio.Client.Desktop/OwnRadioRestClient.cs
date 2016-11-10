@@ -14,12 +14,12 @@ namespace OwnRadio.Client.Desktop
 	{
 		private readonly Uri _serviceUri = new Uri("http://java.ownradio.ru/");
 		private readonly HttpClient _httpClient = new HttpClient();
-		
+
 		public async Task<Track> GetNextTrack(Guid deviceId)
 		{
 			var response = await _httpClient.GetAsync(new Uri(_serviceUri, $"api/v2/tracks/{deviceId}/next"))
 						.ConfigureAwait(false);
-			
+
 			if (response.StatusCode != HttpStatusCode.OK)
 				throw new HttpRequestException($"Failed to get next track ID [{response.StatusCode}]");
 
@@ -29,7 +29,7 @@ namespace OwnRadio.Client.Desktop
 
 			return track;
 		}
-		
+
 		public async void SendStatus(Guid deviceId, Track track)
 		{
 			var form = new MultipartFormDataContent

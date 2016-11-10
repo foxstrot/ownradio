@@ -11,28 +11,28 @@ using OwnRadio.Client.Desktop.ViewModel;
 
 namespace OwnRadio.Client.Desktop
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
-    public partial class App : Application
-    {
+	/// <summary>
+	/// Interaction logic for App.xaml
+	/// </summary>
+	public partial class App : Application
+	{
 		public static OwnRadioRestClient RestClient { get; private set; } = new OwnRadioRestClient();
 
-        /// <summary>
-        /// Event handler fired then application started
-        /// Generate new DeviceID if needed and save it to user's configuartion
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void Application_Startup(object sender, StartupEventArgs e)
-        {
-            //
-            // Check if we already generate DeviceId
-            if(Desktop.Properties.Settings.Default.DeviceId == Guid.Empty)
-            {
-                Desktop.Properties.Settings.Default.DeviceId = Guid.NewGuid();
-                Desktop.Properties.Settings.Default.Save();
-            }
-        }
-    }
+		/// <summary>
+		/// Event handler fired then application started
+		/// Generate new DeviceID if needed and save it to user's configuartion
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		private void Application_Startup(object sender, StartupEventArgs e)
+		{
+			//
+			// Check if we already generate DeviceId
+			if (Desktop.Properties.Settings.Default.DeviceId == Guid.Empty)
+			{
+				Desktop.Properties.Settings.Default.DeviceId = Guid.NewGuid();
+				Desktop.Properties.Settings.Default.Save();
+			}
+		}
+	}
 }

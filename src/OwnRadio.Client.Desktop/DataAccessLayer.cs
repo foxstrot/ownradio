@@ -11,14 +11,14 @@ namespace OwnRadio.Client.Desktop
 	internal class DataAccessLayer
 	{
 		private readonly SQLiteConnection _connection;
-        
+
 		public DataAccessLayer()
 		{
 			try
 			{
-			    var connectionString = ConfigurationManager.ConnectionStrings["OwnradioDesktopClient"].ConnectionString;
-                
-                var databaseFileName = connectionString.Split('=')[1];
+				var connectionString = ConfigurationManager.ConnectionStrings["OwnradioDesktopClient"].ConnectionString;
+
+				var databaseFileName = connectionString.Split('=')[1];
 
 				if (File.Exists(databaseFileName))
 				{
@@ -35,12 +35,12 @@ namespace OwnRadio.Client.Desktop
 					_connection.Close();
 				}
 			}
-			catch(Exception ex)
+			catch (Exception ex)
 			{
 				MessageBox.Show(ex.Message, "Ошибка инициализации DAL");
 			}
 		}
-        
+
 		public int AddToQueue(MusicFile musicFile)
 		{
 			var rowsAffected = 0;
@@ -61,13 +61,13 @@ namespace OwnRadio.Client.Desktop
 				_connection.Close();
 			}
 			catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show(ex.Message);
-            }
+			{
+				System.Windows.MessageBox.Show(ex.Message);
+			}
 
 			return rowsAffected;
 		}
-        
+
 		private bool Exist(string fileName)
 		{
 			var count = 0;
@@ -80,13 +80,13 @@ namespace OwnRadio.Client.Desktop
 				count = Convert.ToInt16(result);
 			}
 			catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show(ex.Message);
-            }
+			{
+				System.Windows.MessageBox.Show(ex.Message);
+			}
 
 			return count > 0;
 		}
-        
+
 		internal ObservableCollection<MusicFile> GetNotUploaded()
 		{
 			var files = new ObservableCollection<MusicFile>();
@@ -114,12 +114,12 @@ namespace OwnRadio.Client.Desktop
 				_connection.Close();
 			}
 			catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show(ex.Message);
-            }
+			{
+				System.Windows.MessageBox.Show(ex.Message);
+			}
 			return files;
 		}
-        
+
 		internal bool MarkAsUploaded(MusicFile musicFile)
 		{
 			int count = 0;
@@ -136,9 +136,9 @@ namespace OwnRadio.Client.Desktop
 				count = Convert.ToInt16(result);
 			}
 			catch (Exception ex)
-            {
-                System.Windows.MessageBox.Show(ex.Message);
-            }
+			{
+				System.Windows.MessageBox.Show(ex.Message);
+			}
 
 			return count > 0;
 		}

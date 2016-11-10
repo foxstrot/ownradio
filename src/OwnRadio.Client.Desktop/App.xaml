@@ -1,17 +1,17 @@
 ﻿<Application x:Class="OwnRadio.Client.Desktop.App"
-             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:OwnRadio.Client.Desktop"
+			 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			 xmlns:local="clr-namespace:OwnRadio.Client.Desktop"
 			 xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
-             xmlns:viewModel="clr-namespace:OwnRadio.Client.Desktop.ViewModel"
-             StartupUri="MainWindow.xaml" Startup="Application_Startup">
-    <Application.Resources>
-        <viewModel:ViewModelPlayer x:Key="ViewModelPlayer"/>
-        <viewModel:ViewModelUploader x:Key="ViewModelUploader"/>
+			 xmlns:viewModel="clr-namespace:OwnRadio.Client.Desktop.ViewModel"
+			 StartupUri="MainWindow.xaml" Startup="Application_Startup">
+	<Application.Resources>
+		<viewModel:ViewModelPlayer x:Key="ViewModelPlayer"/>
+		<viewModel:ViewModelUploader x:Key="ViewModelUploader"/>
 
-        <Style x:Key="MainButtonStyle" TargetType="ButtonBase">
-            <Setter Property="Width" Value="30"></Setter>
-            <Setter Property="Height" Value="30"></Setter>
+		<Style x:Key="MainButtonStyle" TargetType="ButtonBase">
+			<Setter Property="Width" Value="30"></Setter>
+			<Setter Property="Height" Value="30"></Setter>
 			<Setter Property="Margin" Value="0,0,5,0"></Setter>
 		</Style>
 
@@ -66,53 +66,53 @@
 		<Style x:Key="NextButton" TargetType="Button" BasedOn="{StaticResource MainButtonStyle}">
 			<Setter Property="ToolTip" Value="Next Ctrl+N"></Setter>
 			<Setter Property="Command" Value="{Binding NextCommand, Source={StaticResource ViewModelPlayer}}"></Setter>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate>
-                        <Grid Cursor="Hand">
-                            <Ellipse>
-                                <Ellipse.Fill>
-                                    <LinearGradientBrush>
-                                        <GradientStop Color="CornflowerBlue" Offset="0.2"></GradientStop>
-                                        <GradientStop Color="RoyalBlue" Offset="0.9"></GradientStop>
-                                    </LinearGradientBrush>
-                                </Ellipse.Fill>
-                            </Ellipse>
-                            <StackPanel Orientation="Horizontal">
-                                <Polygon Fill="White" Points="5,0 5,10 13,5" Margin="3,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                <Polygon Fill="White" Points="5,0 5,10 13,5" Margin="-4,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate>
+						<Grid Cursor="Hand">
+							<Ellipse>
+								<Ellipse.Fill>
+									<LinearGradientBrush>
+										<GradientStop Color="CornflowerBlue" Offset="0.2"></GradientStop>
+										<GradientStop Color="RoyalBlue" Offset="0.9"></GradientStop>
+									</LinearGradientBrush>
+								</Ellipse.Fill>
+							</Ellipse>
+							<StackPanel Orientation="Horizontal">
+								<Polygon Fill="White" Points="5,0 5,10 13,5" Margin="3,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+								<Polygon Fill="White" Points="5,0 5,10 13,5" Margin="-4,0,0,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</StackPanel>
+						</Grid>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
 
 		<Style x:Key="CloseButton" TargetType="Button" BasedOn="{StaticResource MainButtonStyle}">
 			<Setter Property="ToolTip" Value="Close"></Setter>
 			<Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate>
-                        <Grid Cursor="Hand">
-                            <Ellipse>
-                                <Ellipse.Fill>
-                                    <LinearGradientBrush>
-                                        <GradientStop Color="CornflowerBlue" Offset="0.2"></GradientStop>
-                                        <GradientStop Color="RoyalBlue" Offset="0.9"></GradientStop>
-                                    </LinearGradientBrush>
-                                </Ellipse.Fill>
-                            </Ellipse>
-                            <Grid>
-                                <Polyline StrokeThickness="3" Points="2,2 12,12" Stroke="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                <Polyline StrokeThickness="3" Points="12,2 2,12" Stroke="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Grid>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+				<Setter.Value>
+					<ControlTemplate>
+						<Grid Cursor="Hand">
+							<Ellipse>
+								<Ellipse.Fill>
+									<LinearGradientBrush>
+										<GradientStop Color="CornflowerBlue" Offset="0.2"></GradientStop>
+										<GradientStop Color="RoyalBlue" Offset="0.9"></GradientStop>
+									</LinearGradientBrush>
+								</Ellipse.Fill>
+							</Ellipse>
+							<Grid>
+								<Polyline StrokeThickness="3" Points="2,2 12,12" Stroke="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+								<Polyline StrokeThickness="3" Points="12,2 2,12" Stroke="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+							</Grid>
+						</Grid>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+		</Style>
 
-        <Style x:Key="UploadButton" TargetType="Button" BasedOn="{StaticResource MainButtonStyle}">
+		<Style x:Key="UploadButton" TargetType="Button" BasedOn="{StaticResource MainButtonStyle}">
 			<Setter Property="IsEnabled" Value="{Binding IsUploaded, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Source={StaticResource ViewModelUploader}}"></Setter>
 			<Setter Property="Command" Value="{Binding UploadCommand, Source={StaticResource ViewModelUploader}}"></Setter>
 			<Setter Property="Template">
@@ -136,7 +136,7 @@
 				</Setter.Value>
 			</Setter>
 			<Setter Property="ToolTip" Value="Upload"></Setter>
-				<Style.Triggers>
+			<Style.Triggers>
 				<Trigger Property="IsEnabled" Value="False">
 					<Setter Property="Template">
 						<Setter.Value>
@@ -152,29 +152,29 @@
 						</Setter.Value>
 					</Setter>
 				</Trigger>
-				</Style.Triggers>
+			</Style.Triggers>
 		</Style>
 
 		<Style x:Key="TrackName" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="WhiteSmoke"></Setter>
-            <Setter Property="VerticalAlignment" Value="Center"></Setter>
-            <Setter Property="HorizontalAlignment" Value="Center"></Setter>
-            <Setter Property="FontSize" Value="14"></Setter>
-            <Setter Property="Text" Value="{Binding CurrentTrack.Id, Source={StaticResource ViewModelPlayer}}"></Setter>
-            <Style.Triggers>
-                <EventTrigger RoutedEvent="TextBlock.Loaded">
-                    <EventTrigger.Actions>
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetProperty="(Canvas.Left)" From="-300" To="400"
-                                                 Duration="0:0:10" RepeatBehavior="Forever">
-                                </DoubleAnimation>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </EventTrigger.Actions>
-                </EventTrigger>
-            </Style.Triggers>
-        </Style>
-    </Application.Resources>
+			<Setter Property="Foreground" Value="WhiteSmoke"></Setter>
+			<Setter Property="VerticalAlignment" Value="Center"></Setter>
+			<Setter Property="HorizontalAlignment" Value="Center"></Setter>
+			<Setter Property="FontSize" Value="14"></Setter>
+			<Setter Property="Text" Value="{Binding CurrentTrack.Id, Source={StaticResource ViewModelPlayer}}"></Setter>
+			<Style.Triggers>
+				<EventTrigger RoutedEvent="TextBlock.Loaded">
+					<EventTrigger.Actions>
+						<BeginStoryboard>
+							<Storyboard>
+								<DoubleAnimation Storyboard.TargetProperty="(Canvas.Left)" From="-300" To="400"
+												 Duration="0:0:10" RepeatBehavior="Forever">
+								</DoubleAnimation>
+							</Storyboard>
+						</BeginStoryboard>
+					</EventTrigger.Actions>
+				</EventTrigger>
+			</Style.Triggers>
+		</Style>
+	</Application.Resources>
 </Application>
 
