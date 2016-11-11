@@ -7,24 +7,24 @@ using System.Windows.Input;
 
 namespace OwnRadio.Client.Desktop.ViewModel.Commands
 {
-    public class PauseCommand : ICommand
-    {
-        public event EventHandler CanExecuteChanged;
-        private ViewModelPlayer Player { get; set; }
+	public class PauseCommand : ICommand
+	{
+		public event EventHandler CanExecuteChanged;
+		private ViewModelPlayer Player { get; set; }
 
-        public PauseCommand(ViewModelPlayer player)
-        {
-            Player = player;
-        }
+		public PauseCommand(ViewModelPlayer player)
+		{
+			Player = player;
+		}
 
-        public bool CanExecute(object parameter)
-        {
-	        return true;
-        }
+		public bool CanExecute(object parameter)
+		{
+			return true;
+		}
 
-        public void Execute(object parameter)
-        {
-            Player.Pause();
-        }
-    }
+		public void Execute(object parameter)
+		{
+			Player.Pause();
+		}
+	}
 }
