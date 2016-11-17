@@ -8,6 +8,7 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -133,7 +134,7 @@ public class ExecuteProcedurePostgreSQL {
 		}
 	}
 
-	public void SendHistory(String deviceId){
+	public void SendHistory(String deviceId, int count){
 		CheckConnection checkConnection = new CheckConnection();
 		boolean inetConnect = checkConnection.CheckInetConnection(MainContext);
 		if (!inetConnect)
@@ -143,15 +144,30 @@ public class ExecuteProcedurePostgreSQL {
 		HistoryDataAccess historyDataAccess = new HistoryDataAccess(MainContext);
 		try {
 
-			for( int rec = 0; rec < 3; rec++) {
+			for( int rec = 0; rec < count; rec++) {
 				ContentValues historyRec = historyDataAccess.GetHistoryRec();
 
 				if(historyRec == null) //Если неотправленной статистики нет - выходим
 					return;
 
+				if(historyRec.getAsString("trackid").equals("")){
+					historyRecID = historyRec.getAsString("id");
+					historyDataAccess.DeleteHistoryRec(historyRecID);
+					break;
+				}
+
 				result = -1;
 				URL urlRequest = new URL(serverPath + "histories/" + deviceId + "/" + historyRec.getAsString("trackid"));
-				result = new PostRequest(MainContext).execute(urlRequest.toString(), historyRec.getAsString("data")).get(1, TimeUnit.SECONDS);
+
+				try{
+					UUID.fromString(deviceId);
+					urlRequest = new URL(serverPath + "histories/" + deviceId + "/" + historyRec.getAsString("trackid"));
+
+				}catch (IllegalArgumentException ex){
+					urlRequest = new URL(serverPath + "histories/" + "11111111-1111-1111-1111-111111111111" + "/" + historyRec.getAsString("trackid"));
+
+				}
+				result = new PostRequest(MainContext).execute(urlRequest.toString(), historyRec.getAsString("data"), historyRec.getAsString("id")).get(1, TimeUnit.SECONDS);
 				if (result == HttpURLConnection.HTTP_OK) {
 					historyRecID = historyRec.getAsString("id");
 					historyDataAccess.DeleteHistoryRec(historyRecID);

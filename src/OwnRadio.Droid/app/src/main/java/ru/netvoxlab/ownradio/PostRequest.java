@@ -20,8 +20,11 @@ public class PostRequest extends AsyncTask<String, Void, Integer> {
 	public PostRequest(Context context){
 		mContext = context;
 	}
+	String recid;
 
+	@Override
 	protected Integer doInBackground(String... data) {
+		recid = data[2];//id строки истории
 		try {
 			URL urlRequest = new URL(data[0]);
 			HttpURLConnection urlConnection = (HttpURLConnection) urlRequest.openConnection();
@@ -41,15 +44,16 @@ public class PostRequest extends AsyncTask<String, Void, Integer> {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return ResponseCode;
+	return ResponseCode;
 	}
 
-	protected void onPostExecute(int result) {
+	@Override
+	protected void onPostExecute(Integer result) {
 		super.onPostExecute(result);
 //		HistoryDataAccess historyDataAccess = new HistoryDataAccess(mContext);
 //
 //		if(result == HttpURLConnection.HTTP_OK){
-//			historyDataAccess.DeleteHistoryRec();
+//			historyDataAccess.DeleteHistoryRec(recid);
 //		}
 	}
 }

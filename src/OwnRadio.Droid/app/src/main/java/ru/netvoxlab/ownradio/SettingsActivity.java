@@ -93,7 +93,7 @@ public class SettingsActivity extends AppCompatActivity {
 
 		editTextMaxCacheSize.setText(sp.getString("MaxCacheSize", ""));
 		if (editTextMaxCacheSize.getText().toString().isEmpty()) {
-			editTextMaxCacheSize.setText("100");
+			editTextMaxCacheSize.setText("1000");
 			sp.edit().putString("MaxCacheSize", editTextMaxCacheSize.getText().toString()).commit();
 		}
 
@@ -131,10 +131,11 @@ public class SettingsActivity extends AppCompatActivity {
 				EditText countTrackToDownload = (EditText) findViewById(R.id.editTextCountTrackToDownload);
 				int countTracks = Integer.parseInt(countTrackToDownload.getText().toString());
 				TrackToCache trackToCache = new TrackToCache(getApplicationContext());
-
+//
 				textSettingsInfo.append(trackToCache.SaveTrackToCache(DeviceID.toString(), countTracks) + "\n");
 				textViewLocalTrackCount.setText("The count of local track: " + trackDataAccess.GetExistTracksCount() + ".");
-
+//				/*String requestToAPI = */new RequestToAPI().DownloadTrackToCache("fa610ead-763e-4311-ab7a-4ae7f0ff9672");
+				/*textSettingsInfo.setText(requestToAPI);*/
 			}
 		});
 
@@ -151,6 +152,8 @@ public class SettingsActivity extends AppCompatActivity {
 				}
 				TrackDataAccess trackDataAccess = new TrackDataAccess(getApplicationContext());
 				trackDataAccess.CleanTrackTable();
+				HistoryDataAccess historyDataAccess = new HistoryDataAccess(getApplicationContext());
+				historyDataAccess.CleanHistoryTable();
 			}
 		});
 
@@ -185,9 +188,9 @@ public class SettingsActivity extends AppCompatActivity {
 //				finish();
 				return true;
 
-			case R.id.action_settings:
-//                startActivity(new Intent(this, SettingsActivity.class));
-				return true;
+//			case R.id.action_settings:
+////                startActivity(new Intent(this, SettingsActivity.class));
+//				return true;
 
 			case R.id.action_exit:
 				try {

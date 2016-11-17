@@ -83,6 +83,21 @@ public class TrackDataAccess {
 		return result;
 	}
 
+	public ContentValues GetPathById(String trackid) {
+		ContentValues result = new ContentValues();
+		db = trackDB.getReadableDatabase();
+		Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE id = ?", new String[]{String.valueOf(trackid)});
+		if (userCursor.moveToFirst()) {
+			result.put("id", userCursor.getString(0));
+			result.put("trackurl", userCursor.getString(1));
+		} else {
+			result = null;
+		}
+//        db.close();
+		userCursor.close();
+		return result;
+	}
+
 	public int GetExistTracksCount() {
 		int result;
 		db = trackDB.getReadableDatabase();

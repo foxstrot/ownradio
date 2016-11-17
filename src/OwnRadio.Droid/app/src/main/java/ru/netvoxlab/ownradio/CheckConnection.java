@@ -14,28 +14,35 @@ public class CheckConnection {
 	public boolean CheckWifiConnection(Context context) {
 		ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(context.CONNECTIVITY_SERVICE);
 		NetworkInfo wifiInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+		NetworkInfo inetInfo = connectivityManager.getActiveNetworkInfo();
 
-        if (!wifiInfo.isConnected()) {
-            Toast.makeText(context, "Wifi disconnected", Toast.LENGTH_SHORT).show();
-//            Log.d("Wi-Fi", "Wifi disconnected.");
-//            AlertDialog.Builder builder = new AlertDialog.Builder(context.getApplicationContext());
-//            builder.setTitle("")
-//                    .setMessage("Wifi disconnected.")
-//                    .setCancelable(true)
-//                    .setNegativeButton("OK",
-//                            new DialogInterface.OnClickListener() {
-//                                @Override
-//                                public void onClick(DialogInterface dialogInterface, int i) {
-//                                    dialogInterface.cancel();
-//                                }
-//                            });
-//            AlertDialog alert = builder.create();
-//            try {alert.show();    }catch(Exception ex){
-//                ex.getLocalizedMessage();
-//            }
+		if(inetInfo == null)
+			return false;
 
-            return false;
-        }
+		if (!inetInfo.isConnected())
+			return false;
+
+//        if (!wifiInfo.isConnected()) {
+//            Toast.makeText(context, "Wifi disconnected", Toast.LENGTH_SHORT).show();
+////            Log.d("Wi-Fi", "Wifi disconnected.");
+////            AlertDialog.Builder builder = new AlertDialog.Builder(context.getApplicationContext());
+////            builder.setTitle("")
+////                    .setMessage("Wifi disconnected.")
+////                    .setCancelable(true)
+////                    .setNegativeButton("OK",
+////                            new DialogInterface.OnClickListener() {
+////                                @Override
+////                                public void onClick(DialogInterface dialogInterface, int i) {
+////                                    dialogInterface.cancel();
+////                                }
+////                            });
+////            AlertDialog alert = builder.create();
+////            try {alert.show();    }catch(Exception ex){
+////                ex.getLocalizedMessage();
+////            }
+//
+//            return false;
+//        }
         else
 		return true;
 	}
@@ -43,6 +50,8 @@ public class CheckConnection {
 	public boolean CheckInetConnection(Context context) {
 		ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(context.CONNECTIVITY_SERVICE);
 		NetworkInfo inetInfo = connectivityManager.getActiveNetworkInfo();
+		if(inetInfo == null)
+			return false;
 
 		if (!inetInfo.isConnected()) {
 			Toast.makeText(context, "Internet disconnected", Toast.LENGTH_SHORT).show();

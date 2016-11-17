@@ -39,8 +39,8 @@ public class HistoryDataAccess {
 //			String result = "id=" + userCursor.getString(0);
 //			result += "&" + "trackid=" + userCursor.getString(1);
 //			result += "&" + "userid=" + userCursor.getString(2);
-			data =  "datetimelisten=" + userCursor.getString(3);
-			data += "&" + "islisten=" + userCursor.getString(4);
+			data =  "lastListen=" + userCursor.getString(3);
+			data += "&" + "isListen=" + userCursor.getString(4);
 			data += "&" + "method=" + userCursor.getString(5);
 
 			contentValues.put("id", userCursor.getString(0));
@@ -57,5 +57,10 @@ public class HistoryDataAccess {
 	public void DeleteHistoryRec(String id){
 		db = historyDB.getWritableDatabase();
 		db.delete(HistoryTableName, "id = ?", new String[]{id});
+	}
+
+	public void CleanHistoryTable(){
+		db = historyDB.getWritableDatabase();
+		db.execSQL("DELETE FROM " + HistoryTableName);
 	}
 }

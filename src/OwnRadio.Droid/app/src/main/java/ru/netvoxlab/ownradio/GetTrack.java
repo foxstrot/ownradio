@@ -10,7 +10,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Environment;
-import android.widget.Toast;
 
 import java.io.File;
 
@@ -49,6 +48,7 @@ public class GetTrack {
 //					Uri.parse("http://ownradio.ru/api/track/GetTrackByID/" + trackId));//Core
 			//Загрузка треков осуществляется только через Wi-Fi
 //            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
+			request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
 			//Заголовок для вывода в уведомление
 			request.setTitle(fileName);
 //            request.allowScanningByMediaScanner();
@@ -57,7 +57,7 @@ public class GetTrack {
 			downloadReference = downloadManager.enqueue(request);
 //                    trackURL = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getPath() + "/" + fileName;
 		} catch (Exception ex) {
-			Toast.makeText(context, ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+//			Toast.makeText(context, ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
 //            return -1;
 		}
 	}
@@ -97,6 +97,7 @@ public class GetTrack {
 						track.put("islisten", "0");
 						track.put("isexist", "1");
 						trackDataAccess.SaveTrack(track);
+
 					}
 				}
 			}

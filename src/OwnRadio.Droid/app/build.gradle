@@ -7,8 +7,8 @@ android {
 		applicationId "ru.netvoxlab.ownradio"
 		minSdkVersion 14
 		targetSdkVersion 25
-		versionCode 9
-		versionName "v2016.11.03"
+		versionCode 14
+		versionName "v2016.11.17"
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 	}
 	buildTypes {
@@ -17,6 +17,7 @@ android {
 			proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
 		}
 	}
+	sourceSets { main { res.srcDirs = ['src/main/res', 'src/main/res/xml'] } }
 }
 
 dependencies {
@@ -27,4 +28,7 @@ dependencies {
 	compile 'com.android.support:appcompat-v7:25.0.0'
 	testCompile 'junit:junit:4.12'
 	compile 'com.android.support.test.espresso:espresso-core:2.2.2'
+	// Retrofit & OkHttp
+	compile 'com.squareup.retrofit2:retrofit:2.1.0'
+	compile 'com.squareup.retrofit2:converter-gson:2.1.0'
 }

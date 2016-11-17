@@ -49,10 +49,10 @@
 			android:id="@+id/editTextMaxCacheSize"
 			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:digits="0123456789"
+			android:digits="0123456789."
 			android:hint="Enter max cache size"
-			android:inputType="number"
-			android:text="100" />
+			android:inputType="numberDecimal"
+			android:text="1000" />
 	</LinearLayout>
 
 	<LinearLayout

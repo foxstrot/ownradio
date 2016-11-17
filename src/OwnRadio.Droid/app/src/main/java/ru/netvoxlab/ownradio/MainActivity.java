@@ -2,6 +2,7 @@ package ru.netvoxlab.ownradio;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -9,18 +10,23 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NavUtils;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
@@ -38,14 +44,43 @@ public class MainActivity extends AppCompatActivity {
 	private MediaPlayerService.MediaPlayerServiceBinder binder;
 	MediaPlayerServiceConnection mediaPlayerServiceConnection;
 	private Intent mediaPlayerServiceIntent;
-
+	Button btnPlayPause;
+	Button btnNext;
 	TrackDB trackDB;
 	final String TAG = "ownRadio";
+//	BroadcastReceiver receiver;
+	private Handler handler = new Handler();
+	ProgressBar progressBar;
+
+
+
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+
+		ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBarPlayback);
+		IntentFilter filter = new IntentFilter("MY_ACTION");
+		registerReceiver(myReceiver, filter);
+
+//		receiver = new BroadcastReceiver() {
+//			@Override
+//			public void onReceive(Context context, Intent intent) {
+//				String s = intent.getStringExtra(MediaPlayerService.PlaybackState);
+//				if(s.equals("play"))
+//					btnPlayPause.setBackgroundResource(R.drawable.btn_play);
+//				if (s.equals("pause"))
+//					btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
+//			}
+//		};
+
+//		binder.GetMediaPlayerService().player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+//			@Override
+//			public void onCompletion(MediaPlayer mediaPlayer) {
+//				Toast.makeText(MainActivity.this, "on complete", Toast.LENGTH_LONG).show();
+//			}
+//		});
 
 		Intent iStatus = this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 		Intent iStatus2 = this.registerReceiver(remoteControlReceiver, new IntentFilter(Intent.ACTION_MEDIA_BUTTON));
@@ -64,6 +99,9 @@ public class MainActivity extends AppCompatActivity {
 		TextView textInfo = (TextView) findViewById(R.id.textViewInfo);
 		textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
+		final TextView textTrackID = (TextView) findViewById(R.id.trackID);
+
+
 //		Button btnPlayPause = (Button) findViewById(R.id.btnPlayPause);
 //		btnPlayPause.setOnClickListener(new View.OnClickListener() {
 //			@Override
@@ -81,45 +119,87 @@ public class MainActivity extends AppCompatActivity {
 //			}
 //		});
 
-		ImageButton btnPlay = (ImageButton) findViewById(R.id.imgBtnPlay);
-		btnPlay.setOnClickListener(new View.OnClickListener() {
+//		final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBarPlayback);
+
+		btnPlayPause = (Button) findViewById(R.id.btnPlayPause);
+		btnPlayPause.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				Log.d(TAG, "Press Play");
-//				if (!(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING))
-////					binder.GetMediaPlayerService().Pause();
-////				else
-//					binder.GetMediaPlayerService().Play();
-				Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
-				intent.setAction("ru.netvoxlab.ownradio.action.PLAY");
-				startService(intent);
+//				ProgressBar progressBarPlayback = (ProgressBar) findViewById(R.id.progressBarPlayback);
+//				ObjectAnimator anim = ObjectAnimator.ofInt(progressBarPlayback, "progress", 0, 100);
+//				anim.setDuration(15000);
+//				anim.setInterpolator(new DecelerateInterpolator());
+//				anim.start();
+				if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+				{
+					btnPlayPause.setBackgroundResource(R.drawable.btn_play);
+					binder.GetMediaPlayerService().Pause();
+				}
+				else {
+					btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
+					binder.GetMediaPlayerService().Play();
+				}
+				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
+
 			}
 		});
 
-		ImageButton btnPause = (ImageButton) findViewById(R.id.imgBtnPause);
-		btnPause.setOnClickListener((new View.OnClickListener() {
+		btnNext = (Button) findViewById(R.id.btnNext);
+		btnNext.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-//				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-//					binder.GetMediaPlayerService().Pause();
-				Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
-				intent.setAction("ru.netvoxlab.ownradio.action.PAUSE");
-				startService(intent);
+                if(binder.GetMediaPlayerService().player != null)
+                    binder.GetMediaPlayerService().Next();
+				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 			}
-		}));
+		});
 
-		ImageButton btnNext = (ImageButton) findViewById(R.id.imgBtnNext);
-		btnNext.setOnClickListener((new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-//                if(binder.GetMediaPlayerService().player != null)
-//                    binder.GetMediaPlayerService().Next();
-				Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
-				intent.setAction("ru.netvoxlab.ownradio.action.NEXT");
-				startService(intent);
-			}
-		}));
+
 	}
+
+	private BroadcastReceiver myReceiver = new BroadcastReceiver(){
+		@Override
+		public void onReceive(Context context, Intent intent){
+			if(progressBar == null)
+				progressBar = (ProgressBar) findViewById(R.id.progressBarPlayback);
+
+//			progressBar.setMax(10000);//binder.GetMediaPlayerService().GetDuration());
+////			int ola = intent.getIntExtra("PROGRESS", 0);
+//			progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
+////			Log.d("dddReceiver", String.valueOf(ola));
+
+
+			new Thread(new Runnable() {
+					@Override
+					public void run() {
+						int duration = binder.GetMediaPlayerService().GetDuration();
+						int currentPosition = 0;
+						progressBar.setMax(duration);
+						progressBar.setSecondaryProgress(duration);
+
+						while (currentPosition < duration) {
+							try {
+								Thread.sleep(1000);
+								currentPosition = binder.GetMediaPlayerService().GetPosition();
+							} catch (InterruptedException e) {
+								e.printStackTrace();
+							} catch (Exception e) {
+								e.getLocalizedMessage();
+							}
+
+							// Update the progress bar
+							handler.post(new Runnable() {
+								@Override
+								public void run() {
+									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
+								}
+							});
+						}
+					}
+				}).start();
+
+		}
+	};
 
 	private void InitilizeMedia() {
 		mediaPlayerServiceIntent = new Intent(this, MediaPlayerService.class);
@@ -131,13 +211,9 @@ public class MainActivity extends AppCompatActivity {
 	public void onStart() {
 		super.onStart();
 
-
-
-
 		TextView textVersionName = (TextView) findViewById(R.id.versionName);
 		TextView textDeviceID = (TextView) findViewById(R.id.deviceID);
 		TextView textUserID = (TextView) findViewById(R.id.userID);
-
 		try {
 			String info = this.getPackageManager().getPackageInfo(this.getPackageName(), PackageManager.GET_META_DATA).versionName;
 			textVersionName.setText("Version name: " + info);
@@ -172,12 +248,40 @@ public class MainActivity extends AppCompatActivity {
 		}
 		textDeviceID.setText("Device ID: " + DeviceId);
 		textUserID.setText("User ID: " + UserId);
+
+
+		TrackDataAccess trackDataAccess = new TrackDataAccess(this);
+		TrackToCache trackToCache = new TrackToCache(this);
+		TextView txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
+		txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
+		TextView txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
+		txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
+//		if (mediaPlayerServiceConnection != null) {
+//			InitilizeMedia();
+//			if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+//				btnPlayPause.setBackgroundResource(R.drawable.btn_play);
+//			else
+//				btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
+//		}
 	}
 //
 //	@Override
 //	public void onStop() {
 ////		super.onStop();
 //	}
+
+	@Override
+	public void onRestart(){
+
+//		if (mediaPlayerServiceConnection != null) {
+//			InitilizeMedia();
+			if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+				btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
+			else
+				btnPlayPause.setBackgroundResource(R.drawable.btn_play);
+//		}
+		super.onRestart();
+	}
 
 	@Override
 	public void onDestroy(){
@@ -211,9 +315,29 @@ public class MainActivity extends AppCompatActivity {
 				NavUtils.navigateUpFromSameTask(this);
 				return true;
 
-			case R.id.action_settings:
-				startActivity(new Intent(this, SettingsActivity.class));
-				return true;
+//			case R.id.action_settings:
+//				startActivity(new Intent(this, SettingsActivity.class));
+//				return true;
+
+			case R.id.clear_cache:
+				File dir = new File(this.getExternalFilesDir(Environment.DIRECTORY_MUSIC).getPath());
+				if (dir.isDirectory()) {
+					String[] children = dir.list();
+					for (int i = 0; i < children.length; i++) {
+						new File(dir, children[i]).delete();
+					}
+				}
+				TrackDataAccess trackDataAccess = new TrackDataAccess(this);
+				trackDataAccess.CleanTrackTable();
+				HistoryDataAccess historyDataAccess = new HistoryDataAccess(this);
+				historyDataAccess.CleanHistoryTable();
+
+				TrackToCache trackToCache = new TrackToCache(this);
+				TextView txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
+				txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
+				TextView txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
+				txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
+				break;
 
 			case R.id.action_exit:
 				try {
