@@ -53,6 +53,9 @@ public class MainActivity extends AppCompatActivity {
 	ProgressBar progressBar;
 
 
+	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
+	public static final String ActionTrackInfoUpdate = "ru.netvoxlab.ownradio.action.TRACK_INFO_UPDATE";
+	public static final String ActionButtonImgUpdate = "ru.netvoxlab.ownradio.action.BTN_PLAYPAUSE_IMG_UPDATE";
 
 
 	@Override
@@ -61,26 +64,11 @@ public class MainActivity extends AppCompatActivity {
 		setContentView(R.layout.activity_main);
 
 		ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBarPlayback);
-		IntentFilter filter = new IntentFilter("MY_ACTION");
+		IntentFilter filter = new IntentFilter();
+		filter.addAction(ActionProgressBarUpdate);
+		filter.addAction(ActionTrackInfoUpdate);
+		filter.addAction(ActionButtonImgUpdate);
 		registerReceiver(myReceiver, filter);
-
-//		receiver = new BroadcastReceiver() {
-//			@Override
-//			public void onReceive(Context context, Intent intent) {
-//				String s = intent.getStringExtra(MediaPlayerService.PlaybackState);
-//				if(s.equals("play"))
-//					btnPlayPause.setBackgroundResource(R.drawable.btn_play);
-//				if (s.equals("pause"))
-//					btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
-//			}
-//		};
-
-//		binder.GetMediaPlayerService().player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-//			@Override
-//			public void onCompletion(MediaPlayer mediaPlayer) {
-//				Toast.makeText(MainActivity.this, "on complete", Toast.LENGTH_LONG).show();
-//			}
-//		});
 
 		Intent iStatus = this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 		Intent iStatus2 = this.registerReceiver(remoteControlReceiver, new IntentFilter(Intent.ACTION_MEDIA_BUTTON));
@@ -101,42 +89,18 @@ public class MainActivity extends AppCompatActivity {
 
 		final TextView textTrackID = (TextView) findViewById(R.id.trackID);
 
-
-//		Button btnPlayPause = (Button) findViewById(R.id.btnPlayPause);
-//		btnPlayPause.setOnClickListener(new View.OnClickListener() {
-//			@Override
-//			public void onClick(View view) {
-//				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-//				{
-////					btnPlayPause.setActivated(true);
-//					binder.GetMediaPlayerService().Pause();
-//				}
-//				else
-//				{
-////					btnPlayPause.setActivated(true);
-//					binder.GetMediaPlayerService().Play();
-//				}
-//			}
-//		});
-
-//		final ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBarPlayback);
-
 		btnPlayPause = (Button) findViewById(R.id.btnPlayPause);
 		btnPlayPause.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-//				ProgressBar progressBarPlayback = (ProgressBar) findViewById(R.id.progressBarPlayback);
-//				ObjectAnimator anim = ObjectAnimator.ofInt(progressBarPlayback, "progress", 0, 100);
-//				anim.setDuration(15000);
-//				anim.setInterpolator(new DecelerateInterpolator());
-//				anim.start();
 				if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
 				{
 					btnPlayPause.setBackgroundResource(R.drawable.btn_play);
 					binder.GetMediaPlayerService().Pause();
 				}
 				else {
-					btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
+					if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 0)
+						btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
 					binder.GetMediaPlayerService().Play();
 				}
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
@@ -154,52 +118,70 @@ public class MainActivity extends AppCompatActivity {
 			}
 		});
 
-
 	}
 
 	private BroadcastReceiver myReceiver = new BroadcastReceiver(){
 		@Override
 		public void onReceive(Context context, Intent intent){
-			if(progressBar == null)
+
+			if(intent.getAction() == ActionTrackInfoUpdate)
+				SetTrackInfoText();
+
+			if(intent.getAction() == ActionButtonImgUpdate){
+				if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+					btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
+				else
+					btnPlayPause.setBackgroundResource(R.drawable.btn_play);
+				TextView textTrackID = (TextView) findViewById(R.id.trackID);
+				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
+			}
+
+			if(intent.getAction() != ActionProgressBarUpdate)
+				return;
+
+			if (progressBar == null)
 				progressBar = (ProgressBar) findViewById(R.id.progressBarPlayback);
+				new Thread(new Runnable() {
+						@Override
+						public void run() {
+							int duration = binder.GetMediaPlayerService().GetDuration();
+							int currentPosition = 0;
+							progressBar.setMax(duration);
+							progressBar.setSecondaryProgress(duration);
 
-//			progressBar.setMax(10000);//binder.GetMediaPlayerService().GetDuration());
-////			int ola = intent.getIntExtra("PROGRESS", 0);
-//			progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
-////			Log.d("dddReceiver", String.valueOf(ola));
-
-
-			new Thread(new Runnable() {
-					@Override
-					public void run() {
-						int duration = binder.GetMediaPlayerService().GetDuration();
-						int currentPosition = 0;
-						progressBar.setMax(duration);
-						progressBar.setSecondaryProgress(duration);
-
-						while (currentPosition < duration) {
-							try {
-								Thread.sleep(1000);
-								currentPosition = binder.GetMediaPlayerService().GetPosition();
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							} catch (Exception e) {
-								e.getLocalizedMessage();
-							}
-
-							// Update the progress bar
-							handler.post(new Runnable() {
-								@Override
-								public void run() {
-									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
+							while (currentPosition < duration) {
+								try {
+									Thread.sleep(1000);
+									currentPosition = binder.GetMediaPlayerService().GetPosition();
+								} catch (InterruptedException e) {
+									e.printStackTrace();
+								} catch (Exception e) {
+									e.getLocalizedMessage();
 								}
-							});
-						}
-					}
-				}).start();
 
+								// Update the progress bar
+								handler.post(new Runnable() {
+									@Override
+									public void run() {
+										int duration = binder.GetMediaPlayerService().GetDuration();
+										progressBar.setMax(duration);
+										progressBar.setSecondaryProgress(duration);
+										progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
+									}
+								});
+							}
+						}
+					}).start();
 		}
 	};
+
+	@Override
+	public void onBackPressed(){
+		Intent startMain = new Intent(Intent.ACTION_MAIN);
+		startMain.addCategory(Intent.CATEGORY_HOME);
+		startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+		startActivity(startMain);
+	}
 
 	private void InitilizeMedia() {
 		mediaPlayerServiceIntent = new Intent(this, MediaPlayerService.class);
@@ -249,21 +231,18 @@ public class MainActivity extends AppCompatActivity {
 		textDeviceID.setText("Device ID: " + DeviceId);
 		textUserID.setText("User ID: " + UserId);
 
+		SetTrackInfoText();
+	}
 
+	public void SetTrackInfoText(){
 		TrackDataAccess trackDataAccess = new TrackDataAccess(this);
 		TrackToCache trackToCache = new TrackToCache(this);
 		TextView txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
 		txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
 		TextView txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
 		txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
-//		if (mediaPlayerServiceConnection != null) {
-//			InitilizeMedia();
-//			if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-//				btnPlayPause.setBackgroundResource(R.drawable.btn_play);
-//			else
-//				btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
-//		}
 	}
+
 //
 //	@Override
 //	public void onStop() {
@@ -286,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public void onDestroy(){
 		try {
+			unregisterReceiver(myReceiver);
 			unregisterReceiver(headSetReceiver);
 			unregisterReceiver(remoteControlReceiver);
 		} catch (Exception ex) {

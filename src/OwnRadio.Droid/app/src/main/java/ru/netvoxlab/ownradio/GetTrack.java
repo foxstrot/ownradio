@@ -18,6 +18,7 @@ import java.io.File;
  */
 
 public class GetTrack {
+	public static final String ActionTrackInfoUpdate = "ru.netvoxlab.ownradio.action.TRACK_INFO_UPDATE";
 	private long downloadReference;
 	private DownloadManager downloadManager;
 	TrackDB trackDB;
@@ -98,6 +99,8 @@ public class GetTrack {
 						track.put("isexist", "1");
 						trackDataAccess.SaveTrack(track);
 
+						Intent i = new Intent(ActionTrackInfoUpdate);
+						context.getApplicationContext().sendBroadcast(i);
 					}
 				}
 			}

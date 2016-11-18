@@ -41,7 +41,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public static final String ActionStop = "ru.netvoxlab.ownradio.action.STOP";
 	public static final String ActionTogglePlayback = "ru.netvoxlab.ownradio.action.TOGGLEPLAYBACK";
 	public static final String ActionSaveCurrentPosition = "ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION";
-
+	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
+	public static final String ActionButtonImgUpdate = "ru.netvoxlab.ownradio.action.BTN_PLAYPAUSE_IMG_UPDATE";
 
 	public MediaPlayer player = null;
 	private AudioManager audioManager;
@@ -273,6 +274,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			player.start();
 			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 			StartNotification();
+			UpdateButtonPlayPauseImg();
 
 //            UpdateMediaMetadataCompat
 		}
@@ -286,6 +288,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		if (player.isPlaying()) {
 			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 			StartNotification();
+			UpdateButtonPlayPauseImg();
 			return;
 		}
 
@@ -316,49 +319,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				UpdatePlaybackState(PlaybackStateCompat.STATE_BUFFERING);
 
 				player.prepareAsync();
-//                if (startTrackID.equals(TrackID)) {
-//                    player.seekTo(startPosition);
-//					startPosition = 0;
-//                }
 				AcquireWifiLock();
 				//                UpdateMediaMetadataCompat (metaRetriever);
 				StartNotification();
+				UpdateButtonPlayPauseImg();
 
-				Intent i = new Intent("MY_ACTION");
+				Intent i = new Intent(ActionProgressBarUpdate);
 //									i.putExtra("PROGRESS", GetPosition());
 				sendBroadcast(i);
-
-//				new Thread(new Runnable() {
-//					@Override
-//					public void run() {
-//						int duration = GetDuration();
-//						int currentPosition = 0;
-////						progressBar.setMax(duration);
-//
-//						while (currentPosition < duration) {
-//							try {
-//								Thread.sleep(1000);
-//								currentPosition = GetPosition();
-//							} catch (InterruptedException e) {
-//								e.printStackTrace();
-//							} catch (Exception e) {
-//								e.getLocalizedMessage();
-//							}
-//
-//							// Update the progress bar
-//							handler.post(new Runnable() {
-//								@Override
-//								public void run() {
-//									Intent i = new Intent("MY_ACTION");
-////									i.putExtra("PROGRESS", GetPosition());
-//									sendBroadcast(i);
-////									progressBar.setProgress(GetPosition());
-//								}
-//							});
-//						}
-//					}
-//				}).start();
-
 			} else {
 				if (FlagDownloadTrack) {
 					startPosition = 0;
@@ -545,9 +513,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 			if (state == PlaybackStateCompat.STATE_PLAYING || state == PlaybackStateCompat.STATE_PAUSED) {
 				StartNotification();
+				UpdateButtonPlayPauseImg();
 			}
 		} catch (Exception ex) {
 		}
+	}
+
+	private void UpdateButtonPlayPauseImg(){
+		Intent intent = new Intent(ActionButtonImgUpdate);
+		sendBroadcast(intent);
 	}
 
 	private void StartNotification() {
