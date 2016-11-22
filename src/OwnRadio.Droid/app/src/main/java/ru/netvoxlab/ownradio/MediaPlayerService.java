@@ -8,7 +8,6 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.RemoteControlClient;
 import android.net.Uri;
@@ -28,8 +27,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
-import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -43,6 +40,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public static final String ActionSaveCurrentPosition = "ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION";
 	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
 	public static final String ActionButtonImgUpdate = "ru.netvoxlab.ownradio.action.BTN_PLAYPAUSE_IMG_UPDATE";
+	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
 
 	public MediaPlayer player = null;
 	private AudioManager audioManager;
@@ -242,7 +240,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		player = new MediaPlayer();
 
 		//Tell our player to stream music
-		player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+//		player.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		//Wake mode will be partial to keep the CPU still running under lock screen
 		player.setWakeMode(getApplicationContext(), 1);// WakeLockFlags.Partial=1
 
@@ -253,23 +251,38 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	public void onCompletion(MediaPlayer mediaPlayer) {
-//        Toast.makeText(getApplicationContext(), "Completion", Toast.LENGTH_LONG).show();
 		//Событие возникает при дослушивании трека до конца, плеер останавливается, отправляется статистика прослушивания
 		//затем вызвается функция Play(), запускающая проигрывание следующего трека
+
+		//Сохраняем информацию о прослушивании в локальную БД.
 		int listedTillTheEnd = 1;
+		SaveHistory(listedTillTheEnd);
+
+		PlayNext();
 
 		try {
-			SaveHistory(listedTillTheEnd);
-			ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(getApplicationContext());
-			executeProcedurePostgreSQL.SendHistory(DeviceID,1);
+			//Отправка на сервер накопленной истории прослушивания треков
+//			ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(getApplicationContext());
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						new ExecuteProcedurePostgreSQL(getApplicationContext()).SendHistory(DeviceID, 1);
+						Thread.currentThread().interrupt();
+						return;
+					}catch (Exception ex){
+						Log.d(TAG, ex.getLocalizedMessage());
+						Thread.currentThread().interrupt();
+						return;
+					}
+				}
+			}).start();
 		} catch (Exception ex) {
+			Log.d(TAG, ex.getLocalizedMessage());
 		}
-		PlayNext();
 	}
 
 	public void Play() {
-
-//        Toast.makeText(getApplicationContext(), "Play", Toast.LENGTH_SHORT).show();
 		if (player != null && GetMediaPlayerState() == PlaybackStateCompat.STATE_PAUSED) {
 			player.start();
 			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
@@ -293,24 +306,31 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 
 		try {
-			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-			startPosition = settings.getInt("LastPosition", 0);
-			startTrackID = settings.getString("LastTrackID", "");
-//			if (settings.getBoolean("StatePlay", false))
-//				Play();
-			MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
-			track = trackDataAccess.GetMostOldTrack();
-			if (track != null) {
-				FlagDownloadTrack = false;
-				TrackID = track.getAsString("id");
-				trackURL = track.getAsString("trackurl");
-				if (!new File(trackURL).exists()) {
-					trackDataAccess.DeleteTrackFromCache(track);
-					Play();
-				}
-				player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
+//			MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
 
-				metaRetriever.setDataSource(trackURL);//, new Dictionary<String,String>());
+//			if(trackDataAccess.GetExistTracksCount() >= 10) {
+//				SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+//				startPosition = settings.getInt("LastPosition", 0);
+//				startTrackID = settings.getString("LastTrackID", "");
+//				track = trackDataAccess.GetMostOldTrack();
+//				if (track != null) {
+//					FlagDownloadTrack = false;
+//					TrackID = track.getAsString("id");
+//					trackURL = track.getAsString("trackurl");
+//					if (!new File(trackURL).exists()) {
+//						trackDataAccess.DeleteTrackFromCache(track);
+//						Play();
+//					}
+//					player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
+////					metaRetriever.setDataSource(trackURL);
+//				}
+//			} else {
+				TrackID = new ExecuteProcedurePostgreSQL(getApplicationContext()).GetNextTrackID(DeviceID);
+				String uri = "http://java.ownradio.ru/api/v2/tracks/" + TrackID;
+				player.setDataSource(getApplicationContext(), Uri.parse(uri));
+//					metaRetriever.setDataSource(uri);
+//			}
+
 				int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 				if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
 					//                could not get audio focus
@@ -321,25 +341,29 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				player.prepareAsync();
 				AcquireWifiLock();
 				//                UpdateMediaMetadataCompat (metaRetriever);
-				StartNotification();
-				UpdateButtonPlayPauseImg();
+				if (GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
+					StartNotification();
+					UpdateButtonPlayPauseImg();
+				}
 
 				Intent i = new Intent(ActionProgressBarUpdate);
-//									i.putExtra("PROGRESS", GetPosition());
+//				i.putExtra("PROGRESS", GetPosition());
 				sendBroadcast(i);
-			} else {
-				if (FlagDownloadTrack) {
-					startPosition = 0;
-					FlagDownloadTrack = false;
-					TrackToCache trackToCache = new TrackToCache(getApplicationContext());
-					trackToCache.SaveTrackToCache(DeviceID, 3);
-					Play();
-//                Log.d("MP", "DB is empty");
-//                return;
-				}
-			}
-
-		} catch (IOException ex) {
+//				TrackToCache trackToCache = new TrackToCache(getApplicationContext());
+//				trackToCache.SaveTrackToCache(DeviceID, 3);
+//			} else {
+//				if (FlagDownloadTrack) {
+//					startPosition = 0;
+//					FlagDownloadTrack = false;
+//					TrackToCache trackToCache = new TrackToCache(getApplicationContext());
+//					trackToCache.SaveTrackToCache(DeviceID, 3);
+//					Play();
+////                Log.d("MP", "DB is empty");
+////                return;
+//				}
+//			}
+		} catch (Exception ex) {
+			Log.d(TAG, ex.getLocalizedMessage());
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
 			player.reset();
 			player.release();
@@ -376,32 +400,49 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 		UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
 		player.reset();
-		StopNotification();
+//		StopNotification();
 		super.stopForeground(true);
 		ReleaseWifiLock();
 		UnregisterMediaSessionCompat();
 	}
 
 	public void Next() {
-//        Toast.makeText(getApplicationContext(), "Next", Toast.LENGTH_LONG).show();
+		//Сохраняем информацию о прослушивании в локальную БД.
 		int listedTillTheEnd = -1;
+		SaveHistory(listedTillTheEnd);
+
+		PlayNext();
 
 		try {
-			SaveHistory(listedTillTheEnd);
 			//Отправка на сервер накопленной истории прослушивания треков
-			ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(getApplicationContext());
-			executeProcedurePostgreSQL.SendHistory(DeviceID,3);
+//			ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(getApplicationContext());
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					try {
+						new ExecuteProcedurePostgreSQL(getApplicationContext()).SendHistory(DeviceID, 3);
+						Thread.currentThread().interrupt();
+						return;
+					}catch (Exception ex){
+						Log.d(TAG, ex.getLocalizedMessage());
+						Thread.currentThread().interrupt();
+						return;
+					}
+				}
+			}).start();
 //			executeProcedurePostgreSQL.SetStatusTrack(DeviceID, TrackID, ListedTillTheEnd, currentDateTime);
 
 //			сканирование директории с треками для обнаружения и добавления треков, отсутствующих в бд
-			new TrackToCache(getApplicationContext()).ScanTrackToCache();
+//			new TrackToCache(getApplicationContext()).ScanTrackToCache();
+
+			// Удаление пропущенного трека
 			ContentValues track = trackDataAccess.GetPathById(TrackID);
 			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
 		} catch (Exception ex) {
 			ex.getLocalizedMessage();
 		}
 
-		PlayNext();
+
 	}
 
 	private void SaveHistory(int listedTillTheEnd){
@@ -535,7 +576,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		style.setCancelButtonIntent(pendingCancelIntent);
 
 		String trackTitle = TrackID;
-		String trackArtist = "Ownradio";
+		String trackArtist = "ownRadio";
 
 		Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
 		intent.setAction(ActionPlay);
@@ -609,9 +650,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			player.release();
 			player = null;
 		}
-		String deviceId = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID", "");
-		TrackToCache trackToCache = new TrackToCache(getApplicationContext());
-		trackToCache.SaveTrackToCache(deviceId, 3);
+//		String deviceId = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID", "");
+//		TrackToCache trackToCache = new TrackToCache(getApplicationContext());
+//		trackToCache.SaveTrackToCache(deviceId, 3);
 		UpdatePlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT);
 		Play();
 	}

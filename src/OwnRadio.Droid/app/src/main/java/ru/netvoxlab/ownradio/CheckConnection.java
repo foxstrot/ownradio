@@ -3,7 +3,6 @@ package ru.netvoxlab.ownradio;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.widget.Toast;
 
 /**
  * Created by a.polunina on 31.10.2016.
@@ -54,7 +53,7 @@ public class CheckConnection {
 			return false;
 
 		if (!inetInfo.isConnected()) {
-			Toast.makeText(context, "Internet disconnected", Toast.LENGTH_SHORT).show();
+//			Toast.makeText(context, "Internet disconnected", Toast.LENGTH_SHORT).show();
 			return false;
 		} else
 			return true;

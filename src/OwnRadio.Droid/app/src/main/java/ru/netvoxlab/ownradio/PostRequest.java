@@ -50,10 +50,5 @@ public class PostRequest extends AsyncTask<String, Void, Integer> {
 	@Override
 	protected void onPostExecute(Integer result) {
 		super.onPostExecute(result);
-//		HistoryDataAccess historyDataAccess = new HistoryDataAccess(mContext);
-//
-//		if(result == HttpURLConnection.HTTP_OK){
-//			historyDataAccess.DeleteHistoryRec(recid);
-//		}
 	}
 }

@@ -17,11 +17,6 @@ import java.net.URL;
 public class GetRequest extends AsyncTask<URL, Void, String> {
 	private String strRes;
 
-
-//    public RegisterDevice(String res){
-//        this.strRes = res;
-//    }
-
 	protected String doInBackground(URL... url) {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.FROYO) {
 			System.setProperty("http.keepAlive", "false");
@@ -30,7 +25,6 @@ public class GetRequest extends AsyncTask<URL, Void, String> {
 		try {
 			URL URLRequest = url[0];
 			HttpURLConnection urlConnection = (HttpURLConnection) URLRequest.openConnection();
-//            request.UserAgent = "OwnRadioAndroidClient";
 			urlConnection.setRequestMethod("GET");
 			urlConnection.connect();
 
@@ -47,11 +41,8 @@ public class GetRequest extends AsyncTask<URL, Void, String> {
 				return sb.toString();
 			} else {
 				urlConnection.disconnect();
-				return "1";
-
+				return "Server error. Response code: " + responseCode;
 			}
-//            urlConnection.disconnect();
-//            return "Res";
 		} catch (MalformedURLException ex) {
 			return ex.getLocalizedMessage();
 		} catch (IOException ex) {
@@ -62,6 +53,5 @@ public class GetRequest extends AsyncTask<URL, Void, String> {
 	protected void onPostExecute(String result) {
 		super.onPostExecute(result);
 		strRes = result;
-//        strRes = result;
 	}
 }

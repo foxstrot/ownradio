@@ -5,10 +5,10 @@ android {
 	buildToolsVersion "25.0.0"
 	defaultConfig {
 		applicationId "ru.netvoxlab.ownradio"
-		minSdkVersion 14
+		minSdkVersion 21
 		targetSdkVersion 25
-		versionCode 15
-		versionName "v2016.11.18"
+		versionCode 18
+		versionName "v2016.11.22"
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 	}
 	buildTypes {

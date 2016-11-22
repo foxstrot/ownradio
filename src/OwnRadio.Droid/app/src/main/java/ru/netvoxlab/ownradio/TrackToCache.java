@@ -178,12 +178,6 @@ public class TrackToCache {
 			//Загружаем трек и сохраняем информацию о нем в БД
 //			getTrack.GetTrackDM(mContext, trackId);
 			Log.d(TAG, "Кеширование начато");
-
-
-
-
-
-
 		} catch (Exception ex) {
 			Log.d(TAG, "Error in SaveTrackToCache at file download. Ex.mess:" + ex.getLocalizedMessage());
 			return;
@@ -212,8 +206,8 @@ public class TrackToCache {
 					return "File for delete is not exist. Rec about track deleted from DB";
 				}
 			} else {
-				Log.d(TAG, "Недостаточно свободного места для кеширования новых треков. Прослушанные треки для удаления отсутствуют.");
-				return "Недостаточно свободного места для кеширования новых треков. \n Прослушанные треки для удаления отсутствуют. \n";
+				Log.d(TAG, "Отсутствует файл для удаления.");
+				return "Отсутствует файл для удаления. \n";
 			}
 		} catch (Exception ex) {
 			Log.d(TAG, "Error in SaveTrackToCache at file delete. Ex.mess:" + ex.getLocalizedMessage());

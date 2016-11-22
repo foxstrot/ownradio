@@ -1,8 +1,10 @@
 package ru.netvoxlab.ownradio;
 
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -51,29 +53,27 @@ public class MainActivity extends AppCompatActivity {
 //	BroadcastReceiver receiver;
 	private Handler handler = new Handler();
 	ProgressBar progressBar;
-
+	TextView textInfo;
 
 	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
 	public static final String ActionTrackInfoUpdate = "ru.netvoxlab.ownradio.action.TRACK_INFO_UPDATE";
 	public static final String ActionButtonImgUpdate = "ru.netvoxlab.ownradio.action.BTN_PLAYPAUSE_IMG_UPDATE";
-
+	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		ProgressBar progressBar = (ProgressBar) findViewById(R.id.progressBarPlayback);
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ActionProgressBarUpdate);
 		filter.addAction(ActionTrackInfoUpdate);
 		filter.addAction(ActionButtonImgUpdate);
+		filter.addAction(ActionSendInfoTxt);
 		registerReceiver(myReceiver, filter);
 
-		Intent iStatus = this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
-		Intent iStatus2 = this.registerReceiver(remoteControlReceiver, new IntentFilter(Intent.ACTION_MEDIA_BUTTON));
-
-//		startService(new Intent(this, MediaPlayerService.class));
+		this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
+		this.registerReceiver(remoteControlReceiver, new IntentFilter(Intent.ACTION_MEDIA_BUTTON));
 
 		if (mediaPlayerServiceConnection == null)
 			InitilizeMedia();
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
 //         полная очистка настроек
 //         sp.edit().clear().commit();
 
-		TextView textInfo = (TextView) findViewById(R.id.textViewInfo);
+		textInfo = (TextView) findViewById(R.id.textViewInfo);
 		textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
 		final TextView textTrackID = (TextView) findViewById(R.id.trackID);
@@ -94,15 +94,9 @@ public class MainActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View view) {
 				if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-				{
-					btnPlayPause.setBackgroundResource(R.drawable.btn_play);
 					binder.GetMediaPlayerService().Pause();
-				}
-				else {
-					if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 0)
-						btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
+				else
 					binder.GetMediaPlayerService().Play();
-				}
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 
 			}
@@ -136,6 +130,10 @@ public class MainActivity extends AppCompatActivity {
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 			}
 
+			if(intent.getAction() == ActionSendInfoTxt){
+				textInfo.setText(intent.getStringExtra("TEXTINFO"));
+			}
+
 			if(intent.getAction() != ActionProgressBarUpdate)
 				return;
 
@@ -146,6 +144,9 @@ public class MainActivity extends AppCompatActivity {
 						public void run() {
 							int duration = binder.GetMediaPlayerService().GetDuration();
 							int currentPosition = 0;
+							if(duration<=0)
+								duration = 10000;
+
 							progressBar.setMax(duration);
 							progressBar.setSecondaryProgress(duration);
 
@@ -153,6 +154,7 @@ public class MainActivity extends AppCompatActivity {
 								try {
 									Thread.sleep(1000);
 									currentPosition = binder.GetMediaPlayerService().GetPosition();
+									duration = binder.GetMediaPlayerService().GetDuration();
 								} catch (InterruptedException e) {
 									e.printStackTrace();
 								} catch (Exception e) {
@@ -165,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 									public void run() {
 										int duration = binder.GetMediaPlayerService().GetDuration();
 										progressBar.setMax(duration);
-										progressBar.setSecondaryProgress(duration);
+//										progressBar.setSecondaryProgress(duration);
 										progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
 									}
 								});
@@ -192,6 +194,8 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	public void onStart() {
 		super.onStart();
+		if (mediaPlayerServiceConnection == null)
+			InitilizeMedia();
 
 		TextView textVersionName = (TextView) findViewById(R.id.versionName);
 		TextView textDeviceID = (TextView) findViewById(R.id.deviceID);
@@ -243,30 +247,24 @@ public class MainActivity extends AppCompatActivity {
 		txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
 	}
 
-//
-//	@Override
-//	public void onStop() {
-////		super.onStop();
-//	}
-
 	@Override
-	public void onRestart(){
-
-//		if (mediaPlayerServiceConnection != null) {
-//			InitilizeMedia();
-			if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-				btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
-			else
-				btnPlayPause.setBackgroundResource(R.drawable.btn_play);
-//		}
-		super.onRestart();
+	public void onSaveInstanceState(Bundle savedInstanceState){
+		super.onSaveInstanceState(savedInstanceState);
 	}
 
 	@Override
 	public void onDestroy(){
 		try {
 			unregisterReceiver(myReceiver);
+		} catch (Exception ex) {
+			Log.e(TAG, ex.getLocalizedMessage());
+		}
+		try {
 			unregisterReceiver(headSetReceiver);
+		} catch (Exception ex) {
+			Log.e(TAG, ex.getLocalizedMessage());
+		}
+		try {
 			unregisterReceiver(remoteControlReceiver);
 		} catch (Exception ex) {
 			Log.e(TAG, ex.getLocalizedMessage());
@@ -300,23 +298,43 @@ public class MainActivity extends AppCompatActivity {
 //				return true;
 
 			case R.id.clear_cache:
-				File dir = new File(this.getExternalFilesDir(Environment.DIRECTORY_MUSIC).getPath());
-				if (dir.isDirectory()) {
-					String[] children = dir.list();
-					for (int i = 0; i < children.length; i++) {
-						new File(dir, children[i]).delete();
-					}
-				}
-				TrackDataAccess trackDataAccess = new TrackDataAccess(this);
-				trackDataAccess.CleanTrackTable();
-				HistoryDataAccess historyDataAccess = new HistoryDataAccess(this);
-				historyDataAccess.CleanHistoryTable();
+				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Clear cache?")
+                        .setMessage("All cached tracks will be removed.")
+                        .setCancelable(false)
+                        .setPositiveButton("OK",
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+										File dir = new File(MainActivity.this.getExternalFilesDir(Environment.DIRECTORY_MUSIC).getPath());
+										if (dir.isDirectory()) {
+											String[] children = dir.list();
+											for (int j = 0; j < children.length; j++) {
+												new File(dir, children[j]).delete();
+											}
+										}
+										TrackDataAccess trackDataAccess = new TrackDataAccess(MainActivity.this);
+										trackDataAccess.CleanTrackTable();
+										HistoryDataAccess historyDataAccess = new HistoryDataAccess(MainActivity.this);
+										historyDataAccess.CleanHistoryTable();
 
-				TrackToCache trackToCache = new TrackToCache(this);
-				TextView txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
-				txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
-				TextView txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
-				txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
+										TrackToCache trackToCache = new TrackToCache(MainActivity.this);
+										TextView txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
+										txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
+										TextView txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
+										txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(MainActivity.this.getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
+										dialogInterface.cancel();
+									}
+                                })
+						.setNegativeButton("Cancel",
+								new DialogInterface.OnClickListener(){
+									@Override
+									public void onClick(DialogInterface dialogInterface, int i) {
+										dialogInterface.cancel();
+									}
+								});
+                AlertDialog alert = builder.create();
+                alert.show();
 				break;
 
 			case R.id.action_exit:

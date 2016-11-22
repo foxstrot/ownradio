@@ -2,6 +2,7 @@ package ru.netvoxlab.ownradio;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -17,6 +18,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class ExecuteProcedurePostgreSQL {
+	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
 	Context MainContext;
 	String serverPath = "http://java.ownradio.ru/api/v2/";//"http://ownradio.ru/api/";
 	String serverPathCore = "http://ownradio.ru/api/";

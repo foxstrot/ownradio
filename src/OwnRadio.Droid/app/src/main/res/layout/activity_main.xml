@@ -74,9 +74,9 @@
 			<ProgressBar
 				android:id="@+id/progressBarPlayback"
 				style="?android:attr/progressBarStyleHorizontal"
-				android:max="1000"
+				android:max="10000000"
 				android:progress="0"
-				android:secondaryProgress="1000"
+				android:secondaryProgress="10000000"
 				android:indeterminate="false"
 				android:layout_width="150dp"
 				android:layout_height="150dp"
