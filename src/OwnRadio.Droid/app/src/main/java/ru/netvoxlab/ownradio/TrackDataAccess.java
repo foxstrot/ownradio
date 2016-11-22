@@ -13,11 +13,12 @@ public class TrackDataAccess {
 	Context mContext;
 	SQLiteDatabase db;
 	TrackDB trackDB;
+	int dbVer = R.string.db_ver;
 	private final String TrackTableName = "track";
 
 	public TrackDataAccess(Context context) {
 		mContext = context;
-		trackDB = new TrackDB(mContext, 1);
+		trackDB = new TrackDB(mContext, dbVer);
 
 	}
 
@@ -31,6 +32,11 @@ public class TrackDataAccess {
 		db = trackDB.getWritableDatabase();
 		long rowID = db.insert(TrackTableName, null, trackInstance);
 //        db.close();
+	}
+
+	public void UpdateTrack(ContentValues trackInstance) {
+		db = trackDB.getWritableDatabase();
+		long rowID = db.update(TrackTableName, trackInstance, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
 	}
 
 	public boolean CheckTrackExistInDB(String trackId) {
@@ -77,6 +83,21 @@ public class TrackDataAccess {
 		return result;
 	}
 
+	public ContentValues GetPathById(String trackid) {
+		ContentValues result = new ContentValues();
+		db = trackDB.getReadableDatabase();
+		Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE id = ?", new String[]{String.valueOf(trackid)});
+		if (userCursor.moveToFirst()) {
+			result.put("id", userCursor.getString(0));
+			result.put("trackurl", userCursor.getString(1));
+		} else {
+			result = null;
+		}
+//        db.close();
+		userCursor.close();
+		return result;
+	}
+
 	public int GetExistTracksCount() {
 		int result;
 		db = trackDB.getReadableDatabase();
@@ -94,12 +115,12 @@ public class TrackDataAccess {
 	public void SetStatusTrack(ContentValues trackInstance) {
 		int isListen = Integer.parseInt(trackInstance.get("islisten").toString());
 		db = trackDB.getWritableDatabase();
-		Cursor userCursor = db.rawQuery("SELECT islisten FROM track WHERE trackurl = ?", new String[]{String.valueOf(trackInstance.get("trackurl"))});
+		Cursor userCursor = db.rawQuery("SELECT islisten FROM track WHERE id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
 		if (userCursor.moveToFirst()) {
 			isListen += userCursor.getInt(0);
 		}
 		trackInstance.put("islisten", isListen);
-		long rowID = db.update(TrackTableName, trackInstance, "trackurl = ?", new String[]{String.valueOf(trackInstance.get("trackurl"))});
+		long rowID = db.update(TrackTableName, trackInstance, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
 		userCursor.close();
 //        db.close();
 	}

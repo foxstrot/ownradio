@@ -10,7 +10,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Environment;
-import android.widget.Toast;
 
 import java.io.File;
 
@@ -19,6 +18,7 @@ import java.io.File;
  */
 
 public class GetTrack {
+	public static final String ActionTrackInfoUpdate = "ru.netvoxlab.ownradio.action.TRACK_INFO_UPDATE";
 	private long downloadReference;
 	private DownloadManager downloadManager;
 	TrackDB trackDB;
@@ -39,15 +39,17 @@ public class GetTrack {
 
 		try {
 			//Локальное имя трека
-			String fileName = "trackid_" + trackId + ".mp3";
+			String fileName = trackId + ".mp3";
 
 			downloadManager = (DownloadManager) context.getSystemService(context.DOWNLOAD_SERVICE);
 			context.registerReceiver(receiver, new IntentFilter(
 					DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 			DownloadManager.Request request = new DownloadManager.Request(
-					Uri.parse("http://ownradio.ru/api/track/GetTrackByID/" + trackId));
+					Uri.parse("http://java.ownradio.ru/api/v2/tracks/" + trackId));//Java
+//					Uri.parse("http://ownradio.ru/api/track/GetTrackByID/" + trackId));//Core
 			//Загрузка треков осуществляется только через Wi-Fi
 //            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
+			request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
 			//Заголовок для вывода в уведомление
 			request.setTitle(fileName);
 //            request.allowScanningByMediaScanner();
@@ -56,7 +58,7 @@ public class GetTrack {
 			downloadReference = downloadManager.enqueue(request);
 //                    trackURL = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getPath() + "/" + fileName;
 		} catch (Exception ex) {
-			Toast.makeText(context, ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+//			Toast.makeText(context, ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
 //            return -1;
 		}
 	}
@@ -96,6 +98,9 @@ public class GetTrack {
 						track.put("islisten", "0");
 						track.put("isexist", "1");
 						trackDataAccess.SaveTrack(track);
+
+						Intent i = new Intent(ActionTrackInfoUpdate);
+						context.getApplicationContext().sendBroadcast(i);
 					}
 				}
 			}
