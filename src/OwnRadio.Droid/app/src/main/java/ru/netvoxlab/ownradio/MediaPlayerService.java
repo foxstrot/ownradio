@@ -134,7 +134,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 	TrackInfo trackInfo = new TrackInfo();
 
-
 	public MediaPlayerService() {
 //        PlayingHandler = new Handler ();
 //
@@ -244,9 +243,30 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		//Wake mode will be partial to keep the CPU still running under lock screen
 		player.setWakeMode(getApplicationContext(), 1);// WakeLockFlags.Partial=1
 
-//        player.setOnBufferingUpdateListener(getApplicationContext());
+		player.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
+			@Override
+			public void onBufferingUpdate(MediaPlayer mediaPlayer, int i) {
+
+			}
+		});
+
 		player.setOnCompletionListener(this);
-//        player.setOnErrorListener (this);
+		player.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+			@Override
+			public boolean onError(MediaPlayer mediaPlayer, int what, int extra) {
+				switch(what){
+					case MediaPlayer.MEDIA_ERROR_UNKNOWN:
+						Log.e(TAG, "unknown media error what=["+what+"] extra=["+extra+"]");
+						break;
+					case MediaPlayer.MEDIA_ERROR_SERVER_DIED:
+						Log.e(TAG, "Streaming source Server died what=["+what+"] extra=["+extra+"]");
+						break;
+					default:
+						Log.e(TAG, "Default Problems what=["+ what +"] extra=["+extra+"]");
+				}
+				return false;
+			}
+		});
 		player.setOnPreparedListener(this);
 	}
 
@@ -262,12 +282,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 		try {
 			//Отправка на сервер накопленной истории прослушивания треков
-//			ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(getApplicationContext());
+//			APICalls apiCalls = new APICalls(getApplicationContext());
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						new ExecuteProcedurePostgreSQL(getApplicationContext()).SendHistory(DeviceID, 1);
+						new APICalls(getApplicationContext()).SendHistory(DeviceID, 1);
 						Thread.currentThread().interrupt();
 						return;
 					}catch (Exception ex){
@@ -288,8 +308,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 			StartNotification();
 			UpdateButtonPlayPauseImg();
-
-//            UpdateMediaMetadataCompat
 		}
 
 		if (player == null)
@@ -325,30 +343,36 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 ////					metaRetriever.setDataSource(trackURL);
 //				}
 //			} else {
-				TrackID = new ExecuteProcedurePostgreSQL(getApplicationContext()).GetNextTrackID(DeviceID);
-				String uri = "http://java.ownradio.ru/api/v2/tracks/" + TrackID;
-				player.setDataSource(getApplicationContext(), Uri.parse(uri));
+			String trackIdTmp = new APICalls(getApplicationContext()).GetNextTrackID(DeviceID);
+			if(trackIdTmp == null)
+				return;
+			else
+				TrackID = trackIdTmp;
+
+			String uri = "http://java.ownradio.ru/api/v2/tracks/" + TrackID;
+			player.setDataSource(getApplicationContext(), Uri.parse(uri));
 //					metaRetriever.setDataSource(uri);
 //			}
 
-				int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
-				if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-					//                could not get audio focus
-				}
+			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+			if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+				//                could not get audio focus
+			}
 
-				UpdatePlaybackState(PlaybackStateCompat.STATE_BUFFERING);
+			UpdatePlaybackState(PlaybackStateCompat.STATE_BUFFERING);
 
-				player.prepareAsync();
-				AcquireWifiLock();
-				//                UpdateMediaMetadataCompat (metaRetriever);
-				if (GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
-					StartNotification();
-					UpdateButtonPlayPauseImg();
-				}
+			player.prepareAsync();
+			AcquireWifiLock();
+			//                UpdateMediaMetadataCompat (metaRetriever);
+			if (GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
+				StartNotification();
+				UpdateButtonPlayPauseImg();
+			}
 
-				Intent i = new Intent(ActionProgressBarUpdate);
-//				i.putExtra("PROGRESS", GetPosition());
-				sendBroadcast(i);
+			Intent i = new Intent(ActionProgressBarUpdate);
+			sendBroadcast(i);
+
+
 //				TrackToCache trackToCache = new TrackToCache(getApplicationContext());
 //				trackToCache.SaveTrackToCache(DeviceID, 3);
 //			} else {
@@ -368,12 +392,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			player.reset();
 			player.release();
 			player = null;
+			return;
 		}
 //        }
 	}
 
 	public void Pause() {
-//        Toast.makeText(getApplicationContext(), "Pause", Toast.LENGTH_LONG).show();
 		if (player == null)
 			return;
 
@@ -415,12 +439,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 		try {
 			//Отправка на сервер накопленной истории прослушивания треков
-//			ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(getApplicationContext());
+//			APICalls apiCalls = new APICalls(getApplicationContext());
 			new Thread(new Runnable() {
 				@Override
 				public void run() {
 					try {
-						new ExecuteProcedurePostgreSQL(getApplicationContext()).SendHistory(DeviceID, 3);
+						new APICalls(getApplicationContext()).SendHistory(DeviceID, 3);
 						Thread.currentThread().interrupt();
 						return;
 					}catch (Exception ex){
@@ -430,7 +454,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 					}
 				}
 			}).start();
-//			executeProcedurePostgreSQL.SetStatusTrack(DeviceID, TrackID, ListedTillTheEnd, currentDateTime);
+//			apiCalls.SetStatusTrack(DeviceID, TrackID, ListedTillTheEnd, currentDateTime);
 
 //			сканирование директории с треками для обнаружения и добавления треков, отсутствующих в бд
 //			new TrackToCache(getApplicationContext()).ScanTrackToCache();
@@ -518,6 +542,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	private void UpdatePlaybackState(int state) {
+//		UpdateButtonPlayPauseImg();
 		if (mediaSessionCompat == null || player == null)
 			return;
 
@@ -555,6 +580,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			if (state == PlaybackStateCompat.STATE_PLAYING || state == PlaybackStateCompat.STATE_PAUSED) {
 				StartNotification();
 				UpdateButtonPlayPauseImg();
+
 			}
 		} catch (Exception ex) {
 		}
@@ -575,8 +601,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		style.setShowCancelButton(true);
 		style.setCancelButtonIntent(pendingCancelIntent);
 
-		String trackTitle = TrackID;
-		String trackArtist = "ownRadio";
+		String trackTitle = TrackID.substring(0,8);
+		String trackArtist = "NetVox Lab";
+		String trackAlbum = "ownRadio";
 
 		Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
 		intent.setAction(ActionPlay);
@@ -592,6 +619,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 		contentView.setTextViewText(R.id.viewsTitle, trackTitle);
 		contentView.setTextViewText(R.id.viewsArtist, trackArtist);
+		contentView.setTextViewText(R.id.viewsAlbum, trackAlbum);
 
 
 		Intent playIntent = new Intent(this, MediaPlayerService.class);
@@ -613,7 +641,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		contentView.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
 
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
-				.setSmallIcon(R.drawable.icon)
+				.setSmallIcon(R.drawable.logo)
 				.setContentIntent(pendingIntent)
 				.setCustomContentView(contentView)
 				.setShowWhen(false)
@@ -738,6 +766,4 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			editor.commit();
 		}
 	}
-
-
 }

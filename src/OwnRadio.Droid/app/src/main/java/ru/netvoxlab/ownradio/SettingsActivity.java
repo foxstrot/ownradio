@@ -19,7 +19,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.File;
-import java.util.UUID;
 
 public class SettingsActivity extends AppCompatActivity {
 	String DeviceID;
@@ -108,19 +107,20 @@ public class SettingsActivity extends AppCompatActivity {
 		btnMerge.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(getApplicationContext());
-				EditText editTextUserID = (EditText) findViewById(R.id.editTextUserID);
-				if (editTextUserID.getText().toString().isEmpty()) {
-					textSettingsInfo.append("Введите новый User ID для объединения пользователей \n");
-					return;
-				}
-				UUID UserIDNew = UUID.fromString(editTextUserID.getText().toString());
-				if (!UserIDNew.equals("null")) {
-					String resMerge = executeProcedurePostgreSQL.MergeUserID(UserID, UserIDNew.toString());
-					if (resMerge != "-1")
-						textSettingsInfo.append("Невозможно произвести объединение пользователей по ID. Введеный UserID не существует. \n");
-				} else
-					textSettingsInfo.append("Невозможно произвести объединение пользователей по ID. Введеный UserID имеет неверный формат. \n");
+				textSettingsInfo.append("This function is not available now");
+//				APICalls apiCalls = new APICalls(getApplicationContext());
+//				EditText editTextUserID = (EditText) findViewById(R.id.editTextUserID);
+//				if (editTextUserID.getText().toString().isEmpty()) {
+//					textSettingsInfo.append("Введите новый User ID для объединения пользователей \n");
+//					return;
+//				}
+//				UUID UserIDNew = UUID.fromString(editTextUserID.getText().toString());
+//				if (!UserIDNew.equals("null")) {
+//					String resMerge = apiCalls.MergeUserID(UserID, UserIDNew.toString());
+//					if (resMerge != "-1")
+//						textSettingsInfo.append("Невозможно произвести объединение пользователей по ID. Введеный UserID не существует. \n");
+//				} else
+//					textSettingsInfo.append("Невозможно произвести объединение пользователей по ID. Введеный UserID имеет неверный формат. \n");
 			}
 		});
 

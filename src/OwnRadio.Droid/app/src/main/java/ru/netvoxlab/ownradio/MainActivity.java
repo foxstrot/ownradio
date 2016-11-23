@@ -1,10 +1,8 @@
 package ru.netvoxlab.ownradio;
 
-import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
@@ -16,26 +14,23 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NavUtils;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity {
 
-	private ExecuteProcedurePostgreSQL executeProcedurePostgreSQL;
+	private APICalls apiCalls;
 
 	String DeviceId;
 	String UserId;
@@ -50,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
 	Button btnNext;
 	TrackDB trackDB;
 	final String TAG = "ownRadio";
-//	BroadcastReceiver receiver;
 	private Handler handler = new Handler();
 	ProgressBar progressBar;
 	TextView textInfo;
@@ -63,6 +57,12 @@ public class MainActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		//Remove title bar
+		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
+
+		//Remove notification bar
+		//this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
 		setContentView(R.layout.activity_main);
 
 		IntentFilter filter = new IntentFilter();
@@ -122,12 +122,19 @@ public class MainActivity extends AppCompatActivity {
 				SetTrackInfoText();
 
 			if(intent.getAction() == ActionButtonImgUpdate){
-				if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-					btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
-				else
-					btnPlayPause.setBackgroundResource(R.drawable.btn_play);
-				TextView textTrackID = (TextView) findViewById(R.id.trackID);
-				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
+				try {
+					if (binder == null)
+						return;
+
+					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+						btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
+					else
+						btnPlayPause.setBackgroundResource(R.drawable.btn_play);
+					TextView textTrackID = (TextView) findViewById(R.id.trackID);
+					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
+				}catch (Exception ex){
+					Log.d(TAG, ex.getLocalizedMessage());
+				}
 			}
 
 			if(intent.getAction() == ActionSendInfoTxt){
@@ -145,10 +152,9 @@ public class MainActivity extends AppCompatActivity {
 							int duration = binder.GetMediaPlayerService().GetDuration();
 							int currentPosition = 0;
 							if(duration<=0)
-								duration = 10000;
+								duration = 1000000;
 
 							progressBar.setMax(duration);
-							progressBar.setSecondaryProgress(duration);
 
 							while (currentPosition < duration) {
 								try {
@@ -167,7 +173,6 @@ public class MainActivity extends AppCompatActivity {
 									public void run() {
 										int duration = binder.GetMediaPlayerService().GetDuration();
 										progressBar.setMax(duration);
-//										progressBar.setSecondaryProgress(duration);
 										progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
 									}
 								});
@@ -207,15 +212,15 @@ public class MainActivity extends AppCompatActivity {
 			e.printStackTrace();
 		}
 
-		executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(MainActivity.this);
+		apiCalls = new APICalls(MainActivity.this);
 		try {
 			DeviceId = sp.getString("DeviceID", "");
 			if (DeviceId.isEmpty()) {
 				DeviceId = UUID.randomUUID().toString();
 				String UserName = "NewUser";
 				String DeviceName = Build.BRAND;
-				executeProcedurePostgreSQL.RegisterDevice(DeviceId, UserName, DeviceName);
-				UserId = executeProcedurePostgreSQL.GetUserId(DeviceId);
+//				APICalls.RegisterDevice(DeviceId, UserName, DeviceName);
+				UserId = apiCalls.GetUserId(DeviceId);
 				sp.edit().putString("DeviceID", DeviceId).commit();
 				sp.edit().putString("UserID", UserId);
 				sp.edit().putString("UserName", UserName);
@@ -224,7 +229,7 @@ public class MainActivity extends AppCompatActivity {
 			} else {
 				UserId = sp.getString("UserID", "");
 				if (UserId.isEmpty()) {
-					UserId = executeProcedurePostgreSQL.GetUserId(DeviceId);
+					UserId = apiCalls.GetUserId(DeviceId);
 					sp.edit().putString("UserID", UserId).commit();
 				}
 			}
@@ -233,7 +238,8 @@ public class MainActivity extends AppCompatActivity {
 			ex.getLocalizedMessage();
 		}
 		textDeviceID.setText("Device ID: " + DeviceId);
-		textUserID.setText("User ID: " + UserId);
+//		textUserID.setText("User ID: " + UserId);
+		textUserID.setText("ownRadio");
 
 		SetTrackInfoText();
 	}
@@ -280,83 +286,83 @@ public class MainActivity extends AppCompatActivity {
 		super.onDestroy();
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.menu, menu);
-		return super.onCreateOptionsMenu(menu);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-			case android.R.id.home:
-				NavUtils.navigateUpFromSameTask(this);
-				return true;
-
-//			case R.id.action_settings:
-//				startActivity(new Intent(this, SettingsActivity.class));
+//	@Override
+//	public boolean onCreateOptionsMenu(Menu menu) {
+//		getMenuInflater().inflate(R.menu.menu, menu);
+//		return super.onCreateOptionsMenu(menu);
+//	}
+//
+//	@Override
+//	public boolean onOptionsItemSelected(MenuItem item) {
+//		switch (item.getItemId()) {
+//			case android.R.id.home:
+//				NavUtils.navigateUpFromSameTask(this);
 //				return true;
-
-			case R.id.clear_cache:
-				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-                builder.setTitle("Clear cache?")
-                        .setMessage("All cached tracks will be removed.")
-                        .setCancelable(false)
-                        .setPositiveButton("OK",
-                                new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialogInterface, int i) {
-										File dir = new File(MainActivity.this.getExternalFilesDir(Environment.DIRECTORY_MUSIC).getPath());
-										if (dir.isDirectory()) {
-											String[] children = dir.list();
-											for (int j = 0; j < children.length; j++) {
-												new File(dir, children[j]).delete();
-											}
-										}
-										TrackDataAccess trackDataAccess = new TrackDataAccess(MainActivity.this);
-										trackDataAccess.CleanTrackTable();
-										HistoryDataAccess historyDataAccess = new HistoryDataAccess(MainActivity.this);
-										historyDataAccess.CleanHistoryTable();
-
-										TrackToCache trackToCache = new TrackToCache(MainActivity.this);
-										TextView txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
-										txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
-										TextView txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
-										txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(MainActivity.this.getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
-										dialogInterface.cancel();
-									}
-                                })
-						.setNegativeButton("Cancel",
-								new DialogInterface.OnClickListener(){
-									@Override
-									public void onClick(DialogInterface dialogInterface, int i) {
-										dialogInterface.cancel();
-									}
-								});
-                AlertDialog alert = builder.create();
-                alert.show();
-				break;
-
-			case R.id.action_exit:
-				try {
-					unregisterReceiver(headSetReceiver);
-					unregisterReceiver(remoteControlReceiver);
-				} catch (Exception ex) {
-					Log.e(TAG, ex.getLocalizedMessage());
-				}
-				binder.GetMediaPlayerService().SaveLastPosition();
-				binder.GetMediaPlayerService().StopNotification();
-//				unbindService(mediaPlayerServiceConnection);
-                stopService(new Intent(this, MediaPlayerService.class));
-//                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
-//                intent.setAction("ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION");
-//                startService(intent);
-				android.os.Process.killProcess(android.os.Process.myPid());
-//                System.exit(0);
-				return true;
-		}
-		return super.onOptionsItemSelected(item);
-	}
+//
+////			case R.id.action_settings:
+////				startActivity(new Intent(this, SettingsActivity.class));
+////				return true;
+//
+//			case R.id.clear_cache:
+//				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+//                builder.setTitle("Clear cache?")
+//                        .setMessage("All cached tracks will be removed.")
+//                        .setCancelable(false)
+//                        .setPositiveButton("OK",
+//                                new DialogInterface.OnClickListener() {
+//                                    @Override
+//                                    public void onClick(DialogInterface dialogInterface, int i) {
+//										File dir = new File(MainActivity.this.getExternalFilesDir(Environment.DIRECTORY_MUSIC).getPath());
+//										if (dir.isDirectory()) {
+//											String[] children = dir.list();
+//											for (int j = 0; j < children.length; j++) {
+//												new File(dir, children[j]).delete();
+//											}
+//										}
+//										TrackDataAccess trackDataAccess = new TrackDataAccess(MainActivity.this);
+//										trackDataAccess.CleanTrackTable();
+//										HistoryDataAccess historyDataAccess = new HistoryDataAccess(MainActivity.this);
+//										historyDataAccess.CleanHistoryTable();
+//
+//										TrackToCache trackToCache = new TrackToCache(MainActivity.this);
+//										TextView txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
+//										txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
+//										TextView txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
+//										txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(MainActivity.this.getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
+//										dialogInterface.cancel();
+//									}
+//                                })
+//						.setNegativeButton("Cancel",
+//								new DialogInterface.OnClickListener(){
+//									@Override
+//									public void onClick(DialogInterface dialogInterface, int i) {
+//										dialogInterface.cancel();
+//									}
+//								});
+//                AlertDialog alert = builder.create();
+//                alert.show();
+//				break;
+//
+//			case R.id.action_exit:
+//				try {
+//					unregisterReceiver(headSetReceiver);
+//					unregisterReceiver(remoteControlReceiver);
+//				} catch (Exception ex) {
+//					Log.e(TAG, ex.getLocalizedMessage());
+//				}
+//				binder.GetMediaPlayerService().SaveLastPosition();
+//				binder.GetMediaPlayerService().StopNotification();
+////				unbindService(mediaPlayerServiceConnection);
+//                stopService(new Intent(this, MediaPlayerService.class));
+////                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
+////                intent.setAction("ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION");
+////                startService(intent);
+//				android.os.Process.killProcess(android.os.Process.myPid());
+////                System.exit(0);
+//				return true;
+//		}
+//		return super.onOptionsItemSelected(item);
+//	}
 
 
 	public void LogToTextView() {

@@ -11,7 +11,6 @@ import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
 import java.io.File;
-import java.util.Date;
 
 /**
  * Created by a.polunina on 24.10.2016.
@@ -27,8 +26,6 @@ public class TrackToCache {
 	public TrackToCache(Context context) {
 		mContext = context;
 	}
-
-//    public long GetAvailableSpace(Context context)
 
 	public String SaveTrackToCache(String deviceId, int trackCount) {
 		TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
@@ -54,7 +51,7 @@ public class TrackToCache {
 //			sp.edit().putString("MaxCacheSize", maxCacheSize).commit();
 //		}
 
-		ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(mContext);
+		APICalls apiCalls = new APICalls(mContext);
 
 		for (int i = 0; i < trackCount; i++) {
 			int flag = CheckCacheDoing();
@@ -64,13 +61,14 @@ public class TrackToCache {
 
 				case DOWNLOAD_FILE_TO_CACHE: {
 					CheckConnection checkConnection = new CheckConnection();
-					boolean wifiConnect = checkConnection.CheckWifiConnection(mContext);
-					if (!wifiConnect)
+					boolean internetConnect = checkConnection.CheckInetConnection(mContext);
+//					boolean wifiConnect = checkConnection.CheckWifiConnection(mContext);
+					if (!internetConnect)
 						return "Подключение к интернету отсутствует";
 
 					try {
 						GetTrack getTrack = new GetTrack();
-						trackId = executeProcedurePostgreSQL.GetNextTrackID(deviceId);
+						trackId = apiCalls.GetNextTrackID(deviceId);
 						if (trackDataAccess.CheckTrackExistInDB(trackId)) {
 							Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
 							return "Трек был загружен ранее";
@@ -146,11 +144,11 @@ public class TrackToCache {
 			if (Build.VERSION.SDK_INT <= 17) {
 				StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
 				availableSpace = (long) stat.getFreeBlocks() * (long) stat.getBlockSize();
-				Log.d(TAG, "availableSpace :" + availableSpace / 1048576 + ". Time:" + new Date());
+				Log.d(TAG, "availableSpace :" + availableSpace / 1048576);
 			}
 			if (Build.VERSION.SDK_INT >= 18) {
 				availableSpace = new StatFs(externalStoragePath.getPath()).getAvailableBytes();
-				Log.d(TAG, "availableSpace :" + availableSpace / 1048576 + ". Time:" + new Date());
+				Log.d(TAG, "availableSpace :" + availableSpace / 1048576);
 			}
 
 			if (cacheSize < (cacheSize + availableSpace) / 2.0)
@@ -161,16 +159,17 @@ public class TrackToCache {
 
 	public void DownloadTrackToCache(String deviceId){
 		String trackId;
-		ExecuteProcedurePostgreSQL executeProcedurePostgreSQL = new ExecuteProcedurePostgreSQL(mContext);
+		APICalls apiCalls = new APICalls(mContext);
 		TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
 		CheckConnection checkConnection = new CheckConnection();
-		boolean wifiConnect = checkConnection.CheckWifiConnection(mContext);
-		if (!wifiConnect)
-			return;
+//		boolean internetConnect = checkConnection.CheckInetConnection(mContext);
+////		boolean wifiConnect = checkConnection.CheckWifiConnection(mContext);
+//		if (!internetConnect)
+//			return;
 
 		try {
 			GetTrack getTrack = new GetTrack();
-			trackId = executeProcedurePostgreSQL.GetNextTrackID(deviceId);
+			trackId = apiCalls.GetNextTrackID(deviceId);
 			if (trackDataAccess.CheckTrackExistInDB(trackId)) {
 				Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
 				return;

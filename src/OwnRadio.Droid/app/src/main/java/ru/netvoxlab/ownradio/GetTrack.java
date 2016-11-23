@@ -12,6 +12,8 @@ import android.net.Uri;
 import android.os.Environment;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by a.polunina on 21.10.2016.
@@ -19,6 +21,8 @@ import java.io.File;
 
 public class GetTrack {
 	public static final String ActionTrackInfoUpdate = "ru.netvoxlab.ownradio.action.TRACK_INFO_UPDATE";
+	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
+
 	private long downloadReference;
 	private DownloadManager downloadManager;
 	TrackDB trackDB;
@@ -49,6 +53,7 @@ public class GetTrack {
 //					Uri.parse("http://ownradio.ru/api/track/GetTrackByID/" + trackId));//Core
 			//Загрузка треков осуществляется только через Wi-Fi
 //            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI);
+			//Отключаем уведомления о загрузке
 			request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_HIDDEN);
 			//Заголовок для вывода в уведомление
 			request.setTitle(fileName);
@@ -58,6 +63,9 @@ public class GetTrack {
 			downloadReference = downloadManager.enqueue(request);
 //                    trackURL = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getPath() + "/" + fileName;
 		} catch (Exception ex) {
+			Intent i = new Intent(ActionSendInfoTxt);
+			i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + ex.getLocalizedMessage());
+			context.sendBroadcast(i);
 //			Toast.makeText(context, ex.getLocalizedMessage(), Toast.LENGTH_LONG).show();
 //            return -1;
 		}
@@ -100,7 +108,7 @@ public class GetTrack {
 						trackDataAccess.SaveTrack(track);
 
 						Intent i = new Intent(ActionTrackInfoUpdate);
-						context.getApplicationContext().sendBroadcast(i);
+						context.sendBroadcast(i);
 					}
 				}
 			}
