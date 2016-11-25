@@ -199,7 +199,7 @@ public class SettingsActivity extends AppCompatActivity {
 					unregisterReceiver(headSetReceiver);
 					unregisterReceiver(remoteControlReceiver);
 				} catch (Exception ex) {
-					Log.e(TAG, ex.getLocalizedMessage());
+					Log.e(TAG, " " + ex.getLocalizedMessage());
 				}
 //				binder.GetMediaPlayerService().SaveLastPosition();
 //				binder.GetMediaPlayerService().StopNotification();

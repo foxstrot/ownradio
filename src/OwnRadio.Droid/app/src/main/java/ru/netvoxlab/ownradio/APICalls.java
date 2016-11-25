@@ -13,7 +13,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by a.polunina on 21.10.2016.
@@ -56,15 +55,15 @@ public class APICalls {
 			}catch (Exception ex) {
 				Log.d(TAG, "GetNextTrackID() was return " + result);
 				Intent i = new Intent(ActionSendInfoTxt);
-				i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + result);
+				i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + " " + result);
 				MainContext.sendBroadcast(i);
 				return null;
 			}
 		} catch (MalformedURLException | InterruptedException | ExecutionException ex) {
-			Log.d(TAG, ex.getLocalizedMessage());
+			Log.d(TAG, " " + ex.getLocalizedMessage());
 			return null;
 		} catch (IOException ex) {
-			Log.d(TAG, ex.getLocalizedMessage());
+			Log.d(TAG, " " + ex.getLocalizedMessage());
 			return null;
 		}
 	}
@@ -98,7 +97,7 @@ public class APICalls {
 
 				urlRequest = new URL(serverPath + "histories/" + deviceId + "/" + historyRec.getAsString("trackid"));
 
-				result = new PostRequest(MainContext).execute(urlRequest.toString(), historyRec.getAsString("data"), historyRec.getAsString("id")).get(1, TimeUnit.SECONDS);
+				result = new PostRequest(MainContext).execute(urlRequest.toString(), historyRec.getAsString("data"), historyRec.getAsString("id")).get();
 				if (result == HttpURLConnection.HTTP_OK) {
 					historyRecID = historyRec.getAsString("id");
 					historyDataAccess.DeleteHistoryRec(historyRecID);

@@ -17,7 +17,9 @@ import android.preference.PreferenceManager;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -28,7 +30,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
 
 	private APICalls apiCalls;
 
@@ -49,19 +51,28 @@ public class MainActivity extends AppCompatActivity {
 	ProgressBar progressBar;
 	TextView textInfo;
 
+	TextView textVersionName;
+	TextView textDeviceID;
+	TextView textUserID;
+	TextView textTrackID;
+	TextView txtTrackCount;
+	TextView txtMemoryUsed;
+
+
 	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
 	public static final String ActionTrackInfoUpdate = "ru.netvoxlab.ownradio.action.TRACK_INFO_UPDATE";
 	public static final String ActionButtonImgUpdate = "ru.netvoxlab.ownradio.action.BTN_PLAYPAUSE_IMG_UPDATE";
 	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
 
+	int numberOfTaps = 0;
+	long lastTapTimeMs = 0;
+	long touchDownMs = 0;
+//	Handler handler = new Handler();
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		//Remove title bar
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-
-		//Remove notification bar
-		//this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
 		setContentView(R.layout.activity_main);
 
@@ -87,16 +98,19 @@ public class MainActivity extends AppCompatActivity {
 		textInfo = (TextView) findViewById(R.id.textViewInfo);
 		textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
-		final TextView textTrackID = (TextView) findViewById(R.id.trackID);
+		textTrackID = (TextView) findViewById(R.id.trackID);
 
 		btnPlayPause = (Button) findViewById(R.id.btnPlayPause);
 		btnPlayPause.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
+//					btnPlayPause.setBackgroundResource(R.drawable.btn_play);
 					binder.GetMediaPlayerService().Pause();
-				else
+				} else {
+					btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
 					binder.GetMediaPlayerService().Play();
+				}
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 
 			}
@@ -106,12 +120,83 @@ public class MainActivity extends AppCompatActivity {
 		btnNext.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-                if(binder.GetMediaPlayerService().player != null)
-                    binder.GetMediaPlayerService().Next();
+//				if (binder.GetMediaPlayerService().player != null)
+					binder.GetMediaPlayerService().Next();
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 			}
 		});
+	}
 
+	@Override
+	public boolean onTouch(View v, MotionEvent event) {
+		switch (event.getAction()) {
+			case MotionEvent.ACTION_DOWN: // нажатие
+				touchDownMs = System.currentTimeMillis();
+				break;
+			case MotionEvent.ACTION_MOVE: // движение
+				break;
+			case MotionEvent.ACTION_UP: // отпускание
+				handler.removeCallbacksAndMessages(null);
+				if ((System.currentTimeMillis() - touchDownMs) > ViewConfiguration.getTapTimeout()) {
+					//it was not a tap
+					numberOfTaps = 0;
+					lastTapTimeMs = 0;
+					break;
+				}
+
+				if (numberOfTaps > 0
+						&& (System.currentTimeMillis() - lastTapTimeMs) < ViewConfiguration.getDoubleTapTimeout()) {
+					numberOfTaps += 1;
+				} else {
+					numberOfTaps = 1;
+				}
+
+				lastTapTimeMs = System.currentTimeMillis();
+
+				//5 тапов - отобразить инфрмацию для разработчиков
+				if (numberOfTaps == 5) {
+					sp.edit().putBoolean("DevelopersInfo", true).commit();
+					SetDevelopersInfo();
+//					Toast.makeText(getApplicationContext(), "five", Toast.LENGTH_SHORT).show();
+					//handle triple tap
+				} else if (numberOfTaps == 2) { //2 тапав - скрыть инфрмацию для разработчиков
+					handler.postDelayed(new Runnable() {
+						@Override
+						public void run() {
+							sp.edit().putBoolean("DevelopersInfo", false).commit();
+							SetDevelopersInfo();
+							//handle double tap
+//							Toast.makeText(getApplicationContext(), "double", Toast.LENGTH_SHORT).show();
+						}
+					}, ViewConfiguration.getDoubleTapTimeout());
+				}
+				break;
+			case MotionEvent.ACTION_CANCEL:
+				break;
+		}
+		return true;
+	}
+
+	public void SetDevelopersInfo(){
+		if(!sp.getBoolean("DevelopersInfo",false)) {
+			textVersionName.setVisibility(View.GONE);
+			textDeviceID.setVisibility(View.GONE);
+			textTrackID.setVisibility(View.GONE);
+			txtTrackCount.setVisibility(View.GONE);
+			txtMemoryUsed.setVisibility(View.GONE);
+			textInfo.setVisibility(View.GONE);
+		}
+		else {
+			textVersionName.setVisibility(View.VISIBLE);
+			textDeviceID.setVisibility(View.VISIBLE);
+			textTrackID.setVisibility(View.VISIBLE);
+			txtTrackCount.setVisibility(View.VISIBLE);
+			txtMemoryUsed.setVisibility(View.VISIBLE);
+			textInfo.setVisibility(View.VISIBLE);
+		}
+//		Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
+//		intent.setAction("ru.netvoxlab.ownradio.action.UPDATE_NOTIFICATION");
+//		startService(intent);
 	}
 
 	private BroadcastReceiver myReceiver = new BroadcastReceiver(){
@@ -126,14 +211,15 @@ public class MainActivity extends AppCompatActivity {
 					if (binder == null)
 						return;
 
+//					if (binder.GetMediaPlayerService().player == null)
 					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
 						btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
 					else
 						btnPlayPause.setBackgroundResource(R.drawable.btn_play);
-					TextView textTrackID = (TextView) findViewById(R.id.trackID);
+					textTrackID = (TextView) findViewById(R.id.trackID);
 					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 				}catch (Exception ex){
-					Log.d(TAG, ex.getLocalizedMessage());
+					Log.d(TAG, "ActionButtonImgUpdate error:" + ex.getLocalizedMessage());
 				}
 			}
 
@@ -190,6 +276,16 @@ public class MainActivity extends AppCompatActivity {
 		startActivity(startMain);
 	}
 
+//	@Override
+//	public void onConfigurationChanged(Configuration newConfig) {
+//		super.onConfigurationChanged(newConfig);
+////		if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+////			createHorizontalalLayout();
+////		} else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+////			createVerticalLayout();
+////		}
+//	}
+
 	private void InitilizeMedia() {
 		mediaPlayerServiceIntent = new Intent(this, MediaPlayerService.class);
 		mediaPlayerServiceConnection = new MediaPlayerServiceConnection(this);
@@ -202,9 +298,17 @@ public class MainActivity extends AppCompatActivity {
 		if (mediaPlayerServiceConnection == null)
 			InitilizeMedia();
 
-		TextView textVersionName = (TextView) findViewById(R.id.versionName);
-		TextView textDeviceID = (TextView) findViewById(R.id.deviceID);
-		TextView textUserID = (TextView) findViewById(R.id.userID);
+		textUserID = (TextView) findViewById(R.id.userID);
+		textVersionName = (TextView) findViewById(R.id.versionName);
+		textDeviceID = (TextView) findViewById(R.id.deviceID);
+		txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
+		txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
+
+		textUserID.setOnTouchListener(this);
+
+//		sp.edit().putBoolean("DevelopersInfo",false).commit();
+		SetDevelopersInfo();
+
 		try {
 			String info = this.getPackageManager().getPackageInfo(this.getPackageName(), PackageManager.GET_META_DATA).versionName;
 			textVersionName.setText("Version name: " + info);
@@ -239,17 +343,16 @@ public class MainActivity extends AppCompatActivity {
 		}
 		textDeviceID.setText("Device ID: " + DeviceId);
 //		textUserID.setText("User ID: " + UserId);
-		textUserID.setText("ownRadio");
 
+
+		textUserID.setText("ownRadio");
 		SetTrackInfoText();
 	}
 
 	public void SetTrackInfoText(){
 		TrackDataAccess trackDataAccess = new TrackDataAccess(this);
 		TrackToCache trackToCache = new TrackToCache(this);
-		TextView txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
 		txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
-		TextView txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
 		txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(getApplicationContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
 	}
 
@@ -263,17 +366,17 @@ public class MainActivity extends AppCompatActivity {
 		try {
 			unregisterReceiver(myReceiver);
 		} catch (Exception ex) {
-			Log.e(TAG, ex.getLocalizedMessage());
+			Log.e(TAG, " " + ex.getLocalizedMessage());
 		}
 		try {
 			unregisterReceiver(headSetReceiver);
 		} catch (Exception ex) {
-			Log.e(TAG, ex.getLocalizedMessage());
+			Log.e(TAG, " " + ex.getLocalizedMessage());
 		}
 		try {
 			unregisterReceiver(remoteControlReceiver);
 		} catch (Exception ex) {
-			Log.e(TAG, ex.getLocalizedMessage());
+			Log.e(TAG, " " + ex.getLocalizedMessage());
 		}
 		binder.GetMediaPlayerService().SaveLastPosition();
 		binder.GetMediaPlayerService().StopNotification();
@@ -348,7 +451,7 @@ public class MainActivity extends AppCompatActivity {
 //					unregisterReceiver(headSetReceiver);
 //					unregisterReceiver(remoteControlReceiver);
 //				} catch (Exception ex) {
-//					Log.e(TAG, ex.getLocalizedMessage());
+//					Log.e(TAG, " " + ex.getLocalizedMessage());
 //				}
 //				binder.GetMediaPlayerService().SaveLastPosition();
 //				binder.GetMediaPlayerService().StopNotification();

@@ -2,7 +2,6 @@ package ru.netvoxlab.ownradio;
 
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -41,6 +40,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
 	public static final String ActionButtonImgUpdate = "ru.netvoxlab.ownradio.action.BTN_PLAYPAUSE_IMG_UPDATE";
 	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
+	public static final String ActionUpdateNotification = "ru.netvoxlab.ownradio.action.UPDATE_NOTIFICATION";
 
 	public MediaPlayer player = null;
 	private AudioManager audioManager;
@@ -99,7 +99,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				player.setVolume(1.0f, 1.0f);
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS:
-				Pause();//Stop();
+				Pause();
+//				Stop();
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
 				//We have lost focus for a short time, but likely to resume so pause
@@ -228,6 +229,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				else
 					Play();
 				break;
+			case ActionUpdateNotification:
+				StartNotification();
+				break;
 //            case ActionSaveCurrentPosition: SaveLastPosition();
 //                android.os.Process.killProcess(android.os.Process.myPid());
 //                break;
@@ -242,7 +246,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //		player.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		//Wake mode will be partial to keep the CPU still running under lock screen
 		player.setWakeMode(getApplicationContext(), 1);// WakeLockFlags.Partial=1
-
+		player.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		player.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
 			@Override
 			public void onBufferingUpdate(MediaPlayer mediaPlayer, int i) {
@@ -291,35 +295,50 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 						Thread.currentThread().interrupt();
 						return;
 					}catch (Exception ex){
-						Log.d(TAG, ex.getLocalizedMessage());
+						Log.d(TAG, "Error in history send" + ex.getLocalizedMessage());
 						Thread.currentThread().interrupt();
 						return;
 					}
 				}
 			}).start();
 		} catch (Exception ex) {
-			Log.d(TAG, ex.getLocalizedMessage());
+			Log.d(TAG, " " + ex.getLocalizedMessage());
 		}
 	}
 
 	public void Play() {
+		Log.d(TAG, "Play(): ");
+
 		if (player != null && GetMediaPlayerState() == PlaybackStateCompat.STATE_PAUSED) {
+			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+//			if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+//				//mess
+//				return;
+//			}
+			Log.d(TAG, "Play(): start");
+
 			player.start();
-			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
-			StartNotification();
-			UpdateButtonPlayPauseImg();
+//			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
+//			StartNotification();
+//			UpdateButtonPlayPauseImg();
 		}
 
 		if (player == null)
 			InitializePlayer();
 
+		Log.d(TAG, "Play(): InitializePlayer");
+
 		if (mediaSessionCompat == null)
 			InitMediaSession();
 
+		Log.d(TAG, "Play(): InitMediaSession");
+
 		if (player.isPlaying()) {
 			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
-			StartNotification();
-			UpdateButtonPlayPauseImg();
+			Log.d(TAG, "Play(): UpdatePlaybackState");
+
+//			StartNotification();
+//			UpdateButtonPlayPauseImg();
 			return;
 		}
 
@@ -343,13 +362,21 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 ////					metaRetriever.setDataSource(trackURL);
 //				}
 //			} else {
+			Log.d(TAG, "Play(): try");
+
 			String trackIdTmp = new APICalls(getApplicationContext()).GetNextTrackID(DeviceID);
+
 			if(trackIdTmp == null)
 				return;
 			else
 				TrackID = trackIdTmp;
 
+			Log.d(TAG, "Play(): GetNextTrackID: " + trackIdTmp);
+
 			String uri = "http://java.ownradio.ru/api/v2/tracks/" + TrackID;
+
+			Log.d(TAG, "Play(): URI: " + uri);
+
 			player.setDataSource(getApplicationContext(), Uri.parse(uri));
 //					metaRetriever.setDataSource(uri);
 //			}
@@ -360,17 +387,21 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			}
 
 			UpdatePlaybackState(PlaybackStateCompat.STATE_BUFFERING);
+			Log.d(TAG, "Play(): UpdatePlaybackState" );
 
 			player.prepareAsync();
+			Log.d(TAG, "Play(): prepareAsync" );
+
 			AcquireWifiLock();
 			//                UpdateMediaMetadataCompat (metaRetriever);
-			if (GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
-				StartNotification();
-				UpdateButtonPlayPauseImg();
-			}
+//			if (GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
+//				StartNotification();
+//				UpdateButtonPlayPauseImg();
+//			}
 
 			Intent i = new Intent(ActionProgressBarUpdate);
 			sendBroadcast(i);
+			Log.d(TAG, "Play(): sendBroadcast" );
 
 
 //				TrackToCache trackToCache = new TrackToCache(getApplicationContext());
@@ -387,7 +418,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //				}
 //			}
 		} catch (Exception ex) {
-			Log.d(TAG, ex.getLocalizedMessage());
+			Log.d(TAG, "Error in Play(): " + ex.getStackTrace());
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
 			player.reset();
 			player.release();
@@ -404,30 +435,39 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		if (player.isPlaying())
 			player.pause();
 		UpdatePlaybackState(PlaybackStateCompat.STATE_PAUSED);
+//		UpdateButtonPlayPauseImg();
 	}
 
 	public void Stop() {
 		if (player == null)
 			return;
 
+		SaveLastPosition();
+
 		if (player.isPlaying()) {
 			player.stop();
 		}
 
-		try{
-			BroadcastReceiver headSetReceiver = new MusicBroadcastReceiver();
-			BroadcastReceiver remoteControlReceiver = new RemoteControlReceiver();
-			unregisterReceiver(headSetReceiver);
-			unregisterReceiver(remoteControlReceiver);
+//		try{
+//			BroadcastReceiver headSetReceiver = new MusicBroadcastReceiver();
+//			BroadcastReceiver remoteControlReceiver = new RemoteControlReceiver();
+//			unregisterReceiver(headSetReceiver);
+//			unregisterReceiver(remoteControlReceiver);
+//		}catch (Exception ex){
+//			Log.d(TAG, " " + ex.getLocalizedMessage());
+//		}
+
+		try {
+			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
+//			UpdateButtonPlayPauseImg();
+			player.reset();
+//			StartNotification();
+//			super.stopForeground(true);
+			ReleaseWifiLock();
+//			UnregisterMediaSessionCompat();
 		}catch (Exception ex){
-			Log.d(TAG, ex.getLocalizedMessage());
+			Log.d(TAG, " " + ex.getLocalizedMessage());
 		}
-		UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
-		player.reset();
-//		StopNotification();
-		super.stopForeground(true);
-		ReleaseWifiLock();
-		UnregisterMediaSessionCompat();
 	}
 
 	public void Next() {
@@ -448,7 +488,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 						Thread.currentThread().interrupt();
 						return;
 					}catch (Exception ex){
-						Log.d(TAG, ex.getLocalizedMessage());
+						Log.d(TAG, " " + ex.getLocalizedMessage());
 						Thread.currentThread().interrupt();
 						return;
 					}
@@ -577,10 +617,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 //            OnStatusChanged(EventArgs.Empty);
 
-			if (state == PlaybackStateCompat.STATE_PLAYING || state == PlaybackStateCompat.STATE_PAUSED) {
+			if (state != PlaybackStateCompat.STATE_BUFFERING) {
 				StartNotification();
 				UpdateButtonPlayPauseImg();
-
 			}
 		} catch (Exception ex) {
 		}
@@ -601,9 +640,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		style.setShowCancelButton(true);
 		style.setCancelButtonIntent(pendingCancelIntent);
 
-		String trackTitle = TrackID.substring(0,8);
-		String trackArtist = "NetVox Lab";
-		String trackAlbum = "ownRadio";
+		String trackTitle = "Track ID: " + TrackID.substring(0,8);
+		String trackArtist = "ownRadio";
 
 		Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
 		intent.setAction(ActionPlay);
@@ -617,10 +655,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		PendingIntent pmainIntent = PendingIntent.getActivity(getApplicationContext(), 0,
 				mainIntent, 0);
 
+		if(!PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("DevelopersInfo",false))
+			contentView.setViewVisibility(R.id.viewsTitle, View.GONE);
+		else
+			contentView.setViewVisibility(R.id.viewsTitle, View.VISIBLE);
+
 		contentView.setTextViewText(R.id.viewsTitle, trackTitle);
 		contentView.setTextViewText(R.id.viewsArtist, trackArtist);
-		contentView.setTextViewText(R.id.viewsAlbum, trackAlbum);
-
 
 		Intent playIntent = new Intent(this, MediaPlayerService.class);
 		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
@@ -651,7 +692,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
 			builder.setOngoing(true);
 		else
-			builder.setOngoing(false);
+			builder.setOngoing(true);
 //        style.setShowActionsInCompactView(0,1,2);
 		NotificationManagerCompat.from(getApplicationContext()).notify(NotificationId, builder.build());
 
