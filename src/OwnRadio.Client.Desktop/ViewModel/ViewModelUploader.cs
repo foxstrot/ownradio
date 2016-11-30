@@ -129,7 +129,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
 			try
 			{
 				var allFiles = Directory.EnumerateFiles(sourceDirectory);
-				var musicFiles = allFiles.Where(s => s.Split('.')[s.Split('.').Count() - 1].ToLower().Equals("mp3"));
+				var musicFiles = allFiles.Where(s => s.EndsWith(".mp3"));
 				filenames.AddRange(musicFiles);
 
 				var dirs = Directory.EnumerateDirectories(sourceDirectory);
