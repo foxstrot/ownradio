@@ -47,16 +47,14 @@ namespace OwnRadio.Client.Desktop
 			try
 			{
 				_connection.Open();
-				if (!Exist(musicFile.FileName))
-				{
-					var commandSql = string.Format("INSERT INTO Files (ID, FileName, SubPath) VALUES ($fileGuid, $fileName, $filePath)");
-					var cmd = new SQLiteCommand(commandSql, _connection);
-					cmd.Parameters.AddWithValue("$fileGuid", musicFile.FileGuid.ToString());
-					cmd.Parameters.AddWithValue("$fileName", musicFile.FileName);
-					cmd.Parameters.AddWithValue("$filePath", musicFile.FilePath);
 
-					rowsAffected += cmd.ExecuteNonQuery();
-				}
+				var commandSql = string.Format("INSERT INTO Files (ID, FileName, SubPath) VALUES ($fileGuid, $fileName, $filePath)");
+				var cmd = new SQLiteCommand(commandSql, _connection);
+				cmd.Parameters.AddWithValue("$fileGuid", musicFile.FileGuid.ToString());
+				cmd.Parameters.AddWithValue("$fileName", musicFile.FileName);
+				cmd.Parameters.AddWithValue("$filePath", musicFile.FilePath);
+
+				rowsAffected += cmd.ExecuteNonQuery();
 
 				_connection.Close();
 			}
