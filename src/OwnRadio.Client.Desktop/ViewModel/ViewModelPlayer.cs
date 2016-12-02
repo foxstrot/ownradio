@@ -22,7 +22,16 @@ namespace OwnRadio.Client.Desktop.ViewModel
 
 		public static readonly DependencyProperty CurrentTrackProperty =
 			DependencyProperty.Register("CurrentTrack", typeof(TrackInfo), typeof(ViewModelPlayer), new PropertyMetadata(null));
+		
+		public string FullTrackName
+		{
+			get { return (string)GetValue(FullTrackNameProperty); }
+			set { SetValue(FullTrackNameProperty, value); }
+		}
 
+		public static readonly DependencyProperty FullTrackNameProperty =
+			DependencyProperty.Register("FullTrackName", typeof(string), typeof(ViewModelPlayer), new PropertyMetadata(""));
+		
 		public bool IsRunning
 		{
 			get { return (bool)GetValue(IsRunningProperty); }
@@ -47,7 +56,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
 					Stop();
 					CurrentTrack.ListenEnd = DateTime.Now;
 					CurrentTrack.Status = TrackInfo.Statuses.Listened;
-					await App.RestClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
+					await App.OwnRadioClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
 
 					GetNextTrack();
 					Play();
@@ -95,7 +104,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
 				CurrentTrack.ListenEnd = DateTime.Now;
 				CurrentTrack.Status = TrackInfo.Statuses.Skipped;
 
-				await App.RestClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
+				await App.OwnRadioClient.SendStatus(Properties.Settings.Default.DeviceId, CurrentTrack);
 
 				GetNextTrack();
 				Play();
@@ -110,8 +119,9 @@ namespace OwnRadio.Client.Desktop.ViewModel
 		{
 			try
 			{
-				CurrentTrack = App.RestClient.GetNextTrack(Properties.Settings.Default.DeviceId).Result;
+				CurrentTrack = App.OwnRadioClient.GetNextTrack(Properties.Settings.Default.DeviceId).Result;
 				Player.Source = CurrentTrack.Uri;
+				FullTrackName = $"{CurrentTrack.Artist} - {CurrentTrack.Name}";
 			}
 			catch (Exception exception)
 			{

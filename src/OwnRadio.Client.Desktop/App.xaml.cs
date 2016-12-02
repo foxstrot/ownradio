@@ -16,7 +16,7 @@ namespace OwnRadio.Client.Desktop
 	/// </summary>
 	public partial class App : Application
 	{
-		public static OwnRadioRestClient RestClient { get; private set; } = new OwnRadioRestClient();
+		public static OwnRadioClient OwnRadioClient { get; private set; } = new OwnRadioClient();
 
 		/// <summary>
 		/// Event handler fired then application started

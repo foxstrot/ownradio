@@ -37,7 +37,7 @@ namespace OwnRadio.Client.Desktop.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("http://java.ownradio.ru/")]
+        [global::System.Configuration.DefaultSettingValueAttribute("http://api.ownradio.ru/")]
         public string ServiceUri {
             get {
                 return ((string)(this["ServiceUri"]));
