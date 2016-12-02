@@ -160,13 +160,13 @@
 			<Setter Property="VerticalAlignment" Value="Center"></Setter>
 			<Setter Property="HorizontalAlignment" Value="Center"></Setter>
 			<Setter Property="FontSize" Value="14"></Setter>
-			<Setter Property="Text" Value="{Binding CurrentTrack.Id, Source={StaticResource ViewModelPlayer}}"></Setter>
+			<Setter Property="Text" Value="{Binding FullTrackName, Source={StaticResource ViewModelPlayer}}"></Setter>
 			<Style.Triggers>
 				<EventTrigger RoutedEvent="TextBlock.Loaded">
 					<EventTrigger.Actions>
 						<BeginStoryboard>
 							<Storyboard>
-								<DoubleAnimation Storyboard.TargetProperty="(Canvas.Left)" From="-300" To="400"
+								<DoubleAnimation Storyboard.TargetProperty="(Canvas.Left)" From="-200" To="400"
 												 Duration="0:0:10" RepeatBehavior="Forever">
 								</DoubleAnimation>
 							</Storyboard>

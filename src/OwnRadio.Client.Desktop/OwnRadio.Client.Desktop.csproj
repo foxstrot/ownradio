@@ -126,7 +126,7 @@
     <Compile Include="DataAccessLayer.cs" />
     <Compile Include="Model\TrackInfo.cs" />
     <Compile Include="MusicFile.cs" />
-    <Compile Include="OwnRadioRestClient.cs" />
+    <Compile Include="OwnRadioClient.cs" />
     <Compile Include="ViewModel\Commands\ContinueUploadCommand.cs" />
     <Compile Include="ViewModel\Commands\HideInfoCommand.cs" />
     <Compile Include="ViewModel\Commands\NextCommand.cs" />

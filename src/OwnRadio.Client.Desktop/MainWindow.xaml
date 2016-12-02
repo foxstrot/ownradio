@@ -36,7 +36,7 @@
 								<ColumnDefinition Width="*"></ColumnDefinition>
 								<ColumnDefinition Width="Auto"></ColumnDefinition>
 							</Grid.ColumnDefinitions>
-							<TextBlock Grid.Column="0" Foreground="WhiteSmoke" FontSize="11" Text="v2016.11.30"/>
+							<TextBlock Grid.Column="0" Foreground="WhiteSmoke" FontSize="11" Text="v2016.12.02"/>
 							<TextBlock Grid.Column="2" Foreground="WhiteSmoke" FontSize="11" Cursor="Hand"
 									   Text="{Binding Status, Source={StaticResource ViewModelUploader}}" TextAlignment="Right">
 								<i:Interaction.Triggers>

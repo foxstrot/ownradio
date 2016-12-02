@@ -32,5 +32,10 @@ namespace OwnRadio.Client.Desktop.Model
 		/// DateTime then track was finished (by reaching the end or by skipping)
 		/// </summary>
 		public DateTime ListenEnd { get; set; }
+
+		public string Length { get; set; }
+		public string Name { get; set; }
+		public string Artist { get; set; }
+		public string MethodId { get; set; }
 	}
 }

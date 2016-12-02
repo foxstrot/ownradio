@@ -177,13 +177,12 @@ namespace OwnRadio.Client.Desktop.ViewModel
 					var form = new MultipartFormDataContent
 					{
 						{new StringContent(musicFile.FileGuid.ToString()), "fileGuid"},
-						{new StringContent(musicFile.FileName), "fileName"},
-						{new StringContent(musicFile.FilePath), "filePath"},
+						{new StringContent(fullFileName), "filePath"},
 						{new StringContent(Settings.Default.DeviceId.ToString()), "deviceId"},
 						{new ByteArrayContent(byteArray, 0, byteArray.Count()), "musicFile", musicFile.FileGuid + ".mp3"}
 					};
 
-					var response = await httpClient.PostAsync($"{Settings.Default.ServiceUri}api/v2/tracks", form);
+					var response = await httpClient.PostAsync($"{Settings.Default.ServiceUri}v3/tracks", form);
 
 					response.EnsureSuccessStatusCode();
 					httpClient.Dispose();
@@ -223,7 +222,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
 		{
 			var httpClient = new HttpClient();
 
-			var response = await httpClient.GetAsync($"{Settings.Default.ServiceUri}api/v2/tracks/{guid}");
+			var response = await httpClient.GetAsync($"{Settings.Default.ServiceUri}v3/tracks/{guid}");
 
 			return response.IsSuccessStatusCode;
 		}
