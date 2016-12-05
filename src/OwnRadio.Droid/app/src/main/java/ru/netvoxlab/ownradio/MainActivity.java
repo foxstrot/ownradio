@@ -57,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 	TextView textTrackID;
 	TextView txtTrackCount;
 	TextView txtMemoryUsed;
+	TextView txtTrackTitle;
+	TextView txtTrackArtist;
 
 
 	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
@@ -99,6 +101,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 
 		textTrackID = (TextView) findViewById(R.id.trackID);
+
+		txtTrackTitle = (TextView) findViewById(R.id.trackTitle);
+		txtTrackArtist = (TextView) findViewById(R.id.trackArtist);
 
 		btnPlayPause = (Button) findViewById(R.id.btnPlayPause);
 		btnPlayPause.setOnClickListener(new View.OnClickListener() {
@@ -181,6 +186,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		if(!sp.getBoolean("DevelopersInfo",false)) {
 			textVersionName.setVisibility(View.GONE);
 			textDeviceID.setVisibility(View.GONE);
+			textUserID.setVisibility(View.GONE);
 			textTrackID.setVisibility(View.GONE);
 			txtTrackCount.setVisibility(View.GONE);
 			txtMemoryUsed.setVisibility(View.GONE);
@@ -189,6 +195,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		else {
 			textVersionName.setVisibility(View.VISIBLE);
 			textDeviceID.setVisibility(View.VISIBLE);
+			textUserID.setVisibility(View.VISIBLE);
 			textTrackID.setVisibility(View.VISIBLE);
 			txtTrackCount.setVisibility(View.VISIBLE);
 			txtMemoryUsed.setVisibility(View.VISIBLE);
@@ -216,6 +223,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 						btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
 					else
 						btnPlayPause.setBackgroundResource(R.drawable.btn_play);
+
+					txtTrackTitle.setText(binder.GetMediaPlayerService().trackJSON.getString("name"));
+					txtTrackArtist.setText(binder.GetMediaPlayerService().trackJSON.getString("artist"));
 					textTrackID = (TextView) findViewById(R.id.trackID);
 					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 				}catch (Exception ex){
@@ -301,10 +311,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		textUserID = (TextView) findViewById(R.id.userID);
 		textVersionName = (TextView) findViewById(R.id.versionName);
 		textDeviceID = (TextView) findViewById(R.id.deviceID);
+		textUserID = (TextView) findViewById(R.id.userID);
 		txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
 		txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
 
-		textUserID.setOnTouchListener(this);
+		txtTrackTitle.setOnTouchListener(this);
 
 //		sp.edit().putBoolean("DevelopersInfo",false).commit();
 		SetDevelopersInfo();
@@ -342,10 +353,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 			ex.getLocalizedMessage();
 		}
 		textDeviceID.setText("Device ID: " + DeviceId);
-//		textUserID.setText("User ID: " + UserId);
+		textUserID.setText("User ID: " + UserId);
 
 
-		textUserID.setText("ownRadio");
+//		textUserID.setText("ownRadio");
 		SetTrackInfoText();
 	}
 

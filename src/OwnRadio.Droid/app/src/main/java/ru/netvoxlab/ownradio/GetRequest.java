@@ -26,6 +26,7 @@ public class GetRequest extends AsyncTask<URL, Void, String> {
 			URL URLRequest = url[0];
 			HttpURLConnection urlConnection = (HttpURLConnection) URLRequest.openConnection();
 			urlConnection.setRequestMethod("GET");
+
 			urlConnection.connect();
 
 			int responseCode = urlConnection.getResponseCode();

@@ -26,6 +26,8 @@ import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
+import org.json.JSONObject;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -64,6 +66,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	String TrackID = "";
 	Boolean FlagDownloadTrack = true;
 	final String TAG = "ownRadio";
+
+	JSONObject trackJSON;
 
 	ContentValues track;
 	int startPosition = 0;
@@ -114,26 +118,26 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 	}
 
-	private class TrackInfo {
-		public String Title;
-		public String Artist;
-		public String AlbumArtist;
-		public String Album;
-		public String Duration;
-
-		public TrackInfo() {
-		}
-
-		public TrackInfo(String title, String artist, String albumArtist, String album, String duration) {
-			Title = title;
-			Artist = artist;
-			AlbumArtist = albumArtist;
-			Album = album;
-			Duration = duration;
-		}
-	};
-
-	TrackInfo trackInfo = new TrackInfo();
+//	private class TrackInfo {
+//		public String Title;
+//		public String Artist;
+//		public String AlbumArtist;
+//		public String Album;
+//		public String Duration;
+//
+//		public TrackInfo() {
+//		}
+//
+//		public TrackInfo(String title, String artist, String albumArtist, String album, String duration) {
+//			Title = title;
+//			Artist = artist;
+//			AlbumArtist = albumArtist;
+//			Album = album;
+//			Duration = duration;
+//		}
+//	};
+//
+//	TrackInfo trackInfo = new TrackInfo();
 
 	public MediaPlayerService() {
 //        PlayingHandler = new Handler ();
@@ -364,16 +368,24 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			} else {
 			Log.d(TAG, "Play(): try");
 
-			String trackIdTmp = new APICalls(getApplicationContext()).GetNextTrackID(DeviceID);
 
-			if(trackIdTmp == null)
+//			String trackIdTmp = new APICalls(getApplicationContext()).GetNextTrackID(DeviceID);
+			trackJSON = new APICalls((getApplicationContext())).GetNextTrackID(DeviceID);
+			if(trackJSON == null)
 				return;
-			else
-				TrackID = trackIdTmp;
+			Log.d(TAG, "Play(): GetNextTrackID: " + trackJSON);
 
-			Log.d(TAG, "Play(): GetNextTrackID: " + trackIdTmp);
+			String artist = trackJSON.getString("artist");
+			TrackID = trackJSON.getString("id");
+			String title = trackJSON.getString("name");
+			String methodid = trackJSON.getString("methodid");
+			long length = trackJSON.getLong("length");
 
-			String uri = "http://java.ownradio.ru/api/v2/tracks/" + TrackID;
+
+
+
+			String uri = "http://api.ownradio.ru/v3/tracks/" + TrackID;
+//			String uri = "http://java.ownradio.ru/api/v2/tracks/" + TrackID;
 
 			Log.d(TAG, "Play(): URI: " + uri);
 
@@ -513,9 +525,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		try {
 			//история прослушивания
 			//Добавление истории прослушивания в локальную БД
-			if(TrackID != null) {
+			if(TrackID != null && !TrackID.isEmpty()) {
 
-				SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd\'T\'HH:mm:ss");
 				dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));//Time format UTC+0
 				String currentDateTime = dateFormat.format(new Date()); // Find todays date
 				ContentValues history = new ContentValues();
@@ -523,7 +535,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				history.put("userid", UserID);
 				history.put("datetimelisten", currentDateTime);
 				history.put("islisten", listedTillTheEnd);
-				history.put("method", "случайный");
+				history.put("methodid", trackJSON.getInt("methodid"));
 				HistoryDataAccess historyDataAccess = new HistoryDataAccess(getApplicationContext());
 				historyDataAccess.SaveHistoryRec(history);//сохраняет информацию в history для последующей отправки на сервер
 
@@ -639,9 +651,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		PendingIntent pendingCancelIntent = PendingIntent.getService(getApplicationContext(), 1, new Intent(this, MediaPlayerService.class), PendingIntent.FLAG_CANCEL_CURRENT);
 		style.setShowCancelButton(true);
 		style.setCancelButtonIntent(pendingCancelIntent);
-
-		String trackTitle = "Track ID: " + TrackID.substring(0,8);
-		String trackArtist = "ownRadio";
+		String trackTitle;
+		String trackArtist;
+		try {
+			trackTitle = trackJSON.getString("name");
+			trackArtist = trackJSON.getString("artist");
+		}catch (Exception ex){
+			trackTitle = "Unknown track";
+			trackArtist = "Unknown artist";
+			Log.d(TAG, " " + ex.getStackTrace());
+		}
 
 		Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
 		intent.setAction(ActionPlay);
@@ -655,10 +674,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		PendingIntent pmainIntent = PendingIntent.getActivity(getApplicationContext(), 0,
 				mainIntent, 0);
 
-		if(!PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("DevelopersInfo",false))
-			contentView.setViewVisibility(R.id.viewsTitle, View.GONE);
-		else
-			contentView.setViewVisibility(R.id.viewsTitle, View.VISIBLE);
+//		if(!PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("DevelopersInfo",false))
+//			contentView.setViewVisibility(R.id.viewsTitle, View.GONE);
+//		else
+//			contentView.setViewVisibility(R.id.viewsTitle, View.VISIBLE);
 
 		contentView.setTextViewText(R.id.viewsTitle, trackTitle);
 		contentView.setTextViewText(R.id.viewsArtist, trackArtist);
@@ -692,7 +711,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
 			builder.setOngoing(true);
 		else
-			builder.setOngoing(true);
+			builder.setOngoing(false);
 //        style.setShowActionsInCompactView(0,1,2);
 		NotificationManagerCompat.from(getApplicationContext()).notify(NotificationId, builder.build());
 

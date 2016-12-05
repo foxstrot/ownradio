@@ -34,6 +34,8 @@ public class TrackDataAccess {
 //        db.close();
 	}
 
+
+
 	public void UpdateTrack(ContentValues trackInstance) {
 		db = trackDB.getWritableDatabase();
 		long rowID = db.update(TrackTableName, trackInstance, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});

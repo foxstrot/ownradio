@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 
 public class ServiceGenerator {
-	public static final String API_BASE_URL = "http://java.ownradio.ru/api/";
+	public static final String API_BASE_URL = "http://api.ownradio.ru/v3/";
 
 	private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 

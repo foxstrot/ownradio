@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -22,7 +24,8 @@ public class APICalls {
 	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
 	final String TAG = "ownRadio";
 	Context MainContext;
-	String serverPath = "http://java.ownradio.ru/api/v2/";
+	String serverPath = "http://api.ownradio.ru/v3/";
+//	String serverPath = "http://java.ownradio.ru/api/v2/";
 
 	public APICalls(Context context) {
 		this.MainContext = context;
@@ -36,7 +39,7 @@ public class APICalls {
 	}
 
 	//Получает ID следующего трека
-	public String GetNextTrackID(String deviceId) {
+	public JSONObject GetNextTrackID(String deviceId) {
 		CheckConnection checkConnection = new CheckConnection();
 		boolean internetConnect = checkConnection.CheckInetConnection(MainContext);
 		if (!internetConnect){
@@ -50,8 +53,13 @@ public class APICalls {
 		try {
 			URL URLRequest = new URL(serverPath + "tracks/" + deviceId + "/next");
 			String result = new GetRequest().execute(URLRequest).get();
+
 			try {
-				return UUID.fromString(result.substring(1, 37)).toString(); //сделать адекватный парсинг
+				JSONObject jsonObject = new JSONObject(result);
+				UUID.fromString(jsonObject.getString("id")).toString();
+
+				return jsonObject;
+//				return UUID.fromString(trackId).toString(); //сделать адекватный парсинг
 			}catch (Exception ex) {
 				Log.d(TAG, "GetNextTrackID() was return " + result);
 				Intent i = new Intent(ActionSendInfoTxt);

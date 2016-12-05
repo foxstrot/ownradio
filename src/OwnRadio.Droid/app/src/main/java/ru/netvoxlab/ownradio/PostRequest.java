@@ -30,7 +30,7 @@ public class PostRequest extends AsyncTask<String, Void, Integer> {
 			HttpURLConnection urlConnection = (HttpURLConnection) urlRequest.openConnection();
 			urlConnection.setRequestMethod("POST");
 			urlConnection.setDoOutput(true);
-
+			urlConnection.setRequestProperty("Content-Type", "application/json");
 			OutputStreamWriter out = new OutputStreamWriter(urlConnection.getOutputStream());
 			out.write(data[1]);
 			out.flush();

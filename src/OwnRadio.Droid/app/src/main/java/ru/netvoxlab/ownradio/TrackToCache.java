@@ -10,6 +10,8 @@ import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.io.File;
 
 /**
@@ -68,13 +70,14 @@ public class TrackToCache {
 
 					try {
 						GetTrack getTrack = new GetTrack();
-						trackId = apiCalls.GetNextTrackID(deviceId);
+						JSONObject trackJSON = apiCalls.GetNextTrackID(deviceId);
+						trackId = trackJSON.getString("id");
 						if (trackDataAccess.CheckTrackExistInDB(trackId)) {
 							Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
 							return "Трек был загружен ранее";
 						}
 						//Загружаем трек и сохраняем информацию о нем в БД
-						getTrack.GetTrackDM(mContext, trackId);
+						getTrack.GetTrackDM(mContext, trackJSON);
 						Log.d(TAG, "Кеширование начато");
 					} catch (Exception ex) {
 						Log.d(TAG, "Error in SaveTrackToCache at file download. Ex.mess:" + ex.getLocalizedMessage());
@@ -158,29 +161,29 @@ public class TrackToCache {
 	}
 
 	public void DownloadTrackToCache(String deviceId){
-		String trackId;
-		APICalls apiCalls = new APICalls(mContext);
-		TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
-		CheckConnection checkConnection = new CheckConnection();
-//		boolean internetConnect = checkConnection.CheckInetConnection(mContext);
-////		boolean wifiConnect = checkConnection.CheckWifiConnection(mContext);
-//		if (!internetConnect)
+//		String trackId;
+//		APICalls apiCalls = new APICalls(mContext);
+//		TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
+//		CheckConnection checkConnection = new CheckConnection();
+////		boolean internetConnect = checkConnection.CheckInetConnection(mContext);
+//////		boolean wifiConnect = checkConnection.CheckWifiConnection(mContext);
+////		if (!internetConnect)
+////			return;
+//
+//		try {
+//			GetTrack getTrack = new GetTrack();
+//			trackId = apiCalls.GetNextTrackID(deviceId);
+//			if (trackDataAccess.CheckTrackExistInDB(trackId)) {
+//				Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
+//				return;
+//			}
+//			//Загружаем трек и сохраняем информацию о нем в БД
+////			getTrack.GetTrackDM(mContext, trackId);
+//			Log.d(TAG, "Кеширование начато");
+//		} catch (Exception ex) {
+//			Log.d(TAG, "Error in SaveTrackToCache at file download. Ex.mess:" + ex.getLocalizedMessage());
 //			return;
-
-		try {
-			GetTrack getTrack = new GetTrack();
-			trackId = apiCalls.GetNextTrackID(deviceId);
-			if (trackDataAccess.CheckTrackExistInDB(trackId)) {
-				Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
-				return;
-			}
-			//Загружаем трек и сохраняем информацию о нем в БД
-//			getTrack.GetTrackDM(mContext, trackId);
-			Log.d(TAG, "Кеширование начато");
-		} catch (Exception ex) {
-			Log.d(TAG, "Error in SaveTrackToCache at file download. Ex.mess:" + ex.getLocalizedMessage());
-			return;
-		}
+//		}
 	}
 
 	public String DeleteTrackFromCache(ContentValues track){

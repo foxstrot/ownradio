@@ -19,11 +19,11 @@
 		android:layout_marginBottom="@dimen/activity_vertical_margin"
 		android:layout_gravity="center_horizontal"
 		android:background="#00ffffff"
-		android:paddingLeft="@dimen/activity_horizontal_margin"
 		android:orientation="vertical">
 
+
 		<TextView
-			android:id="@+id/userID"
+			android:id="@+id/trackArtist"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:gravity="center_horizontal"
@@ -31,8 +31,20 @@
 			android:layout_marginTop="@dimen/activity_vertical_margin"
 			android:clickable="true"
 			android:textColor="#419bda"
-			android:textSize="24dp"
-			android:text="ownRadio:" />
+			android:textSize="26dp"
+			android:text="" />
+
+		<TextView
+			android:id="@+id/trackTitle"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:gravity="center_horizontal"
+			android:layout_gravity="center_horizontal"
+			android:layout_marginTop="@dimen/activity_vertical_margin"
+			android:clickable="true"
+			android:textColor="#000000"
+			android:textSize="18dp"
+			android:text="" />
 
 	</LinearLayout>
 
@@ -139,6 +151,15 @@
 			android:clickable="true"
 			android:textColor="#000000"
 			android:text="Track ID:" />
+
+		<TextView
+			android:id="@+id/userID"
+			android:textSize="12dp"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:clickable="true"
+			android:textColor="#000000"
+			android:text="User ID:" />
 
 	</LinearLayout>
 
