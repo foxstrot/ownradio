@@ -9,7 +9,7 @@
 			<shape
 				android:innerRadiusRatio="3"
 				android:shape="ring"
-				android:innerRadius="80dp"
+				android:innerRadius="54dp"
 				android:thicknessRatio="26.0">
 				<rotate
 					android:fromDegrees="0"

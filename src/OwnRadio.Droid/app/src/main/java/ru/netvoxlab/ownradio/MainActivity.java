@@ -21,7 +21,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.Window;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -43,8 +43,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 	private MediaPlayerService.MediaPlayerServiceBinder binder;
 	MediaPlayerServiceConnection mediaPlayerServiceConnection;
 	private Intent mediaPlayerServiceIntent;
-	Button btnPlayPause;
-	Button btnNext;
+	ImageButton btnPlayPause;
+	ImageButton btnNext;
 	TrackDB trackDB;
 	final String TAG = "ownRadio";
 	private Handler handler = new Handler();
@@ -105,15 +105,17 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		txtTrackTitle = (TextView) findViewById(R.id.trackTitle);
 		txtTrackArtist = (TextView) findViewById(R.id.trackArtist);
 
-		btnPlayPause = (Button) findViewById(R.id.btnPlayPause);
+		btnPlayPause = (ImageButton) findViewById(R.id.btnPlayPause);
 		btnPlayPause.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
-//					btnPlayPause.setBackgroundResource(R.drawable.btn_play);
+					btnPlayPause.setImageResource(R.drawable.btn_play);
+					btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 					binder.GetMediaPlayerService().Pause();
 				} else {
-					btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
+					btnPlayPause.setImageResource(R.drawable.btn_pause);
+					btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 					binder.GetMediaPlayerService().Play();
 				}
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
@@ -121,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 			}
 		});
 
-		btnNext = (Button) findViewById(R.id.btnNext);
+		btnNext = (ImageButton) findViewById(R.id.btnNext);
 		btnNext.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -219,10 +221,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 						return;
 
 //					if (binder.GetMediaPlayerService().player == null)
-					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-						btnPlayPause.setBackgroundResource(R.drawable.btn_pause);
-					else
-						btnPlayPause.setBackgroundResource(R.drawable.btn_play);
+					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
+						btnPlayPause.setImageResource(R.drawable.btn_pause);
+						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+					}
+					else{
+						btnPlayPause.setImageResource(R.drawable.btn_play);
+						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+					}
 
 					txtTrackTitle.setText(binder.GetMediaPlayerService().trackJSON.getString("name"));
 					txtTrackArtist.setText(binder.GetMediaPlayerService().trackJSON.getString("artist"));
@@ -245,7 +251,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				new Thread(new Runnable() {
 						@Override
 						public void run() {
-							int duration = binder.GetMediaPlayerService().GetDuration();
+							int duration;
+							try {
+								duration = binder.GetMediaPlayerService().trackJSON.getInt("length");
+							}catch (Exception ex){
+								duration = binder.GetMediaPlayerService().GetDuration() / 1000;
+							}
 							int currentPosition = 0;
 							if(duration<=0)
 								duration = 1000000;
@@ -255,8 +266,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 							while (currentPosition < duration) {
 								try {
 									Thread.sleep(1000);
-									currentPosition = binder.GetMediaPlayerService().GetPosition();
-									duration = binder.GetMediaPlayerService().GetDuration();
+									currentPosition = binder.GetMediaPlayerService().GetPosition() / 1000;
+									try {
+										duration = binder.GetMediaPlayerService().trackJSON.getInt("length");
+									}catch (Exception ex){
+										duration = binder.GetMediaPlayerService().GetDuration() / 1000;
+									}
 								} catch (InterruptedException e) {
 									e.printStackTrace();
 								} catch (Exception e) {
@@ -267,9 +282,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 								handler.post(new Runnable() {
 									@Override
 									public void run() {
-										int duration = binder.GetMediaPlayerService().GetDuration();
+										int duration;
+										try {
+											duration = binder.GetMediaPlayerService().trackJSON.getInt("length");
+										}catch (Exception ex){
+											duration = binder.GetMediaPlayerService().GetDuration() / 1000;
+										}
 										progressBar.setMax(duration);
-										progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
+										progressBar.setProgress(binder.GetMediaPlayerService().GetPosition() / 1000);
 									}
 								});
 							}

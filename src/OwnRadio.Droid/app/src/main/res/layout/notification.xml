@@ -26,14 +26,14 @@
 		android:orientation="vertical">
 
 		<TextView
-			android:id="@+id/viewsTitle"
+			android:id="@+id/viewsArtist"
 			android:textColor="#419bda"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:text="Title" />
 
 		<TextView
-			android:id="@+id/viewsArtist"
+			android:id="@+id/viewsTitle"
 			android:textColor="#000000"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"

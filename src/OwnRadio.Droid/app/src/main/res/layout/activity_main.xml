@@ -71,7 +71,7 @@
 					android:id="@+id/progressBarPlayback"
 					style="?android:attr/progressBarStyleHorizontal"
 					android:max="10000000"
-					android:progress="0"
+					android:progress="10000000"
 					android:indeterminate="false"
 					android:layout_width="@dimen/progress_size"
 					android:layout_height="@dimen/progress_size"
@@ -79,10 +79,11 @@
 					android:layout_centerInParent="true"
 					android:elevation="10dp"/>
 
-				<Button
+				<ImageButton
+					android:src="@drawable/btn_play"
 					android:layout_width="@dimen/button_play_size"
 					android:layout_height="@dimen/button_play_size"
-					android:background="@drawable/btn_play"
+					android:background="@drawable/circular_button_selector"
 					android:id="@+id/btnPlayPause"
 					android:layout_marginTop="@dimen/buttons_horizontal_margin"
 					android:layout_centerVertical="true"
@@ -90,13 +91,15 @@
 
 			</RelativeLayout>
 
-			<Button
-				android:layout_width="@dimen/button_next_size"
-				android:layout_height="@dimen/button_next_size"
+
+			<ImageButton
+				android:layout_width="@dimen/button_play_size"
+				android:layout_height="@dimen/button_play_size"
 				android:layout_centerVertical="true"
 				android:layout_below="@+id/RelativeLayoutLeftButton"
 				android:layout_marginTop="@dimen/buttons_horizontal_margin"
-				android:background="@drawable/btn_next"
+				android:src="@drawable/btn_next"
+				android:background="@drawable/circular_button_selector"
 				android:id="@+id/btnNext"
 				android:layout_centerHorizontal="true"/>
 		</RelativeLayout>
