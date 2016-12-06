@@ -70,6 +70,25 @@ public class TrackDataAccess {
 		return result;
 	}
 
+	public ContentValues GetMostOldTrackNEW() {
+		ContentValues result = new ContentValues();
+		db = trackDB.getReadableDatabase();
+		Cursor userCursor = db.rawQuery("SELECT id, trackurl, title, artist, methodid, length FROM track WHERE isexist = ? ORDER BY datetimelastlisten", new String[]{String.valueOf(1)});
+		if (userCursor.moveToFirst()) {
+			result.put("id", userCursor.getString(0));
+			result.put("trackurl", userCursor.getString(1));
+			result.put("name", userCursor.getString(2));
+			result.put("artist", userCursor.getString(3));
+			result.put("methodid", userCursor.getInt(4));
+			result.put("length", userCursor.getInt(5));
+		} else {
+			result = null;
+		}
+//        db.close();
+		userCursor.close();
+		return result;
+	}
+
 	public ContentValues GetTrackForDel() {
 		ContentValues result = new ContentValues();
 		db = trackDB.getReadableDatabase();

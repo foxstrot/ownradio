@@ -99,7 +99,7 @@ public class GetTrack {
 
 						String uriString = c
 								.getString(c
-										.getColumnIndex(DownloadManager.COLUMN_LOCAL_FILENAME));
+										.getColumnIndex(DownloadManager.COLUMN_LOCAL_URI));//.COLUMN_LOCAL_FILENAME));
 
 
 //доработать сохранение пути загрузки
@@ -117,8 +117,9 @@ public class GetTrack {
 							track.put("title", TrackJSON.getString("name"));
 							track.put("artist", TrackJSON.getString("artist"));
 							track.put("length", TrackJSON.getString("length"));
+							track.put("methodid", TrackJSON.getString("methodid"));
 						}catch (Exception ex){
-							Log.d(TAG, " " + ex.getStackTrace());
+							Log.d(TAG, " " + ex.getLocalizedMessage());
 						}
 						trackDataAccess.SaveTrack(track);
 

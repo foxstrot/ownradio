@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
+import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.RemoteControlClient;
 import android.net.Uri;
@@ -28,6 +29,7 @@ import android.widget.RemoteViews;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
@@ -283,8 +285,22 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		//затем вызвается функция Play(), запускающая проигрывание следующего трека
 
 		//Сохраняем информацию о прослушивании в локальную БД.
-		int listedTillTheEnd = 1;
-		SaveHistory(listedTillTheEnd);
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					int listedTillTheEnd = 1;
+					SaveHistory(listedTillTheEnd, track);
+					Thread.currentThread().interrupt();
+					return;
+				}catch (Exception ex){
+					Log.d(TAG, " " + ex.getLocalizedMessage());
+					Thread.currentThread().interrupt();
+					return;
+				}
+			}
+		}).start();
+//		SaveHistory(listedTillTheEnd);
 
 		PlayNext();
 
@@ -349,37 +365,41 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		try {
 //			MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
 
-//			if(trackDataAccess.GetExistTracksCount() >= 10) {
-//				SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-//				startPosition = settings.getInt("LastPosition", 0);
-//				startTrackID = settings.getString("LastTrackID", "");
-//				track = trackDataAccess.GetMostOldTrack();
-//				if (track != null) {
-//					FlagDownloadTrack = false;
-//					TrackID = track.getAsString("id");
-//					trackURL = track.getAsString("trackurl");
-//					if (!new File(trackURL).exists()) {
-//						trackDataAccess.DeleteTrackFromCache(track);
-//						Play();
-//					}
-//					player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
-////					metaRetriever.setDataSource(trackURL);
-//				}
-//			} else {
-			Log.d(TAG, "Play(): try");
+			if(trackDataAccess.GetExistTracksCount() >= 10) {
+				Log.d(TAG, "Play(): cache");
+				SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+				startPosition = settings.getInt("LastPosition", 0);
+				startTrackID = settings.getString("LastTrackID", "");
+				track = trackDataAccess.GetMostOldTrackNEW();
 
-
+				if (track != null) {
+					FlagDownloadTrack = false;
+					TrackID = track.getAsString("id");
+					trackURL = track.getAsString("trackurl");
+					if (!new File(trackURL).exists()) {
+						trackDataAccess.DeleteTrackFromCache(track);
+						Play();
+					}
+					player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
+//					metaRetriever.setDataSource(trackURL);
+				}
+			} else {
+			Log.d(TAG, "Play(): stream");
 //			String trackIdTmp = new APICalls(getApplicationContext()).GetNextTrackID(DeviceID);
 			trackJSON = new APICalls((getApplicationContext())).GetNextTrackID(DeviceID);
 			if(trackJSON == null)
 				return;
 			Log.d(TAG, "Play(): GetNextTrackID: " + trackJSON);
-
-			String artist = trackJSON.getString("artist");
+				track = new ContentValues();
+				track.put("id", trackJSON.getString("id"));
+				track.put("name", trackJSON.getString("name"));
+				track.put("methodid", trackJSON.getString("methodid"));
+				track.put("length", trackJSON.getString("length"));
+//			String artist = trackJSON.getString("artist");
 			TrackID = trackJSON.getString("id");
-			String title = trackJSON.getString("name");
-			String methodid = trackJSON.getString("methodid");
-			long length = trackJSON.getLong("length");
+//			String title = trackJSON.getString("name");
+//			String methodid = trackJSON.getString("methodid");
+//			long length = trackJSON.getLong("length");
 
 
 
@@ -391,7 +411,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 			player.setDataSource(getApplicationContext(), Uri.parse(uri));
 //					metaRetriever.setDataSource(uri);
-//			}
+			}
 
 			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 			if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
@@ -430,7 +450,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //				}
 //			}
 		} catch (Exception ex) {
-			Log.d(TAG, "Error in Play(): " + ex.getStackTrace());
+			Log.d(TAG, "Error in Play(): " + ex.getLocalizedMessage());
+			ex.printStackTrace();
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
 			player.reset();
 			player.release();
@@ -483,37 +504,53 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	public void Next() {
-		//Сохраняем информацию о прослушивании в локальную БД.
-		int listedTillTheEnd = -1;
-		SaveHistory(listedTillTheEnd);
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					//Сохраняем информацию о прослушивании в локальную БД.
+					int listedTillTheEnd = -1;
+					SaveHistory(listedTillTheEnd, track);
+
+					//Отправка на сервер накопленной истории прослушивания треков
+					new APICalls(getApplicationContext()).SendHistory(DeviceID, 3);
+
+					Thread.currentThread().interrupt();
+					return;
+				}catch (Exception ex){
+					Log.d(TAG, " " + ex.getLocalizedMessage());
+					Thread.currentThread().interrupt();
+					return;
+				}
+			}
+		}).start();
+//		SaveHistory(listedTillTheEnd);
 
 		PlayNext();
 
 		try {
-			//Отправка на сервер накопленной истории прослушивания треков
 //			APICalls apiCalls = new APICalls(getApplicationContext());
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						new APICalls(getApplicationContext()).SendHistory(DeviceID, 3);
-						Thread.currentThread().interrupt();
-						return;
-					}catch (Exception ex){
-						Log.d(TAG, " " + ex.getLocalizedMessage());
-						Thread.currentThread().interrupt();
-						return;
-					}
-				}
-			}).start();
+//			new Thread(new Runnable() {
+//				@Override
+//				public void run() {
+//					try {
+//						Thread.currentThread().interrupt();
+//						return;
+//					}catch (Exception ex){
+//						Log.d(TAG, " " + ex.getLocalizedMessage());
+//						Thread.currentThread().interrupt();
+//						return;
+//					}
+//				}
+//			}).start();
 //			apiCalls.SetStatusTrack(DeviceID, TrackID, ListedTillTheEnd, currentDateTime);
 
 //			сканирование директории с треками для обнаружения и добавления треков, отсутствующих в бд
 //			new TrackToCache(getApplicationContext()).ScanTrackToCache();
 
 			// Удаление пропущенного трека
-			ContentValues track = trackDataAccess.GetPathById(TrackID);
-			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+			ContentValues trackForDel = trackDataAccess.GetPathById(TrackID);
+			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(trackForDel);
 		} catch (Exception ex) {
 			ex.getLocalizedMessage();
 		}
@@ -521,21 +558,21 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 	}
 
-	private void SaveHistory(int listedTillTheEnd){
+	private void SaveHistory(int listedTillTheEnd, ContentValues trackInstance){
 		try {
 			//история прослушивания
 			//Добавление истории прослушивания в локальную БД
-			if(TrackID != null && !TrackID.isEmpty()) {
+			if(trackInstance.getAsString("id") != null && !trackInstance.getAsString("id").isEmpty()) {
 
 				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd\'T\'HH:mm:ss");
 				dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));//Time format UTC+0
 				String currentDateTime = dateFormat.format(new Date()); // Find todays date
 				ContentValues history = new ContentValues();
-				history.put("trackid", TrackID);
+				history.put("trackid", trackInstance.getAsString("id"));
 				history.put("userid", UserID);
 				history.put("datetimelisten", currentDateTime);
 				history.put("islisten", listedTillTheEnd);
-				history.put("methodid", trackJSON.getInt("methodid"));
+				history.put("methodid", trackInstance.getAsInteger("methodid"));
 				HistoryDataAccess historyDataAccess = new HistoryDataAccess(getApplicationContext());
 				historyDataAccess.SaveHistoryRec(history);//сохраняет информацию в history для последующей отправки на сервер
 
@@ -634,6 +671,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				UpdateButtonPlayPauseImg();
 			}
 		} catch (Exception ex) {
+			ex.printStackTrace();
+			Log.d(TAG, " " + ex.getLocalizedMessage());
 		}
 	}
 
@@ -653,13 +692,22 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		style.setCancelButtonIntent(pendingCancelIntent);
 		String trackTitle;
 		String trackArtist;
+		MediaMetadataRetriever mMediaMetaDataRetriever = new MediaMetadataRetriever();
 		try {
-			trackTitle = trackJSON.getString("name");
-			trackArtist = trackJSON.getString("artist");
+			trackTitle =(track.getAsString("name") == null) ?  "Unknown track" : track.getAsString("name");
+			trackArtist =(track.getAsString("artist") == null) ?  "Unknown artist" : track.getAsString("artist");
+			//данный блок для получения информации о треке
+//			mMediaMetaDataRetriever.setDataSource(track.getAsString("trackurl"));
+//			trackTitle = mMediaMetaDataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+//			trackArtist = mMediaMetaDataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+
 		}catch (Exception ex){
-			trackTitle = "Unknown track";
+//			trackTitle = track.getAsString("name");
+//			trackArtist = track.getAsString("artist");
+			trackTitle ="Unknown track";
 			trackArtist = "Unknown artist";
-			Log.d(TAG, " " + ex.getStackTrace());
+			Log.d(TAG, " " + ex.getLocalizedMessage());
+			ex.printStackTrace();
 		}
 
 		Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
@@ -724,25 +772,35 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		nm.cancelAll();
 	}
 
-	public void PlayPause() {
-		if (player == null || (player != null && GetMediaPlayerState() == PlaybackStateCompat.STATE_PAUSED)) {
-			Play();
-		} else {
-			Pause();
-		}
-	}
-
 	public void PlayNext() {
 		if (player != null) {
 			player.reset();
 			player.release();
 			player = null;
 		}
-//		String deviceId = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID", "");
-//		TrackToCache trackToCache = new TrackToCache(getApplicationContext());
-//		trackToCache.SaveTrackToCache(deviceId, 3);
 		UpdatePlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT);
 		Play();
+
+//		String deviceId = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID", "");
+
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					TrackToCache trackToCache = new TrackToCache(getApplicationContext());
+					trackToCache.SaveTrackToCache(DeviceID, 3);
+
+					Thread.currentThread().interrupt();
+					return;
+				}catch (Exception ex){
+					Log.d(TAG, " " + ex.getLocalizedMessage());
+					Thread.currentThread().interrupt();
+					return;
+				}
+			}
+		}).start();
+//		TrackToCache trackToCache = new TrackToCache(getApplicationContext());
+//		trackToCache.SaveTrackToCache(DeviceID, 3);
 	}
 
 	public class MediaSessionCallback extends MediaSessionCompat.Callback {

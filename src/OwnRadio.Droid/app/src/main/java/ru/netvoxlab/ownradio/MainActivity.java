@@ -230,8 +230,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 					}
 
-					txtTrackTitle.setText(binder.GetMediaPlayerService().trackJSON.getString("name"));
-					txtTrackArtist.setText(binder.GetMediaPlayerService().trackJSON.getString("artist"));
+					String title = binder.GetMediaPlayerService().track.getAsString("name");
+					String artist = binder.GetMediaPlayerService().track.getAsString("artist");
+					if(title == null || title.isEmpty() || title.equals("null"))
+						title = "Unknown track";
+					if(artist == null || artist.isEmpty() || artist.equals("null"))
+						artist = "Unknown artist";
+					txtTrackTitle.setText(title);
+					txtTrackArtist.setText(artist);
 					textTrackID = (TextView) findViewById(R.id.trackID);
 					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 				}catch (Exception ex){
@@ -253,7 +259,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 						public void run() {
 							int duration;
 							try {
-								duration = binder.GetMediaPlayerService().trackJSON.getInt("length");
+								duration = binder.GetMediaPlayerService().track.getAsInteger("length");
 							}catch (Exception ex){
 								duration = binder.GetMediaPlayerService().GetDuration() / 1000;
 							}
@@ -268,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 									Thread.sleep(1000);
 									currentPosition = binder.GetMediaPlayerService().GetPosition() / 1000;
 									try {
-										duration = binder.GetMediaPlayerService().trackJSON.getInt("length");
+										duration = binder.GetMediaPlayerService().track.getAsInteger("length");
 									}catch (Exception ex){
 										duration = binder.GetMediaPlayerService().GetDuration() / 1000;
 									}
@@ -284,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 									public void run() {
 										int duration;
 										try {
-											duration = binder.GetMediaPlayerService().trackJSON.getInt("length");
+											duration = binder.GetMediaPlayerService().track.getAsInteger("length");
 										}catch (Exception ex){
 											duration = binder.GetMediaPlayerService().GetDuration() / 1000;
 										}

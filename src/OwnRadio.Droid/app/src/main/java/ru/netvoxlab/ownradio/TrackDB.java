@@ -12,7 +12,7 @@ public class TrackDB extends SQLiteOpenHelper {
 	private final static int DB_VER = R.string.db_ver;
 	public static final String TABLE_NAME_TRACK = "track";
 	static final String CREATE_TABLE_TRACK = "CREATE TABLE " + TABLE_NAME_TRACK + "(id TEXT NOT NULL UNIQUE, trackurl TEXT NOT NULL," +
-			" title TEXT, artist TEXT NOT NULL, length INTEGER NOT NULL, methoid INTEGER NOT NULL, " +
+			" title TEXT, artist TEXT, length INTEGER NOT NULL DEFAULT 1000, methodid INTEGER NOT NULL DEFAULT 1, " +
 			" datetimelastlisten TEXT NOT NULL, islisten INTEGER NOT NULL DEFAULT 0, isexist INTEGER NOT NULL DEFAULT 0)";
 
 	public static final String TABLE_NAME_HISTORY = "history";

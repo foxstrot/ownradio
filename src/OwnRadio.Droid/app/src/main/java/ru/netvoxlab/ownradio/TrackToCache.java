@@ -2,11 +2,9 @@ package ru.netvoxlab.ownradio;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Environment;
 import android.os.StatFs;
-import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
@@ -31,27 +29,7 @@ public class TrackToCache {
 
 	public String SaveTrackToCache(String deviceId, int trackCount) {
 		TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
-
-
-		String filePath;
 		String trackId;
-//		long cacheSize = 0;
-//		long availableSpace = 0;
-//		long minAvailableSpace = 20 * 1048576;
-//		File[] externalStoragesPaths = ContextCompat.getExternalFilesDirs(mContext, null);
-//		File externalStoragePath;
-//		if (externalStoragesPaths == null) {
-//			return "Директория на карте памяти недоступна";
-//		}
-//		externalStoragePath = externalStoragesPaths[0];
-
-		SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(mContext);
-
-//		String maxCacheSize = sp.getString("MaxCacheSize", "");
-//		if (maxCacheSize.isEmpty()) {
-//			maxCacheSize = "100";
-//			sp.edit().putString("MaxCacheSize", maxCacheSize).commit();
-//		}
 
 		APICalls apiCalls = new APICalls(mContext);
 
@@ -88,8 +66,8 @@ public class TrackToCache {
 
 				case DELETE_FILE_FROM_CACHE: {
 					ContentValues track = trackDataAccess.GetTrackForDel();
-					DeleteTrackFromCache(track);
-					i--;
+					if(DeleteTrackFromCache(track))
+						i--;
 					break;
 				}
 			}
@@ -160,35 +138,8 @@ public class TrackToCache {
 				return DELETE_FILE_FROM_CACHE;
 	}
 
-	public void DownloadTrackToCache(String deviceId){
-//		String trackId;
-//		APICalls apiCalls = new APICalls(mContext);
-//		TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
-//		CheckConnection checkConnection = new CheckConnection();
-////		boolean internetConnect = checkConnection.CheckInetConnection(mContext);
-//////		boolean wifiConnect = checkConnection.CheckWifiConnection(mContext);
-////		if (!internetConnect)
-////			return;
-//
-//		try {
-//			GetTrack getTrack = new GetTrack();
-//			trackId = apiCalls.GetNextTrackID(deviceId);
-//			if (trackDataAccess.CheckTrackExistInDB(trackId)) {
-//				Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
-//				return;
-//			}
-//			//Загружаем трек и сохраняем информацию о нем в БД
-////			getTrack.GetTrackDM(mContext, trackId);
-//			Log.d(TAG, "Кеширование начато");
-//		} catch (Exception ex) {
-//			Log.d(TAG, "Error in SaveTrackToCache at file download. Ex.mess:" + ex.getLocalizedMessage());
-//			return;
-//		}
-	}
-
-	public String DeleteTrackFromCache(ContentValues track){
+	public boolean DeleteTrackFromCache(ContentValues track){
 		TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
-//		ContentValues track = trackDataAccess.GetTrackForDel();
 		try {
 			if (track != null) {
 				File file1 = new File(track.getAsString("trackurl"));
@@ -197,23 +148,22 @@ public class TrackToCache {
 					if (file.delete()) {
 						trackDataAccess.DeleteTrackFromCache(track);
 						Log.d(TAG, "File is deleted");
-//						Toast.makeText(mContext, "File is deleted", Toast.LENGTH_SHORT).show();
-						return "File is deleted";
+						return true;
 					}
 					Log.d(TAG, "File not deleted. Something error");
-					return "File not deleted. Something error";
+					return false;
 				} else {
 					trackDataAccess.DeleteTrackFromCache(track);
 					Log.d(TAG, "File for delete is not exist. Rec about track deleted from DB");
-					return "File for delete is not exist. Rec about track deleted from DB";
+					return false;
 				}
 			} else {
 				Log.d(TAG, "Отсутствует файл для удаления.");
-				return "Отсутствует файл для удаления. \n";
+				return false;
 			}
 		} catch (Exception ex) {
 			Log.d(TAG, "Error in SaveTrackToCache at file delete. Ex.mess:" + ex.getLocalizedMessage());
-			return ex.getLocalizedMessage();
+			return false;
 		}
 	}
 }

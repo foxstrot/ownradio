@@ -116,7 +116,7 @@ public class APICalls {
 				}
 			}
 		}catch (Exception ex){
-			ex.getStackTrace();
+			ex.printStackTrace();
 		}
 	}
 }
