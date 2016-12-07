@@ -39,10 +39,11 @@ public class HistoryDataAccess {
 //			String result = "id=" + userCursor.getString(0);
 //			result += "&" + "trackid=" + userCursor.getString(1);
 //			result += "&" + "userid=" + userCursor.getString(2);
-			data =  "lastListen=" + userCursor.getString(3);
-			data += "&" + "isListen=" + userCursor.getString(4);
-			data += "&" + "method=" + userCursor.getString(5);
-
+			data = "{";
+			data += "\"lastListen\":\"" + userCursor.getString(3) + "\",";
+			data += "\"isListen\":" + userCursor.getInt(4) + "," ;
+			data += "\"methodid\":" + userCursor.getInt(5);
+			data +="}";
 			contentValues.put("id", userCursor.getString(0));
 			contentValues.put("trackid", userCursor.getString(1));
 			contentValues.put("data", data);

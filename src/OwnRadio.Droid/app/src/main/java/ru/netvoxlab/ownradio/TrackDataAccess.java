@@ -34,6 +34,8 @@ public class TrackDataAccess {
 //        db.close();
 	}
 
+
+
 	public void UpdateTrack(ContentValues trackInstance) {
 		db = trackDB.getWritableDatabase();
 		long rowID = db.update(TrackTableName, trackInstance, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
@@ -60,6 +62,25 @@ public class TrackDataAccess {
 
 			result.put("id", userCursor.getString(0));
 			result.put("trackurl", userCursor.getString(1));
+		} else {
+			result = null;
+		}
+//        db.close();
+		userCursor.close();
+		return result;
+	}
+
+	public ContentValues GetMostOldTrackNEW() {
+		ContentValues result = new ContentValues();
+		db = trackDB.getReadableDatabase();
+		Cursor userCursor = db.rawQuery("SELECT id, trackurl, title, artist, methodid, length FROM track WHERE isexist = ? ORDER BY datetimelastlisten", new String[]{String.valueOf(1)});
+		if (userCursor.moveToFirst()) {
+			result.put("id", userCursor.getString(0));
+			result.put("trackurl", userCursor.getString(1));
+			result.put("name", userCursor.getString(2));
+			result.put("artist", userCursor.getString(3));
+			result.put("methodid", userCursor.getInt(4));
+			result.put("length", userCursor.getInt(5));
 		} else {
 			result = null;
 		}

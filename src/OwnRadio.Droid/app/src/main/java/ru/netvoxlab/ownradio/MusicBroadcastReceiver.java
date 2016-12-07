@@ -15,7 +15,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 		if (intent.getAction() != AudioManager.ACTION_AUDIO_BECOMING_NOISY && intent.getAction() != Intent.ACTION_HEADSET_PLUG)
 			return;
 
-		String action = MediaPlayerService.ActionStop;
+		String action = MediaPlayerService.ActionPause;
 
 		if (intent.getAction() == Intent.ACTION_HEADSET_PLUG) {
 			boolean isHSConnected = false;
