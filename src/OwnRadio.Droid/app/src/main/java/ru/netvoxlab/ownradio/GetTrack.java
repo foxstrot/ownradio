@@ -47,6 +47,7 @@ public class GetTrack {
 				DownloadManager.ACTION_DOWNLOAD_COMPLETE));
 
 		try {
+
 			TrackJSON = dataJSON;
 			TrackID = dataJSON.getString("id");
 			//Локальное имя трека
@@ -70,6 +71,9 @@ public class GetTrack {
 			request.setDestinationInExternalFilesDir(context, Environment.DIRECTORY_MUSIC, fileName);
 			downloadReference = downloadManager.enqueue(request);
 //                    trackURL = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS).getPath() + "/" + fileName;
+			Intent i = new Intent(ActionSendInfoTxt);
+			i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + " Connection is successful");
+			context.sendBroadcast(i);
 		} catch (Exception ex) {
 			Intent i = new Intent(ActionSendInfoTxt);
 			i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + ex.getLocalizedMessage());
@@ -89,6 +93,8 @@ public class GetTrack {
 				DownloadManager.Query query = new DownloadManager.Query();
 				query.setFilterById(downloadReference);
 				Cursor c = downloadManager.query(query);
+				if( c == null)
+					return;
 				if (c.moveToFirst()) {
 					int columnIndex = c
 							.getColumnIndex(DownloadManager.COLUMN_STATUS);

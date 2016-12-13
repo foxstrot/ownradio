@@ -1,8 +1,13 @@
 package ru.netvoxlab.ownradio;
 
+import java.util.Map;
+
 import okhttp3.ResponseBody;
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Headers;
+import retrofit2.http.POST;
 import retrofit2.http.Path;
 import retrofit2.http.Streaming;
 
@@ -12,11 +17,16 @@ import retrofit2.http.Streaming;
 
 public interface APIService {
 
-	@GET("v2/tracks/11111111-1111-1111-1111-111111111111/next")
-	Call<String> GetNextTrackID();
+	@GET("/v3/tracks/{deviceid}/next")
+	@Headers("Content-Type: application/json")
+	Call<Map<String, String>> getNextTrackID(@Path("deviceid") String deviceId);
 
 	@Streaming
-	@GET("v2/tracks/{trackId}")
-	Call<ResponseBody> DownloadTrackToCache(@Path("trackId") String trackId);
+	@GET("v3/tracks/{trackid}")
+	Call<ResponseBody> getTrackById(@Path("trackid") String trackId);
+
+	@POST("/v3/histories/{deviceid}/{trackid}")
+	@Headers("Content-Type: application/json")
+	Call<Void> sendHistory(@Path("deviceid") String deviceId, @Path("trackid") String trackId, @Body HistoryModel data);
 
 }

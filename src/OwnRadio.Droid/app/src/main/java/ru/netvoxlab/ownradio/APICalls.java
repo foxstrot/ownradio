@@ -5,16 +5,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import org.json.JSONObject;
-
-import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 /**
  * Created by a.polunina on 21.10.2016.
@@ -25,7 +24,6 @@ public class APICalls {
 	final String TAG = "ownRadio";
 	Context MainContext;
 	String serverPath = "http://api.ownradio.ru/v3/";
-//	String serverPath = "http://java.ownradio.ru/api/v2/";
 
 	public APICalls(Context context) {
 		this.MainContext = context;
@@ -39,7 +37,7 @@ public class APICalls {
 	}
 
 	//Получает ID следующего трека
-	public JSONObject GetNextTrackID(String deviceId) {
+	public Map<String, String> GetNextTrackID(String deviceId) {
 		CheckConnection checkConnection = new CheckConnection();
 		boolean internetConnect = checkConnection.CheckInetConnection(MainContext);
 		if (!internetConnect){
@@ -51,27 +49,10 @@ public class APICalls {
 		}
 
 		try {
-			URL URLRequest = new URL(serverPath + "tracks/" + deviceId + "/next");
-			String result = new GetRequest().execute(URLRequest).get();
-
-			try {
-				JSONObject jsonObject = new JSONObject(result);
-				UUID.fromString(jsonObject.getString("id")).toString();
-
-				return jsonObject;
-//				return UUID.fromString(trackId).toString(); //сделать адекватный парсинг
-			}catch (Exception ex) {
-				Log.d(TAG, "GetNextTrackID() was return " + result);
-				Intent i = new Intent(ActionSendInfoTxt);
-				i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + " " + result);
-				MainContext.sendBroadcast(i);
-				return null;
-			}
-		} catch (MalformedURLException | InterruptedException | ExecutionException ex) {
-			Log.d(TAG, " " + ex.getLocalizedMessage());
-			return null;
-		} catch (IOException ex) {
-			Log.d(TAG, " " + ex.getLocalizedMessage());
+			Map<String, String> result = new GetNextTrack(MainContext).execute(deviceId).get();
+			UUID.fromString(result.get("id")).toString();
+			return result;
+		}catch (Exception ex) {
 			return null;
 		}
 	}
@@ -86,34 +67,54 @@ public class APICalls {
 			return; //Подключение к интернету отсутствует
 		}
 
-		String historyRecID;
-		int result;
-		URL urlRequest;
-		HistoryDataAccess historyDataAccess = new HistoryDataAccess(MainContext);
+		final HistoryDataAccess historyDataAccess = new HistoryDataAccess(MainContext);
+		final ContentValues[] historyRecs = historyDataAccess.GetHistoryRec(count);
+
+		if(historyRecs == null)
+			return;
+
 		try {
 			for( int rec = 0; rec < count; rec++) {
-				ContentValues historyRec = historyDataAccess.GetHistoryRec();
-
+//				final ContentValues historyRec = historyDataAccess.GetHistoryRec();
+				final ContentValues historyRec = historyRecs[rec];
 				if(historyRec == null) //Если неотправленной статистики нет - выходим
 					return;
 
 				if(historyRec.getAsString("trackid").equals("")){
-					historyRecID = historyRec.getAsString("id");
-					historyDataAccess.DeleteHistoryRec(historyRecID);
+					historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
 					break;
 				}
 
-				urlRequest = new URL(serverPath + "histories/" + deviceId + "/" + historyRec.getAsString("trackid"));
+//				HistoryModel data = new HistoryModel("2016-11-16T13:15:15",1,1);
+				HistoryModel data = new HistoryModel();
+				data.setLastListen(historyRec.getAsString("lastListen"));
+				data.setIsListen(historyRec.getAsInteger("isListen"));
+				data.setMethodid(historyRec.getAsInteger("methodid"));
 
-				result = new PostRequest(MainContext).execute(urlRequest.toString(), historyRec.getAsString("data"), historyRec.getAsString("id")).get();
-				if (result == HttpURLConnection.HTTP_OK) {
-					historyRecID = historyRec.getAsString("id");
-					historyDataAccess.DeleteHistoryRec(historyRecID);
-				} else {
-					Intent i = new Intent(ActionSendInfoTxt);
-					i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + "Server response: " + result);
-					MainContext.sendBroadcast(i);
-				}
+				ServiceGenerator.createService(APIService.class).sendHistory(deviceId,historyRec.getAsString("trackid"), data)
+				.enqueue(new Callback<Void>() {
+					@Override
+					public void onResponse(Call<Void> call, Response<Void> response) {
+						if(response.isSuccessful()){
+							if(response.code() == HttpURLConnection.HTTP_OK){
+								historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
+								Log.i(TAG, "History is sending");
+								Intent i = new Intent(ActionSendInfoTxt);
+								i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + " Connection is successful");
+								MainContext.sendBroadcast(i);
+							} else {
+								Log.i(TAG, "SendHistory: Server response: " + response.code());
+								Intent i = new Intent(ActionSendInfoTxt);
+								i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + "Server response: " + response.code());
+								MainContext.sendBroadcast(i);
+							}
+						}
+					}
+					@Override
+					public void onFailure(Call<Void> call, Throwable t) {
+						Log.i(TAG, "An error occurred during networking");
+					}
+				});
 			}
 		}catch (Exception ex){
 			ex.printStackTrace();
