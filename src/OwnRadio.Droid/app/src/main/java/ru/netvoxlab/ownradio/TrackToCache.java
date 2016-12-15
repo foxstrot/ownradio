@@ -164,6 +164,8 @@ public class TrackToCache {
 		try {
 			File directory = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
 			if (directory.listFiles() != null) {
+				if(directory.listFiles().length == new TrackDataAccess(mContext).GetExistTracksCount())
+					return;
 				ContentValues track = new ContentValues();
 				for (File file : directory.listFiles()) {
 					if (file.isFile()) {
