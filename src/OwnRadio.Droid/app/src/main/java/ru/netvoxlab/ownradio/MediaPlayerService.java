@@ -37,6 +37,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 import static android.app.PendingIntent.getActivity;
+import static android.os.Build.VERSION_CODES.LOLLIPOP;
 
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener, AudioManager.OnAudioFocusChangeListener {
 	public static final String ActionPlay = "ru.netvoxlab.ownradio.action.PLAY";
@@ -294,7 +295,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public void Play() {
 		Log.d(TAG, "Play(): ");
 
-		if (player != null && GetMediaPlayerState() == PlaybackStateCompat.STATE_PAUSED) {
+		if (player != null){// && GetMediaPlayerState() == PlaybackStateCompat.STATE_PAUSED) {
 			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 //			if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
 //				//mess
@@ -601,21 +602,50 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	public int GetPosition() {
-		if (player == null
-				|| (GetMediaPlayerState() != PlaybackStateCompat.STATE_PLAYING
-				&& GetMediaPlayerState() != PlaybackStateCompat.STATE_PAUSED))
+		if (Build.VERSION.SDK_INT >= LOLLIPOP) {
+			if (player == null
+					|| (GetMediaPlayerState() != PlaybackStateCompat.STATE_PLAYING
+					&& GetMediaPlayerState() != PlaybackStateCompat.STATE_PAUSED))
+				return -1;
+			else
+				return player.getCurrentPosition();
+		}
+
+	if (Build.VERSION.SDK_INT <LOLLIPOP)	{
+		if (player == null)
 			return -1;
 		else
-			return player.getCurrentPosition();
+			try {
+				return player.getCurrentPosition();
+			}catch (Exception ex){
+
+			}
+	}
+		return -1;
+
 	}
 
 	public int GetDuration() {
+		if (Build.VERSION.SDK_INT >= LOLLIPOP) {
 		if (player == null
 				|| (GetMediaPlayerState() != PlaybackStateCompat.STATE_PLAYING
 				&& GetMediaPlayerState() != PlaybackStateCompat.STATE_PAUSED))
 			return 0;
 		else
 			return player.getDuration();
+		}
+
+		if (Build.VERSION.SDK_INT <LOLLIPOP)	{
+			if (player == null)
+				return -1;
+			else
+				try {
+					return player.getCurrentPosition();
+				}catch (Exception ex){
+
+				}
+		}
+		return 0;
 	}
 
 	private void UpdatePlaybackState(int state) {
@@ -642,7 +672,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				mediaSessionCompat.setPlaybackState(stateBuilder.build());
 
 				//Used for backwards compatibility
-				if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+				if (Build.VERSION.SDK_INT < LOLLIPOP) {
 
 					if (mediaSessionCompat.getRemoteControlClient() != null && mediaSessionCompat.getRemoteControlClient().getClass().equals(RemoteControlClient.class)) {
 						remoteControlClient = (RemoteControlClient) mediaSessionCompat.getRemoteControlClient();
@@ -679,7 +709,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				Log.d(TAG, " " + ex.getLocalizedMessage());
 			}
 		}else {
-			UpdateButtonPlayPauseImg();
+			if (state != PlaybackStateCompat.STATE_BUFFERING)
+				UpdateButtonPlayPauseImg();
 		}
 	}
 
@@ -689,7 +720,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	private void StartNotification() {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+		if (Build.VERSION.SDK_INT >= LOLLIPOP) {
 			//                MediaMetadataCompat currentTrack = mediaControllerCompat.getMediaMetadata();
 			android.support.v7.app.NotificationCompat.MediaStyle style = new android.support.v7.app.NotificationCompat.MediaStyle();
 			style.setMediaSession(mediaSessionCompat.getSessionToken());
@@ -984,6 +1015,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			player.release();
 			player = null;
 
+			Intent intent = new Intent(ActionButtonImgUpdate);
+			sendBroadcast(intent);
 			StopNotification();
 			stopForeground(true);
 			ReleaseWifiLock();

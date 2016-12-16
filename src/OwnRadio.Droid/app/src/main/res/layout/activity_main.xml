@@ -32,7 +32,7 @@
 			android:clickable="true"
 			android:textColor="#419bda"
 			android:textSize="26dp"
-			android:text="" />
+			android:text="ownRadio" />
 
 		<TextView
 			android:id="@+id/trackTitle"

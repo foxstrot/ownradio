@@ -110,14 +110,28 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		btnPlayPause.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
-					btnPlayPause.setImageResource(R.drawable.btn_play);
-					btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
-					binder.GetMediaPlayerService().Pause();
-				} else {
-					btnPlayPause.setImageResource(R.drawable.btn_pause);
-					btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
-					binder.GetMediaPlayerService().Play();
+				if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
+						btnPlayPause.setImageResource(R.drawable.btn_play);
+						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+						binder.GetMediaPlayerService().Pause();
+					} else {
+						btnPlayPause.setImageResource(R.drawable.btn_pause);
+						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+						binder.GetMediaPlayerService().Play();
+					}
+				}
+
+				if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().player.isPlaying()) {
+						btnPlayPause.setImageResource(R.drawable.btn_play);
+						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+						binder.GetMediaPlayerService().Pause();
+					} else {
+						btnPlayPause.setImageResource(R.drawable.btn_pause);
+						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+						binder.GetMediaPlayerService().Play();
+					}
 				}
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 			}
@@ -154,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				}
 
 				if (numberOfTaps > 0
-						&& (System.currentTimeMillis() - lastTapTimeMs) < ViewConfiguration.getDoubleTapTimeout()) {
+						&& (System.currentTimeMillis() - lastTapTimeMs) < 2*ViewConfiguration.getDoubleTapTimeout()) {
 					numberOfTaps += 1;
 				} else {
 					numberOfTaps = 1;
@@ -209,17 +223,29 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				String title;
 				String artist;
 				try {
-					if (binder == null)
+					if (binder == null) {
+						txtTrackTitle.setText("");
+						txtTrackArtist.setText("ownRadio");
 						return;
-
-//					if (binder.GetMediaPlayerService().player == null)
-					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
-						btnPlayPause.setImageResource(R.drawable.btn_pause);
-						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 					}
-					else{
-						btnPlayPause.setImageResource(R.drawable.btn_play);
-						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+
+					if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+						if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
+							btnPlayPause.setImageResource(R.drawable.btn_pause);
+							btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+						} else {
+							btnPlayPause.setImageResource(R.drawable.btn_play);
+							btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+						}
+					}
+					if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+						if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().player.isPlaying()) {
+							btnPlayPause.setImageResource(R.drawable.btn_pause);
+							btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+						} else {
+							btnPlayPause.setImageResource(R.drawable.btn_play);
+							btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
+						}
 					}
 					title = binder.GetMediaPlayerService().track.getAsString("name");
 					artist = binder.GetMediaPlayerService().track.getAsString("artist");
@@ -330,7 +356,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 			InitilizeMedia();
 
 		txtTrackTitle.setOnTouchListener(this);
-
+		txtTrackArtist.setOnTouchListener(this);
 //		new Thread(new Runnable() {
 //			@Override
 //			public void run() {
