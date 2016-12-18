@@ -134,8 +134,6 @@ public class SettingsActivity extends AppCompatActivity {
 //
 				textSettingsInfo.append(trackToCache.SaveTrackToCache(DeviceID.toString(), countTracks) + "\n");
 				textViewLocalTrackCount.setText("The count of local track: " + trackDataAccess.GetExistTracksCount() + ".");
-//				/*String requestToAPI = */new RequestToAPI().DownloadTrackToCache("fa610ead-763e-4311-ab7a-4ae7f0ff9672");
-				/*textSettingsInfo.setText(requestToAPI);*/
 			}
 		});
 

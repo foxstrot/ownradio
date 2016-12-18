@@ -5,6 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import static ru.netvoxlab.ownradio.TrackDB.DB_VER;
+
 /**
  * Created by a.polunina on 26.10.2016.
  */
@@ -13,13 +15,11 @@ public class TrackDataAccess {
 	Context mContext;
 	SQLiteDatabase db;
 	TrackDB trackDB;
-	int dbVer = R.string.db_ver;
 	private final String TrackTableName = "track";
 
 	public TrackDataAccess(Context context) {
 		mContext = context;
-		trackDB = new TrackDB(mContext, dbVer);
-
+		trackDB = new TrackDB(mContext, DB_VER);
 	}
 
 	public void CleanTrackTable() {
@@ -33,8 +33,6 @@ public class TrackDataAccess {
 		long rowID = db.insert(TrackTableName, null, trackInstance);
 //        db.close();
 	}
-
-
 
 	public void UpdateTrack(ContentValues trackInstance) {
 		db = trackDB.getWritableDatabase();
@@ -56,7 +54,7 @@ public class TrackDataAccess {
 
 	public ContentValues GetMostOldTrack() {
 		ContentValues result = new ContentValues();
-		db = trackDB.getReadableDatabase();
+		db = trackDB.getWritableDatabase();
 		Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE isexist = ? ORDER BY datetimelastlisten", new String[]{String.valueOf(1)});
 		if (userCursor.moveToFirst()) {
 
@@ -72,7 +70,7 @@ public class TrackDataAccess {
 
 	public ContentValues GetMostOldTrackNEW() {
 		ContentValues result = new ContentValues();
-		db = trackDB.getReadableDatabase();
+		db = trackDB.getWritableDatabase();
 		Cursor userCursor = db.rawQuery("SELECT id, trackurl, title, artist, methodid, length FROM track WHERE isexist = ? ORDER BY datetimelastlisten", new String[]{String.valueOf(1)});
 		if (userCursor.moveToFirst()) {
 			result.put("id", userCursor.getString(0));
@@ -91,7 +89,7 @@ public class TrackDataAccess {
 
 	public ContentValues GetTrackForDel() {
 		ContentValues result = new ContentValues();
-		db = trackDB.getReadableDatabase();
+		db = trackDB.getWritableDatabase();
 		Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE islisten != ? AND isexist = ? AND datetimelastlisten != ? ORDER BY datetimelastlisten", new String[]{String.valueOf(0), String.valueOf(1), String.valueOf("")});
 		if (userCursor.moveToFirst()) {
 			result.put("id", userCursor.getString(0));
@@ -106,7 +104,7 @@ public class TrackDataAccess {
 
 	public ContentValues GetPathById(String trackid) {
 		ContentValues result = new ContentValues();
-		db = trackDB.getReadableDatabase();
+		db = trackDB.getWritableDatabase();
 		Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE id = ?", new String[]{String.valueOf(trackid)});
 		if (userCursor.moveToFirst()) {
 			result.put("id", userCursor.getString(0));
@@ -121,7 +119,7 @@ public class TrackDataAccess {
 
 	public int GetExistTracksCount() {
 		int result;
-		db = trackDB.getReadableDatabase();
+		db = trackDB.getWritableDatabase();
 		Cursor userCursor = db.rawQuery("SELECT COUNT(*) FROM track WHERE isexist = ? ORDER BY datetimelastlisten", new String[]{String.valueOf(1)});
 		if (userCursor.moveToFirst()) {
 			result = userCursor.getInt(0);

@@ -42,9 +42,8 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 			//сигнал остановки сервиса
 			action = MediaPlayerService.ActionPause;
 
-		Intent intent1 = new Intent(context, MediaPlayerService.class);
-		intent1.setAction(action);
-		Intent remoteIntent = new Intent(action);
-		context.startService(intent1);
+		Intent remoteIntent = new Intent(context, MediaPlayerService.class);
+		remoteIntent.setAction(action);
+		context.startService(remoteIntent);
 	}
 }

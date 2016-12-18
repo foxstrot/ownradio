@@ -4,8 +4,10 @@ import android.os.AsyncTask;
 import android.os.Build;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -26,7 +28,7 @@ public class GetRequest extends AsyncTask<URL, Void, String> {
 			URL URLRequest = url[0];
 			HttpURLConnection urlConnection = (HttpURLConnection) URLRequest.openConnection();
 			urlConnection.setRequestMethod("GET");
-
+			urlConnection.setRequestProperty("Content-Type", "application/json");
 			urlConnection.connect();
 
 			int responseCode = urlConnection.getResponseCode();
@@ -34,11 +36,19 @@ public class GetRequest extends AsyncTask<URL, Void, String> {
 				//запрос успешно отправлен
 				InputStream streamReader = new BufferedInputStream(urlConnection.getInputStream());
 				StringBuffer sb = new StringBuffer();
-				int ch;
-				while ((ch = streamReader.read()) != -1) {
-					sb.append((char) ch);
+				BufferedReader br = new BufferedReader(new InputStreamReader(streamReader));
+				String inputLine = "";
+				while ((inputLine = br.readLine()) != null) {
+					sb.append(inputLine);
 				}
-				urlConnection.disconnect();
+//				result = sb.toString();
+//
+//
+//				int ch;
+//				while ((ch = streamReader.read()) != -1) {
+//					sb.append((char) ch);
+//				}
+//				urlConnection.disconnect();
 				return sb.toString();
 			} else {
 				urlConnection.disconnect();

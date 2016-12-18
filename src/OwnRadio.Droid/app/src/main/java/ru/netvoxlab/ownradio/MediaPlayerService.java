@@ -7,7 +7,6 @@ import android.content.ContentValues;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
-import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.media.RemoteControlClient;
 import android.net.Uri;
@@ -20,6 +19,8 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
@@ -27,12 +28,16 @@ import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
 
-import org.json.JSONObject;
-
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
+
+import static android.app.PendingIntent.getActivity;
+import static android.os.Build.VERSION_CODES.LOLLIPOP;
 
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener, AudioManager.OnAudioFocusChangeListener {
 	public static final String ActionPlay = "ru.netvoxlab.ownradio.action.PLAY";
@@ -45,7 +50,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public static final String ActionButtonImgUpdate = "ru.netvoxlab.ownradio.action.BTN_PLAYPAUSE_IMG_UPDATE";
 	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
 	public static final String ActionUpdateNotification = "ru.netvoxlab.ownradio.action.UPDATE_NOTIFICATION";
-
+	private RemoteControlClient remoteControlClient;
 	public MediaPlayer player = null;
 	private AudioManager audioManager;
 	private WifiManager wifiManager;
@@ -60,7 +65,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	private Handler handler = new Handler();
 	private Handler PlayingHandler;
 	private java.lang.Runnable PlayingHandlerRunnable;
-
 	String trackURL;
 	TrackDataAccess trackDataAccess;
 	String DeviceID;
@@ -69,11 +73,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	Boolean FlagDownloadTrack = true;
 	final String TAG = "ownRadio";
 
-	JSONObject trackJSON;
-
+	Map<String, String> trackMap;
+	public static List<Map<String,String>> queue = new ArrayList<>();
+	public static int queueSize = 0;
 	ContentValues track;
 	int startPosition = 0;
 	String startTrackID = "";
+
 
 	public int GetMediaPlayerState() {
 		return (mediaControllerCompat.getPlaybackState() != null ? mediaControllerCompat.getPlaybackState().getState() : PlaybackStateCompat.STATE_NONE);
@@ -120,27 +126,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 	}
 
-//	private class TrackInfo {
-//		public String Title;
-//		public String Artist;
-//		public String AlbumArtist;
-//		public String Album;
-//		public String Duration;
-//
-//		public TrackInfo() {
-//		}
-//
-//		public TrackInfo(String title, String artist, String albumArtist, String album, String duration) {
-//			Title = title;
-//			Artist = artist;
-//			AlbumArtist = albumArtist;
-//			Album = album;
-//			Duration = duration;
-//		}
-//	};
-//
-//	TrackInfo trackInfo = new TrackInfo();
-
 	public MediaPlayerService() {
 //        PlayingHandler = new Handler ();
 //
@@ -169,7 +154,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		try {
 			if (mediaSessionCompat == null) {
 				Intent nIntent = new Intent(getApplicationContext(), MainActivity.class);
-				PendingIntent pIntent = PendingIntent.getActivity(getApplicationContext(), 0, nIntent, 0);
+				PendingIntent pIntent = getActivity(getApplicationContext(), 0, nIntent, 0);
 
 				remoteComponentName = new ComponentName(getApplication().getPackageName(), new RemoteControlReceiver().ComponentName());
 
@@ -204,6 +189,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		MediaButtonReceiver.handleIntent(mediaSessionCompat, intent);
 		trackDataAccess = new TrackDataAccess(getApplicationContext());
 		DeviceID = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID", "");
 		UserID = DeviceID;//PreferenceManager.getDefaultSharedPreferences(this).getString("UserID", "");
@@ -228,7 +214,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				break;
 			case ActionTogglePlayback:
 				if (player == null)
-					return Service.START_STICKY;
+					return Service.START_REDELIVER_INTENT;
 
 				if (player.isPlaying())
 					Pause();
@@ -242,17 +228,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //                android.os.Process.killProcess(android.os.Process.myPid());
 //                break;
 		}
-		return Service.START_STICKY;
+		return Service.START_REDELIVER_INTENT;
 	}
 
 	private void InitializePlayer() {
 		player = new MediaPlayer();
 
 		//Tell our player to stream music
-//		player.setAudioStreamType(AudioManager.STREAM_MUSIC);
+		player.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		//Wake mode will be partial to keep the CPU still running under lock screen
 		player.setWakeMode(getApplicationContext(), 1);// WakeLockFlags.Partial=1
-		player.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		player.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
 			@Override
 			public void onBufferingUpdate(MediaPlayer mediaPlayer, int i) {
@@ -283,15 +268,20 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public void onCompletion(MediaPlayer mediaPlayer) {
 		//Событие возникает при дослушивании трека до конца, плеер останавливается, отправляется статистика прослушивания
 		//затем вызвается функция Play(), запускающая проигрывание следующего трека
+		//Сохраняем информацию о прослушивании в локальную БД.
+		int listedTillTheEnd = 1;
+		SaveHistory(listedTillTheEnd, track);
+
+		PlayNext();
 
 		//Сохраняем информацию о прослушивании в локальную БД.
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
+				android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
 				try {
-					int listedTillTheEnd = 1;
-					SaveHistory(listedTillTheEnd, track);
-					Thread.currentThread().interrupt();
+					//Отправка на сервер накопленной истории прослушивания треков
+					new APICalls(getApplicationContext()).SendHistory(DeviceID, 3);
 					return;
 				}catch (Exception ex){
 					Log.d(TAG, " " + ex.getLocalizedMessage());
@@ -300,36 +290,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				}
 			}
 		}).start();
-//		SaveHistory(listedTillTheEnd);
-
-		PlayNext();
-
-		try {
-			//Отправка на сервер накопленной истории прослушивания треков
-//			APICalls apiCalls = new APICalls(getApplicationContext());
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					try {
-						new APICalls(getApplicationContext()).SendHistory(DeviceID, 1);
-						Thread.currentThread().interrupt();
-						return;
-					}catch (Exception ex){
-						Log.d(TAG, "Error in history send" + ex.getLocalizedMessage());
-						Thread.currentThread().interrupt();
-						return;
-					}
-				}
-			}).start();
-		} catch (Exception ex) {
-			Log.d(TAG, " " + ex.getLocalizedMessage());
-		}
 	}
 
 	public void Play() {
 		Log.d(TAG, "Play(): ");
 
-		if (player != null && GetMediaPlayerState() == PlaybackStateCompat.STATE_PAUSED) {
+		if (player != null){// && GetMediaPlayerState() == PlaybackStateCompat.STATE_PAUSED) {
 			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 //			if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
 //				//mess
@@ -341,6 +307,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 //			StartNotification();
 //			UpdateButtonPlayPauseImg();
+			UpdateMediaMetadataCompat();
 		}
 
 		if (player == null)
@@ -365,7 +332,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		try {
 //			MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
 
-			if(trackDataAccess.GetExistTracksCount() >= 10) {
+			if(trackDataAccess.GetExistTracksCount() >= 3) {
 				Log.d(TAG, "Play(): cache");
 				SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 				startPosition = settings.getInt("LastPosition", 0);
@@ -382,40 +349,40 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 					}
 					player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
 //					metaRetriever.setDataSource(trackURL);
+					Intent i = new Intent(ActionSendInfoTxt);
+					i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + " Play(): cache");
+					getApplicationContext().sendBroadcast(i);
 				}
 			} else {
-			Log.d(TAG, "Play(): stream");
-//			String trackIdTmp = new APICalls(getApplicationContext()).GetNextTrackID(DeviceID);
-			trackJSON = new APICalls((getApplicationContext())).GetNextTrackID(DeviceID);
-			if(trackJSON == null)
-				return;
-			Log.d(TAG, "Play(): GetNextTrackID: " + trackJSON);
+				Log.d(TAG, "Play(): stream");
+				trackMap = new APICalls((getApplicationContext())).GetNextTrackID(DeviceID);
+				if(trackMap == null)
+					return;
+				Log.d(TAG, "Play(): GetNextTrackID: " + trackMap);
 				track = new ContentValues();
-				track.put("id", trackJSON.getString("id"));
-				track.put("name", trackJSON.getString("name"));
-				track.put("methodid", trackJSON.getString("methodid"));
-				track.put("length", trackJSON.getString("length"));
-//			String artist = trackJSON.getString("artist");
-			TrackID = trackJSON.getString("id");
-//			String title = trackJSON.getString("name");
-//			String methodid = trackJSON.getString("methodid");
-//			long length = trackJSON.getLong("length");
+				track.put("id", trackMap.get("id"));
+				track.put("title", trackMap.get("name"));
+				track.put("artist", trackMap.get("artist"));
+				track.put("methodid", trackMap.get("methodid"));
+				track.put("length", trackMap.get("length"));
 
-
+				TrackID = trackMap.get("id");
 
 
 			String uri = "http://api.ownradio.ru/v3/tracks/" + TrackID;
-//			String uri = "http://java.ownradio.ru/api/v2/tracks/" + TrackID;
-
 			Log.d(TAG, "Play(): URI: " + uri);
 
 			player.setDataSource(getApplicationContext(), Uri.parse(uri));
 //					metaRetriever.setDataSource(uri);
+
+				Intent i = new Intent(ActionSendInfoTxt);
+				i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + " Play(): stream");
+				getApplicationContext().sendBroadcast(i);
 			}
 
 			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 			if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-				//                could not get audio focus
+				audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 			}
 
 			UpdatePlaybackState(PlaybackStateCompat.STATE_BUFFERING);
@@ -425,7 +392,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			Log.d(TAG, "Play(): prepareAsync" );
 
 			AcquireWifiLock();
-			//                UpdateMediaMetadataCompat (metaRetriever);
+			                UpdateMediaMetadataCompat ();
 //			if (GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
 //				StartNotification();
 //				UpdateButtonPlayPauseImg();
@@ -434,32 +401,70 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			Intent i = new Intent(ActionProgressBarUpdate);
 			sendBroadcast(i);
 			Log.d(TAG, "Play(): sendBroadcast" );
-
-
-//				TrackToCache trackToCache = new TrackToCache(getApplicationContext());
-//				trackToCache.SaveTrackToCache(DeviceID, 3);
-//			} else {
-//				if (FlagDownloadTrack) {
-//					startPosition = 0;
-//					FlagDownloadTrack = false;
-//					TrackToCache trackToCache = new TrackToCache(getApplicationContext());
-//					trackToCache.SaveTrackToCache(DeviceID, 3);
-//					Play();
-////                Log.d("MP", "DB is empty");
-////                return;
-//				}
-//			}
 		} catch (Exception ex) {
 			Log.d(TAG, "Error in Play(): " + ex.getLocalizedMessage());
-			ex.printStackTrace();
-			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
 			player.reset();
 			player.release();
 			player = null;
+			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
+			ex.printStackTrace();
 			return;
 		}
 //        }
-	}
+
+		if(queue.size()<5) {
+//			queue.add(new APICalls(getApplicationContext()).GetNextTrackID(DeviceID));
+//			queue.add(new APICalls(getApplicationContext()).GetNextTrackID(DeviceID));
+//			queue.add(new APICalls(getApplicationContext()).GetNextTrackID(DeviceID));
+
+//		Запускаем кеширование треков - 3 шт
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+					try {
+//						new GetTrackById(getApplicationContext()).GetTrack();
+						TrackToCache trackToCache = new TrackToCache(getApplicationContext());
+						trackToCache.SaveTrackToCache(DeviceID, 3);
+						Thread.currentThread().interrupt();
+						return;
+					} catch (Exception ex) {
+						Log.d(TAG, " " + ex.getLocalizedMessage());
+						Thread.currentThread().interrupt();
+						return;
+					}
+				}
+			}).start();
+		}
+//			try {
+//				if (thread.getState()== Thread.State.TERMINATED || thread.getState() == Thread.State.NEW) {
+//					Log.d(TAG, "isAlive is false");
+//					thread.run();
+////					thread.start();
+//				}
+//			}catch (Exception ex){
+//				Log.d(TAG, " " + ex.getLocalizedMessage());
+//			}
+		}
+//	}
+
+	Thread thread = new Thread(new Runnable() {
+		@Override
+		public void run() {
+			android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+			try {
+//						new GetTrackById(getApplicationContext()).GetTrack();
+				TrackToCache trackToCache = new TrackToCache(getApplicationContext());
+				trackToCache.SaveTrackToCache(DeviceID, 3);
+				thread.interrupt();
+				return;
+			} catch (Exception ex) {
+				Log.d(TAG, " " + ex.getLocalizedMessage());
+				thread.interrupt();
+				return;
+			}
+		}
+	});
 
 	public void Pause() {
 		if (player == null)
@@ -480,6 +485,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		if (player.isPlaying()) {
 			player.stop();
 		}
+//		NotificationManager notificationManager = (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+//		notificationManager.cancel( 1 );
+//		Intent intent = new Intent( getApplicationContext(), MediaPlayerService.class );
+//		stopService( intent );
 
 //		try{
 //			BroadcastReceiver headSetReceiver = new MusicBroadcastReceiver();
@@ -504,58 +513,38 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	public void Next() {
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					//Сохраняем информацию о прослушивании в локальную БД.
-					int listedTillTheEnd = -1;
-					SaveHistory(listedTillTheEnd, track);
-
-					//Отправка на сервер накопленной истории прослушивания треков
-					new APICalls(getApplicationContext()).SendHistory(DeviceID, 3);
-
-					Thread.currentThread().interrupt();
-					return;
-				}catch (Exception ex){
-					Log.d(TAG, " " + ex.getLocalizedMessage());
-					Thread.currentThread().interrupt();
-					return;
-				}
-			}
-		}).start();
-//		SaveHistory(listedTillTheEnd);
+		//Сохраняем информацию о прослушивании в локальную БД.
+		int listedTillTheEnd = -1;
+		SaveHistory(listedTillTheEnd, track);
 
 		PlayNext();
 
 		try {
-//			APICalls apiCalls = new APICalls(getApplicationContext());
-//			new Thread(new Runnable() {
-//				@Override
-//				public void run() {
-//					try {
-//						Thread.currentThread().interrupt();
-//						return;
-//					}catch (Exception ex){
-//						Log.d(TAG, " " + ex.getLocalizedMessage());
-//						Thread.currentThread().interrupt();
-//						return;
-//					}
-//				}
-//			}).start();
 //			apiCalls.SetStatusTrack(DeviceID, TrackID, ListedTillTheEnd, currentDateTime);
 
-//			сканирование директории с треками для обнаружения и добавления треков, отсутствующих в бд
-//			new TrackToCache(getApplicationContext()).ScanTrackToCache();
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
+					try {
+						// Удаление пропущенного трека
+						ContentValues trackForDel = trackDataAccess.GetPathById(TrackID);
+						new TrackToCache(getApplicationContext()).DeleteTrackFromCache(trackForDel);
+						//Отправка на сервер накопленной истории прослушивания треков
+						new APICalls(getApplicationContext()).SendHistory(DeviceID, 3);
+						Thread.currentThread().interrupt();
+						return;
+					}catch (Exception ex){
+						Log.d(TAG, " " + ex.getLocalizedMessage());
+						Thread.currentThread().interrupt();
+						return;
+					}
+				}
+			}).start();
 
-			// Удаление пропущенного трека
-			ContentValues trackForDel = trackDataAccess.GetPathById(TrackID);
-			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(trackForDel);
 		} catch (Exception ex) {
 			ex.getLocalizedMessage();
 		}
-
-
 	}
 
 	private void SaveHistory(int listedTillTheEnd, ContentValues trackInstance){
@@ -613,66 +602,115 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	public int GetPosition() {
-		if (player == null
-				|| (GetMediaPlayerState() != PlaybackStateCompat.STATE_PLAYING
-				&& GetMediaPlayerState() != PlaybackStateCompat.STATE_PAUSED))
+		if (Build.VERSION.SDK_INT >= LOLLIPOP) {
+			if (player == null
+					|| (GetMediaPlayerState() != PlaybackStateCompat.STATE_PLAYING
+					&& GetMediaPlayerState() != PlaybackStateCompat.STATE_PAUSED))
+				return -1;
+			else
+				return player.getCurrentPosition();
+		}
+
+	if (Build.VERSION.SDK_INT <LOLLIPOP)	{
+		if (player == null)
 			return -1;
 		else
-			return player.getCurrentPosition();
+			try {
+				return player.getCurrentPosition();
+			}catch (Exception ex){
+
+			}
+	}
+		return -1;
+
 	}
 
 	public int GetDuration() {
+		if (Build.VERSION.SDK_INT >= LOLLIPOP) {
 		if (player == null
 				|| (GetMediaPlayerState() != PlaybackStateCompat.STATE_PLAYING
 				&& GetMediaPlayerState() != PlaybackStateCompat.STATE_PAUSED))
 			return 0;
 		else
 			return player.getDuration();
+		}
+
+		if (Build.VERSION.SDK_INT <LOLLIPOP)	{
+			if (player == null)
+				return -1;
+			else
+				try {
+					return player.getCurrentPosition();
+				}catch (Exception ex){
+
+				}
+		}
+		return 0;
 	}
 
 	private void UpdatePlaybackState(int state) {
-//		UpdateButtonPlayPauseImg();
 		if (mediaSessionCompat == null || player == null)
 			return;
 
-		try {
-			PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
-					.setActions(
-							PlaybackStateCompat.ACTION_PAUSE |
-									PlaybackStateCompat.ACTION_PLAY |
-									PlaybackStateCompat.ACTION_PLAY_PAUSE |
-									PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
-									PlaybackStateCompat.ACTION_STOP
-					)
-					.setState(state, GetPosition(), 1.0f, SystemClock.elapsedRealtime());
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+//		UpdateButtonPlayPauseImg();
+
+
+			try {
+				PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
+						.setActions(
+								PlaybackStateCompat.ACTION_PAUSE |
+										PlaybackStateCompat.ACTION_PLAY |
+										PlaybackStateCompat.ACTION_PLAY_PAUSE |
+										PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
+										PlaybackStateCompat.ACTION_STOP
+						)
+						.setState(state, GetPosition(), 1.0f, SystemClock.elapsedRealtime());
 
 //			if(state == PlaybackStateCompat.STATE_PLAYING)
 //				getApplicationContext().
-			mediaSessionCompat.setPlaybackState(stateBuilder.build());
+				mediaSessionCompat.setPlaybackState(stateBuilder.build());
 
-			//Used for backwards compatibility
-			if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-				if (mediaSessionCompat.getRemoteControlClient() != null && mediaSessionCompat.getRemoteControlClient().equals(RemoteControlClient.class)) {
-					RemoteControlClient remoteControlClient = (RemoteControlClient) mediaSessionCompat.getRemoteControlClient();
+				//Used for backwards compatibility
+				if (Build.VERSION.SDK_INT < LOLLIPOP) {
 
-					int flags = RemoteControlClient.FLAG_KEY_MEDIA_PLAY
-							| RemoteControlClient.FLAG_KEY_MEDIA_PAUSE
-							| RemoteControlClient.FLAG_KEY_MEDIA_PLAY_PAUSE
-							| RemoteControlClient.FLAG_KEY_MEDIA_NEXT
-							| RemoteControlClient.FLAG_KEY_MEDIA_STOP;
-					remoteControlClient.setTransportControlFlags(flags);
+					if (mediaSessionCompat.getRemoteControlClient() != null && mediaSessionCompat.getRemoteControlClient().getClass().equals(RemoteControlClient.class)) {
+						remoteControlClient = (RemoteControlClient) mediaSessionCompat.getRemoteControlClient();
+
+						int flags =
+// (int)PlaybackStateCompat.ACTION_PAUSE |
+//							(int)PlaybackStateCompat.ACTION_PLAY |
+//							(int)PlaybackStateCompat.ACTION_PLAY_PAUSE |
+//							(int)PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
+//							(int)PlaybackStateCompat.ACTION_STOP;
+								RemoteControlClient.FLAG_KEY_MEDIA_PLAY
+										| RemoteControlClient.FLAG_KEY_MEDIA_PAUSE
+										| RemoteControlClient.FLAG_KEY_MEDIA_PLAY_PAUSE
+										| RemoteControlClient.FLAG_KEY_MEDIA_NEXT
+										| RemoteControlClient.FLAG_KEY_MEDIA_STOP;
+//					int flags2 = RemoteControlClient.PLAYSTATE_PLAYING
+//							| RemoteControlClient.PLAYSTATE_PAUSED
+//							| RemoteControlClient.FLAG_KEY_MEDIA_PLAY_PAUSE
+//							| RemoteControlClient.PLAYSTATE_SKIPPING_FORWARDS
+//							| RemoteControlClient.PLAYSTATE_STOPPED;
+						remoteControlClient.setTransportControlFlags(flags);
+						remoteControlClient.setPlaybackState(state);
+					}
 				}
-			}
 
 //            OnStatusChanged(EventArgs.Empty);
 
-			if (state != PlaybackStateCompat.STATE_BUFFERING) {
-				StartNotification();
-				UpdateButtonPlayPauseImg();
+				if (state != PlaybackStateCompat.STATE_BUFFERING) {
+					StartNotification();
+					UpdateButtonPlayPauseImg();
+				}
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				Log.d(TAG, " " + ex.getLocalizedMessage());
 			}
-		} catch (Exception ex) {
-			ex.printStackTrace();
-			Log.d(TAG, " " + ex.getLocalizedMessage());
+		}else {
+			if (state != PlaybackStateCompat.STATE_BUFFERING)
+				UpdateButtonPlayPauseImg();
 		}
 	}
 
@@ -682,90 +720,110 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	private void StartNotification() {
-		//                MediaMetadataCompat currentTrack = mediaControllerCompat.getMediaMetadata();
-		android.support.v7.app.NotificationCompat.MediaStyle style = new android.support.v7.app.NotificationCompat.MediaStyle();
-		style.setMediaSession(mediaSessionCompat.getSessionToken());
+		if (Build.VERSION.SDK_INT >= LOLLIPOP) {
+			//                MediaMetadataCompat currentTrack = mediaControllerCompat.getMediaMetadata();
+			android.support.v7.app.NotificationCompat.MediaStyle style = new android.support.v7.app.NotificationCompat.MediaStyle();
+			style.setMediaSession(mediaSessionCompat.getSessionToken());
 
-		PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
-		PendingIntent pendingCancelIntent = PendingIntent.getService(getApplicationContext(), 1, new Intent(this, MediaPlayerService.class), PendingIntent.FLAG_CANCEL_CURRENT);
-		style.setShowCancelButton(true);
-		style.setCancelButtonIntent(pendingCancelIntent);
-		String trackTitle;
-		String trackArtist;
-		MediaMetadataRetriever mMediaMetaDataRetriever = new MediaMetadataRetriever();
-		try {
-			trackTitle =(track.getAsString("name") == null) ?  "Unknown track" : track.getAsString("name");
-			trackArtist =(track.getAsString("artist") == null) ?  "Unknown artist" : track.getAsString("artist");
-			//данный блок для получения информации о треке
-//			mMediaMetaDataRetriever.setDataSource(track.getAsString("trackurl"));
-//			trackTitle = mMediaMetaDataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
-//			trackArtist = mMediaMetaDataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ALBUM);
+			PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+			PendingIntent pendingCancelIntent = PendingIntent.getService(getApplicationContext(), 1, new Intent(this, MediaPlayerService.class), PendingIntent.FLAG_CANCEL_CURRENT);
+			style.setShowCancelButton(true);
+			style.setCancelButtonIntent(pendingCancelIntent);
+			String trackTitle;
+			String trackArtist;
+			try {
+				trackTitle = (track.getAsString("name") == null) ? "Unknown track" : track.getAsString("name");
+				trackArtist = (track.getAsString("artist") == null) ? "Unknown artist" : track.getAsString("artist");
 
-		}catch (Exception ex){
-//			trackTitle = track.getAsString("name");
-//			trackArtist = track.getAsString("artist");
-			trackTitle ="Unknown track";
-			trackArtist = "Unknown artist";
-			Log.d(TAG, " " + ex.getLocalizedMessage());
-			ex.printStackTrace();
-		}
+			} catch (Exception ex) {
+				trackTitle = "Unknown track";
+				trackArtist = "Unknown artist";
+				Log.d(TAG, " " + ex.getLocalizedMessage());
+			}
 
-		Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
-		intent.setAction(ActionPlay);
-		RemoteViews contentView = new RemoteViews(getApplicationContext().getPackageName(), R.layout.notification);
+			Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
+			intent.setAction(ActionPlay);
+			RemoteViews contentView = new RemoteViews(getApplicationContext().getPackageName(), R.layout.notification);
 
-		contentView.setViewVisibility(R.id.viewsIcon, View.VISIBLE);
+			contentView.setViewVisibility(R.id.viewsIcon, View.VISIBLE);
 
-		Intent mainIntent = new Intent(this, MainActivity.class);
-		mainIntent.setAction(Intent.ACTION_MAIN);
-		mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-		PendingIntent pmainIntent = PendingIntent.getActivity(getApplicationContext(), 0,
-				mainIntent, 0);
+			Intent mainIntent = new Intent(this, MainActivity.class);
+			mainIntent.setAction(Intent.ACTION_MAIN);
+			mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+			PendingIntent pmainIntent = PendingIntent.getActivity(getApplicationContext(), 0,
+					mainIntent, 0);
 
-//		if(!PreferenceManager.getDefaultSharedPreferences(getApplicationContext()).getBoolean("DevelopersInfo",false))
-//			contentView.setViewVisibility(R.id.viewsTitle, View.GONE);
-//		else
-//			contentView.setViewVisibility(R.id.viewsTitle, View.VISIBLE);
+			contentView.setTextViewText(R.id.viewsTitle, trackTitle);
+			contentView.setTextViewText(R.id.viewsArtist, trackArtist);
 
-		contentView.setTextViewText(R.id.viewsTitle, trackTitle);
-		contentView.setTextViewText(R.id.viewsArtist, trackArtist);
+			Intent playIntent = new Intent(this, MediaPlayerService.class);
+			if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
+				playIntent.setAction(ActionPause);
+				contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_pause_action);
+			} else {
+				playIntent.setAction(ActionPlay);
+				contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_play_action);
+			}
+			PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
 
-		Intent playIntent = new Intent(this, MediaPlayerService.class);
-		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
-			playIntent.setAction(ActionPause);
-			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_pause_action);
-		} else {
-			playIntent.setAction(ActionPlay);
-			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_play_action);
-		}
-		PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
-
-		Intent nextIntent = new Intent(this, MediaPlayerService.class);
-		nextIntent.setAction(ActionNext);
-		PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
+			Intent nextIntent = new Intent(this, MediaPlayerService.class);
+			nextIntent.setAction(ActionNext);
+			PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
 
 
-		contentView.setOnClickPendingIntent(R.id.viewsNext, pnextIntent);
-		contentView.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
+			contentView.setOnClickPendingIntent(R.id.viewsNext, pnextIntent);
+			contentView.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
 
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
-				.setSmallIcon(R.drawable.logo)
-				.setContentIntent(pendingIntent)
-				.setCustomContentView(contentView)
-				.setShowWhen(false)
-				.setPriority(NotificationCompat.PRIORITY_HIGH)
-				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+			NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
+					.setSmallIcon(R.drawable.logo)
+					.setContentIntent(pendingIntent)
+					.setCustomContentView(contentView)
+					.setShowWhen(false)
+					.setPriority(NotificationCompat.PRIORITY_HIGH)
+					.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
 
-		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-			builder.setOngoing(true);
-		else
-			builder.setOngoing(false);
+			if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+				builder.setOngoing(true);
+			else
+				builder.setOngoing(false);
 //        style.setShowActionsInCompactView(0,1,2);
-		NotificationManagerCompat.from(getApplicationContext()).notify(NotificationId, builder.build());
+			NotificationManagerCompat.from(getApplicationContext()).notify(NotificationId, builder.build());
 
 //        NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 //        notificationManager.notify(2, notification);
+//
+//		if (Build.VERSION.SDK_INT >18 && Build.VERSION.SDK_INT < 21) {
+////			 MediaMetadataEditor metadataEditor = remoteControlClient.editMetadata(true);
+//			if (mediaSessionCompat.getRemoteControlClient() != null){// && mediaSessionCompat.getRemoteControlClient().equals(RemoteControlClient.class)) {
+//				RemoteControlClient remoteControlClient = (RemoteControlClient) mediaSessionCompat.getRemoteControlClient();
+//				RemoteControlClient.MetadataEditor metadataEditor = remoteControlClient.editMetadata(true);
+//				String trackAlbum;
+//				try{
+//					metadataEditor.putString(METADATA_KEY_TITLE, track.getAsString("name"));
+//					metadataEditor.putString(METADATA_KEY_ARTIST, track.getAsString("artist"));
+//					metadataEditor.putString(METADATA_KEY_ALBUM, "ownRadio");
+//				}catch (Exception ex){
+//					metadataEditor.putString(METADATA_KEY_TITLE, "Unknown track");
+//					metadataEditor.putString(METADATA_KEY_ARTIST, "Unknown artist");
+//					metadataEditor.putString(METADATA_KEY_ALBUM, "ownRadio");
+//				}
+//
+//				metadataEditor.apply();
+////
+////				metadataEditor.putString(METADATA_KEY_TITLE, track.getAsString("name"));
+////				metadataEditor.putString(METADATA_KEY_ARTIST, track.getAsString("title"));
+////				metadataEditor.putString(METADATA_KEY_ALBUM, "ownRadio");
+////				int flags = RemoteControlClient.FLAG_KEY_MEDIA_PLAY
+////						| RemoteControlClient.FLAG_KEY_MEDIA_PAUSE
+////						| RemoteControlClient.FLAG_KEY_MEDIA_PLAY_PAUSE
+////						| RemoteControlClient.FLAG_KEY_MEDIA_NEXT
+////						| RemoteControlClient.FLAG_KEY_MEDIA_STOP;
+////				remoteControlClient.setPlaybackState().setTransportControlFlags(flags);
+//			}
+//		}
+		}
 	}
+
 
 	public void StopNotification() {
 		NotificationManagerCompat nm = NotificationManagerCompat.from(getApplicationContext());
@@ -780,27 +838,67 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 		UpdatePlaybackState(PlaybackStateCompat.STATE_SKIPPING_TO_NEXT);
 		Play();
+	}
 
-//		String deviceId = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID", "");
+	private void UpdateMediaMetadataCompat ()
+	{
+//		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+			if (mediaSessionCompat == null)
+				return;
 
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					TrackToCache trackToCache = new TrackToCache(getApplicationContext());
-					trackToCache.SaveTrackToCache(DeviceID, 3);
+			MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder();
 
-					Thread.currentThread().interrupt();
-					return;
-				}catch (Exception ex){
-					Log.d(TAG, " " + ex.getLocalizedMessage());
-					Thread.currentThread().interrupt();
-					return;
-				}
+//		if (metaRetriever != null) {
+			builder
+					.putLong(MediaMetadataCompat.METADATA_KEY_DURATION, GetDuration())//track.getAsLong("length"))
+					.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "ownRadio")
+					.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, track.getAsString("artist"))
+					.putString(MediaMetadataCompat.METADATA_KEY_TITLE, track.getAsString("name"));
+//			.putString (MediaMetadataCompat.METADATA_KEY_ALBUM, metaRetriever.extractMetadata (METADATA_KEY_ALBUM))
+//					.putString (MediaMetadataCompat.METADATA_KEY_ARTIST, metaRetriever.extractMetadata (METADATA_KEY_ARTIST))
+//					.putString (MediaMetadataCompat.METADATA_KEY_TITLE, metaRetriever.extractMetadata (METADATA_KEY_TITLE));
+//		} else {
+//			builder
+//					.putString (MediaMetadataCompat.METADATA_KEY_ALBUM, mediaSessionCompat.get(METADATA_KEY_ALBUM)
+//					.putString (MediaMetadataCompat.METADATA_KEY_ARTIST, mediaSessionCompat.Controller.Metadata.GetString (METADATA_KEY_ARTIST)
+//					.putString (MediaMetadataCompat.METADATA_KEY_TITLE, mediaSessionCompat.Controller.Metadata.GetString (METADATA_KEY_TITLE));
+//		}
+//		track.getAsString("name"));
+//					metadataEditor.putString(METADATA_KEY_ARTIST, track.getAsString("artist"));
+//					metadataEditor.putString(METADATA_KEY_ALBUM, "ownRadio");
+			mediaSessionCompat.setMetadata(builder.build());
+//		}
+	}
+
+	private void RegisterRemoteClient()
+	{
+		try{
+
+			if(remoteControlClient == null)
+			{
+				audioManager.registerMediaButtonEventReceiver(remoteComponentName);
+				//Create a new pending intent that we want triggered by remote control client
+				Intent mediaButtonIntent = new Intent(Intent.ACTION_MEDIA_BUTTON);
+				mediaButtonIntent.setComponent(remoteComponentName);
+				// Create new pending intent for the intent
+				PendingIntent mediaPendingIntent = PendingIntent.getBroadcast(this, 0, mediaButtonIntent, 0);
+				// Create and register the remote control client
+				remoteControlClient = new RemoteControlClient(mediaPendingIntent);
+				audioManager.registerRemoteControlClient(remoteControlClient);
 			}
-		}).start();
-//		TrackToCache trackToCache = new TrackToCache(getApplicationContext());
-//		trackToCache.SaveTrackToCache(DeviceID, 3);
+
+
+			//add transport control flags we can to handle
+			remoteControlClient.setTransportControlFlags(RemoteControlClient.FLAG_KEY_MEDIA_PLAY
+						| RemoteControlClient.FLAG_KEY_MEDIA_PAUSE
+						| RemoteControlClient.FLAG_KEY_MEDIA_PLAY_PAUSE
+						| RemoteControlClient.FLAG_KEY_MEDIA_NEXT
+						| RemoteControlClient.FLAG_KEY_MEDIA_STOP);
+
+
+		}catch(Exception ex){
+			Log.d(TAG, " " + ex.getLocalizedMessage());
+		}
 	}
 
 	public class MediaSessionCallback extends MediaSessionCompat.Callback {
@@ -834,6 +932,55 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			mediaPlayerService.GetMediaPlayerService().Stop();
 			super.onStop();
 		}
+
+//		@Override
+//		public boolean onMediaButtonEvent(Intent mediaButtonEvent){
+//			final String intentAction = mediaButtonEvent.getAction();
+//			if (AudioManager.ACTION_AUDIO_BECOMING_NOISY.equals(intentAction)) {
+////				if (PrefUtils.isHeadsetPause(getBaseContext())) {
+////					Log.d(LOG_TAG, "Headset disconnected");
+////					pause();
+////				}
+//			} else if (Intent.ACTION_MEDIA_BUTTON.equals(intentAction)) {
+//				final KeyEvent event = mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+//				if (event == null) return super.onMediaButtonEvent(mediaButtonEvent);
+//				final int keycode = event.getKeyCode();
+//				final int action = event.getAction();
+//				final long eventTime = event.getEventTime();
+//				if (event.getRepeatCount() == 0 && action == KeyEvent.ACTION_DOWN) {
+//					switch (keycode) {
+////						case KeyEvent.KEYCODE_HEADSETHOOK:
+////							if (eventTime - mLastClickTime < DOUBLE_CLICK) {
+////								playNext(mSongNumber);
+////								mLastClickTime = 0;
+////							} else {
+////								if (isPlaying())
+////									pause();
+////								else resume();
+////								mLastClickTime = eventTime;
+////							}
+////							break;
+//						case KeyEvent.KEYCODE_HEADSETHOOK:
+//						case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+//							Play();
+//							break;
+//						case KeyEvent.KEYCODE_MEDIA_PLAY:
+//							Play();
+//							break;
+//						case KeyEvent.KEYCODE_MEDIA_PAUSE:
+//							Pause();
+//							break;
+//						case KeyEvent.KEYCODE_MEDIA_STOP:
+//							Stop();
+//							break;
+//						case KeyEvent.KEYCODE_MEDIA_NEXT:
+//							Next();
+//							break;
+//					}
+//				}
+//			}
+//			return super.onMediaButtonEvent(mediaButtonEvent);
+//		}
 	}
 
 	public class MediaPlayerServiceBinder extends Binder {
@@ -868,6 +1015,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			player.release();
 			player = null;
 
+			Intent intent = new Intent(ActionButtonImgUpdate);
+			sendBroadcast(intent);
 			StopNotification();
 			stopForeground(true);
 			ReleaseWifiLock();
