@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Configuration;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -22,6 +23,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
 		public ContinueUploadCommand ContinueUploadCommand { get; set; }
 		public HideInfoCommand HideInfoCommand { get; set; }
 		public ShowInfoCommand ShowInfoCommand { get; set; }
+		public ClearDbCommand ClearDbCommand { get; set; }
 
 		public bool IsUploading
 		{
@@ -75,6 +77,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
 			ContinueUploadCommand = new ContinueUploadCommand(this);
 			HideInfoCommand = new HideInfoCommand(this);
 			ShowInfoCommand = new ShowInfoCommand(this);
+			ClearDbCommand = new ClearDbCommand(this);
 
 			try
 			{
@@ -85,6 +88,13 @@ namespace OwnRadio.Client.Desktop.ViewModel
 			{
 				ShowMessage(ex.Message);
 			}
+		}
+
+		public void ClearDatabase()
+		{
+			_dal.Clear();
+			UploadQueue.Clear();
+			System.Windows.MessageBox.Show("База данных успешно очищена!");
 		}
 
 		public void GetQueue(string path)
@@ -99,9 +109,9 @@ namespace OwnRadio.Client.Desktop.ViewModel
 				foreach (var file in filenames)
 				{
 					var info = new FileInfo(file);
-					if (info.Length > Properties.Settings.Default.MaxTrackSize)
+					if (info.Length > Settings.Default.MaxTrackSize)
 					{
-						System.Windows.MessageBox.Show($"{file} exceeds maximum size - {Properties.Settings.Default.MaxTrackSize} bytes");
+						System.Windows.MessageBox.Show($"{file} exceeds maximum size - {Settings.Default.MaxTrackSize} bytes");
 						continue;
 					}
 
@@ -129,7 +139,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
 			try
 			{
 				var allFiles = Directory.EnumerateFiles(sourceDirectory);
-				var musicFiles = allFiles.Where(s => s.EndsWith(".mp3"));
+				var musicFiles = allFiles.Where(s => s.EndsWith(".mp3", true, CultureInfo.InvariantCulture));
 				filenames.AddRange(musicFiles);
 
 				var dirs = Directory.EnumerateDirectories(sourceDirectory);
@@ -168,7 +178,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
 
 					var fullFileName = musicFile.FilePath + "\\" + musicFile.FileName;
 
-					var fileStream = File.Open(fullFileName, FileMode.Open);
+					var fileStream = File.OpenRead(fullFileName);
 					var byteArray = new byte[fileStream.Length];
 					fileStream.Read(byteArray, 0, (int)fileStream.Length);
 					fileStream.Close();
@@ -181,7 +191,7 @@ namespace OwnRadio.Client.Desktop.ViewModel
 						{new StringContent(Settings.Default.DeviceId.ToString()), "deviceId"},
 						{new ByteArrayContent(byteArray, 0, byteArray.Count()), "musicFile", musicFile.FileGuid + ".mp3"}
 					};
-
+					
 					var response = await httpClient.PostAsync($"{Settings.Default.ServiceUri}v3/tracks", form);
 
 					response.EnsureSuccessStatusCode();

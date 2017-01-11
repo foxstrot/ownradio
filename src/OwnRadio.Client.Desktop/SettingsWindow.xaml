@@ -1,0 +1,16 @@
+﻿<Window x:Class="OwnRadio.Client.Desktop.SettingsWindow"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+		xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+		mc:Ignorable="d"
+		Title="Настройки" Height="180" Width="300" Padding="5">
+	<StackPanel Margin="10">
+		<TextBlock Padding="5">Введите новый DeviceId:</TextBlock>
+		<TextBox Name="NewGuid" Margin="5" Padding="5"></TextBox>
+		<StackPanel Orientation="Horizontal">
+			<Button Click="CloseWindow" Margin="5" Padding="5" Width="100">Отмена</Button>
+			<Button Click="ChangeDeviceId" Margin="5" Padding="5" Width="100">OK</Button>
+		</StackPanel>
+	</StackPanel>
+</Window>

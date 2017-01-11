@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -21,7 +18,7 @@ namespace OwnRadio.Client.Desktop
 
 		public async Task<TrackInfo> GetNextTrack(Guid deviceId)
 		{
-			var response = await _httpClient.GetAsync(new Uri(_serviceUri, $"v3/tracks/{deviceId}/next"))
+			var response = await _httpClient.GetAsync(new Uri($"{_serviceUri}v3/tracks/{deviceId}/next"))
 						.ConfigureAwait(false);
 
 			if (response.StatusCode != HttpStatusCode.OK)
@@ -32,7 +29,7 @@ namespace OwnRadio.Client.Desktop
 			dynamic obj = JObject.Parse(json);
 			
 			track.Id = Guid.Parse((string)obj.id);
-			track.Uri = new Uri(_serviceUri, $"v3/tracks/{track.Id}");
+			track.Uri = new Uri($"{_serviceUri}v3/tracks/{track.Id}");
 			track.Artist = (string)obj.artist;
 			track.Length = (string)obj.length;
 			track.Name = (string)obj.name;
@@ -43,16 +40,14 @@ namespace OwnRadio.Client.Desktop
 
 		public async Task SendStatus(Guid deviceId, TrackInfo track)
 		{
-			var serializer = new JavaScriptSerializer();
-
-			var data = new TrackHistory
-			{
+			var status = new {
 				lastListen = track.ListenEnd.ToString("yyyy-MM-ddTH:m:s"),
 				isListen = ((int)track.Status).ToString(),
 				methodid = track.MethodId
 			};
 
-			var json = serializer.Serialize(data);
+			var serializer = new JavaScriptSerializer();
+			var json = serializer.Serialize(status);
 			var content = new StringContent(json, Encoding.UTF8, "application/json");
 
 			var response = await _httpClient.PostAsync($"{_serviceUri}v3/histories/{deviceId}/{track.Id}", content);
@@ -60,12 +55,5 @@ namespace OwnRadio.Client.Desktop
 			if (response.StatusCode != HttpStatusCode.OK)
 				throw new HttpRequestException($"Failed to get send track status [{response.StatusCode}]");
 		}
-	}
-
-	public class TrackHistory
-	{
-		public string lastListen { get; set; }
-		public string isListen { get; set; }
-		public string methodid { get; set; }
 	}
 }
