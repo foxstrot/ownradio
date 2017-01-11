@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using OwnRadio.Client.Desktop.Model;
+using OwnRadio.Client.Desktop.Properties;
 using OwnRadio.Client.Desktop.ViewModel.Commands;
 
 namespace OwnRadio.Client.Desktop.ViewModel
@@ -40,12 +41,23 @@ namespace OwnRadio.Client.Desktop.ViewModel
 
 		public static readonly DependencyProperty IsRunningProperty =
 			DependencyProperty.Register("IsRunning", typeof(bool), typeof(ViewModelPlayer), new PropertyMetadata(false));
+		
+		public string DeviceId
+		{
+			get { return (string)GetValue(DeviceIdProperty); }
+			set { SetValue(DeviceIdProperty, value); }
+		}
 
+		public static readonly DependencyProperty DeviceIdProperty =
+			DependencyProperty.Register("DeviceId", typeof(string), typeof(ViewModelPlayer), new PropertyMetadata(""));
+		
 		public ViewModelPlayer()
 		{
 			this.PlayCommand = new PlayCommand(this);
 			this.NextCommand = new NextCommand(this);
 			this.PauseCommand = new PauseCommand(this);
+
+			DeviceId = $"DeviceId: {Guid.Parse(Settings.Default.DeviceId.ToString())}";
 
 			Player.LoadedBehavior = MediaState.Manual;
 			Player.UnloadedBehavior = MediaState.Manual;

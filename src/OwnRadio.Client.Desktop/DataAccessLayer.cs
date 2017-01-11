@@ -41,6 +41,23 @@ namespace OwnRadio.Client.Desktop
 			}
 		}
 
+		public void Clear()
+		{
+			try
+			{
+				var command = new SQLiteCommand("DROP TABLE \"Files\";", _connection);
+				_connection.Open();
+				command.ExecuteNonQuery();
+				command = new SQLiteCommand("CREATE TABLE \"Files\" ( `ID` TEXT NOT NULL, `FileName` TEXT NOT NULL, `SubPath` TEXT, `Uploaded` INTEGER DEFAULT 0, PRIMARY KEY(`ID`) );", _connection);
+				command.ExecuteNonQuery();
+				_connection.Close();
+			}
+			catch (Exception ex)
+			{
+				MessageBox.Show(ex.Message, "Ошибка инициализации DAL");
+			}
+		}
+
 		public int AddToQueue(MusicFile musicFile)
 		{
 			var rowsAffected = 0;

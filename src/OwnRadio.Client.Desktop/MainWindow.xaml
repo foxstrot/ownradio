@@ -6,7 +6,7 @@
 		xmlns:local="clr-namespace:OwnRadio.Client.Desktop"
 		xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
 		mc:Ignorable="d"
-		Title="Own radio" SnapsToDevicePixels="True" Background="Transparent" Width="560" WindowStyle="None" AllowsTransparency="True" Icon="Resources/icon.png">
+		Title="Own radio" SnapsToDevicePixels="True" Background="Transparent" Width="560" WindowStyle="None" AllowsTransparency="True" Icon="Resources/logo.ico">
 	<Window.InputBindings>
 		<KeyBinding Key="P" Modifiers="Control" Command="{Binding PlayCommand, Source={StaticResource ViewModelPlayer}}"/>
 		<KeyBinding Key="S" Modifiers="Control" Command="{Binding PauseCommand, Source={StaticResource ViewModelPlayer}}"/>
@@ -36,7 +36,7 @@
 								<ColumnDefinition Width="*"></ColumnDefinition>
 								<ColumnDefinition Width="Auto"></ColumnDefinition>
 							</Grid.ColumnDefinitions>
-							<TextBlock Grid.Column="0" Foreground="WhiteSmoke" FontSize="11" Text="v2016.12.05"/>
+							<TextBlock Grid.Column="0" Foreground="WhiteSmoke" FontSize="11" Text="v2017.01.11"/>
 							<TextBlock Grid.Column="2" Foreground="WhiteSmoke" FontSize="11" Cursor="Hand"
 									   Text="{Binding Status, Source={StaticResource ViewModelUploader}}" TextAlignment="Right">
 								<i:Interaction.Triggers>
@@ -60,6 +60,7 @@
 		</Border>
 		<Border Padding="20,15" CornerRadius="20" Background="LightGray" Margin="2" Visibility="{Binding Info, Source={StaticResource ViewModelUploader}}">
 			<StackPanel>
+				<TextBlock Padding="0,0,0,15" Name="TbDeviceId" Text="{Binding DeviceId, Source={StaticResource ViewModelPlayer}}" MouseRightButtonDown="ChangeDeviceId"></TextBlock>
 				<TextBlock TextWrapping="Wrap" TextAlignment="Justify">Выберите директорию для загрузки mp3-файлов на сервер (включая поддиректории).
 					Максимальный размер загружаемого файла - 80 Мб</TextBlock>
 				<TextBlock Margin="0,5">Очередь загрузки</TextBlock>
@@ -75,7 +76,16 @@
 				</ListBox>
 				<TextBlock Text="{Binding Message, Source={StaticResource ViewModelUploader}}"></TextBlock>
 				<TextBlock Text="{Binding Status, Source={StaticResource ViewModelUploader}}"></TextBlock>
-				<Button Command="{Binding HideInfoCommand, Source={StaticResource ViewModelUploader}}">Hide</Button>
+
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition></ColumnDefinition>
+						<ColumnDefinition></ColumnDefinition>
+					</Grid.ColumnDefinitions>
+					<Button Margin="0,0,5,0" Grid.Column="0" IsEnabled="{Binding IsUploaded, Source={StaticResource ViewModelUploader}}"
+							Command="{Binding ClearDbCommand, Source={StaticResource ViewModelUploader}}">Clear Db</Button>
+					<Button Grid.Column="1" Command="{Binding HideInfoCommand, Source={StaticResource ViewModelUploader}}">Hide</Button>
+				</Grid>
 			</StackPanel>
 		</Border>
 	</StackPanel>
