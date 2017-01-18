@@ -1,1 +1,1 @@
-# phonegap
+# phonegap app
