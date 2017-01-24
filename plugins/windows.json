@@ -1,0 +1,28 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {}
+    },
+    "installed_plugins": {
+        "cordova-plugin-music-controls": {
+            "PACKAGE_NAME": "HelloWorld"
+        },
+        "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "HelloWorld"
+        },
+        "cordova-plugin-file-transfer": {
+            "PACKAGE_NAME": "HelloWorld"
+        }
+    },
+    "dependent_plugins": {
+        "cordova-plugin-compat": {
+            "PACKAGE_NAME": "HelloWorld"
+        },
+        "cordova-plugin-file": {
+            "PACKAGE_NAME": "HelloWorld"
+        }
+    }
+}
