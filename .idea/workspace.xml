@@ -2,17 +2,28 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="cdd2ded4-4b9b-4861-86ab-c3a1ad024123" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/ru.netvoxlab.ownradio.apk" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/ru.netvoxlab.ownradio.apk" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/.idea/compiler.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/.idea/compiler.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/.idea/gradle.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/.idea/gradle.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/.idea/misc.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/.idea/misc.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/.idea/modules.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/.idea/modules.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/.idea/runConfigurations.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/.idea/runConfigurations.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/build.gradle" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/build.gradle" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/AndroidManifest.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/AndroidManifest.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/CheckConnection.java" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/CheckConnection.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/GetTrack.java" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/GetTrack.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/MainActivity.java" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/MainActivity.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/MediaPlayerService.java" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/MediaPlayerService.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/SettingsActivity.java" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/SettingsActivity.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/TrackDataAccess.java" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/TrackDataAccess.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/TrackToCache.java" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/java/ru/netvoxlab/ownradio/TrackToCache.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/drawable/progress.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/drawable/progress.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/drawable/togglebutton_playpause.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/drawable/togglebutton_playpause.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/layout/activity_main.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/layout/activity_main.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/layout/activity_settings.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/layout/activity_settings.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/layout/notification.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/layout/notification.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/menu/menu.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/menu/menu.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/values-w820dp/dimens.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/values-w820dp/dimens.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/values/dimens.xml" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/app/src/main/res/values/dimens.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/build.gradle" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/build.gradle" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/gradle/wrapper/gradle-wrapper.properties" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/gradle/wrapper/gradle-wrapper.properties" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/OwnRadio.Droid/gradlew" afterPath="$PROJECT_DIR$/src/OwnRadio.Droid/gradlew" />
     </list>
     <ignored path="Client.Android.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -70,11 +81,10 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="AndroidView">
         <subPane />
       </pane>
-      <pane id="Scope" />
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -136,6 +146,7 @@
         </subPane>
       </pane>
       <pane id="PackagesPane" />
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -242,7 +253,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1056" extended-state="6" />
+    <frame x="-8" y="-8" width="1936" height="1056" extended-state="0" />
     <editor active="false" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -257,7 +268,7 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24920969" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24920969" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -265,11 +276,19 @@
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Build Variants" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="8" side_tool="true" content_ui="tabs" />
+      <window_info id="Android Monitor" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32962137" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find Sample Code" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32962137" sideWeight="0.5" order="13" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Android Model" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="true" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32405347" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.40191898" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Captures" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Gradle Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="11" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.07622601" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
   <component name="VcsContentAnnotationSettings">

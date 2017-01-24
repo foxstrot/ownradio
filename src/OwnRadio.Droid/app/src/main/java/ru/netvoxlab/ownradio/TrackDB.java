@@ -7,22 +7,24 @@ import android.os.Environment;
 
 import java.io.File;
 
+import static ru.netvoxlab.ownradio.MainActivity.filePath;
+
 /**
  * Created by a.polunina on 25.10.2016.
  */
 
 public class TrackDB extends SQLiteOpenHelper {
-	public final static int DB_VER = 3;
+	public final static int DB_VER = 6;
 	public static final String TABLE_NAME_TRACK = "track";
 	static final String CREATE_TABLE_TRACK = "CREATE TABLE " + TABLE_NAME_TRACK + "(id TEXT NOT NULL UNIQUE, trackurl TEXT NOT NULL," +
 			" title TEXT, artist TEXT, length INTEGER NOT NULL DEFAULT 1000, methodid INTEGER NOT NULL DEFAULT 1, " +
-			" datetimelastlisten TEXT NOT NULL, islisten INTEGER NOT NULL DEFAULT 0, isexist INTEGER NOT NULL DEFAULT 0)";
+			" datetimelastlisten TEXT NOT NULL, isexist INTEGER NOT NULL DEFAULT 0, countplay INTEGER NOT NULL DEFAULT 0)";
 
 	public static final String TABLE_NAME_HISTORY = "history";
 	static final String CREATE_TABLE_HISTORY = "CREATE TABLE " + TABLE_NAME_HISTORY + "(id TEXT NOT NULL UNIQUE, trackid TEXT NOT NULL, userid TEXT NOT NULL," +
 			"datetimelisten TEXT NOT NULL, islisten INTEGER NOT NULL DEFAULT 0, methodid INTEGER NOT NULL)";
 
-	private static final String DB_NAME = "ownradiodb.db3";
+	public static final String DB_NAME = "ownradiodb34.db3";
 	Context mContext;
 
 	public TrackDB(Context context, int dbVer) {
@@ -46,9 +48,17 @@ public class TrackDB extends SQLiteOpenHelper {
 
 		//Чистим все треки
 		try {
-			File directory = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+			File directory = filePath;//mContext.getFilesDir();
+//			File directory = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
 			if (directory.listFiles() != null) {
 				for (File file : directory.listFiles()) {
+					file.delete();
+				}
+			}
+
+			File directory2 = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+			if (directory2.listFiles() != null) {
+				for (File file : directory2.listFiles()) {
 					file.delete();
 				}
 			}

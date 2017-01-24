@@ -9,6 +9,7 @@
 			<shape
 				android:innerRadiusRatio="3"
 				android:shape="ring"
+				android:useLevel="true"
 				android:innerRadius="54dp"
 				android:thicknessRatio="26.0">
 				<rotate

@@ -5,6 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 
+import static ru.netvoxlab.ownradio.MediaPlayerService.isHSConnected;
+import static ru.netvoxlab.ownradio.MediaPlayerService.playbackWithHSisInterrupted;
+import static ru.netvoxlab.ownradio.MediaPlayerService.player;
+
 public class MusicBroadcastReceiver extends BroadcastReceiver {
 	public MusicBroadcastReceiver() {
 	}
@@ -18,7 +22,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 		String action = MediaPlayerService.ActionPause;
 
 		if (intent.getAction() == Intent.ACTION_HEADSET_PLUG) {
-			boolean isHSConnected = false;
+
 			if (intent.getAction().equals(Intent.ACTION_HEADSET_PLUG)) {
 				int state = intent.getIntExtra("state", -1);
 				switch (state) {
@@ -27,20 +31,28 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 						if (isHSConnected) {
 							isHSConnected = false;
 							action = MediaPlayerService.ActionPause;
+							if(player.isPlaying())
+								playbackWithHSisInterrupted = true;
 						}
 						break;
 					case 1:
 						//подключение наушников
 						isHSConnected = true;
+						if(!playbackWithHSisInterrupted)
+							return;
 						action = MediaPlayerService.ActionPlay;
+						playbackWithHSisInterrupted = false;
 						break;
 				}
 			}
 		}
 
-		if (intent.getAction() == AudioManager.ACTION_AUDIO_BECOMING_NOISY)
+		if (intent.getAction() == AudioManager.ACTION_AUDIO_BECOMING_NOISY) {
 			//сигнал остановки сервиса
 			action = MediaPlayerService.ActionPause;
+			if(player.isPlaying())
+				playbackWithHSisInterrupted = true;
+		}
 
 		Intent remoteIntent = new Intent(context, MediaPlayerService.class);
 		remoteIntent.setAction(action);

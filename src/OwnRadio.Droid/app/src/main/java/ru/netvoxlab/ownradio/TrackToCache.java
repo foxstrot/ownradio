@@ -2,18 +2,19 @@ package ru.netvoxlab.ownradio;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
-import android.os.Environment;
 import android.os.StatFs;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
+
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.util.Map;
 
-import static ru.netvoxlab.ownradio.MediaPlayerService.queue;
-import static ru.netvoxlab.ownradio.MediaPlayerService.queueSize;
-
+import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
+import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
+import static ru.netvoxlab.ownradio.MainActivity.filePath;
 
 /**
  * Created by a.polunina on 24.10.2016.
@@ -21,17 +22,21 @@ import static ru.netvoxlab.ownradio.MediaPlayerService.queueSize;
 
 public class TrackToCache {
 	Context mContext;
+	File pathToCache;
 	private final int EXTERNAL_STORAGE_NOT_AVAILABLE = -1;
 	private final int DOWNLOAD_FILE_TO_CACHE = 1;
 	private final int DELETE_FILE_FROM_CACHE = 2;
 	final String TAG = "ownRadio";
-//	public List<Map<String,String>> queue;
 
 	public TrackToCache(Context context) {
 		mContext = context;
+		pathToCache = filePath;
 	}
 
 	public String SaveTrackToCache(String deviceId, int trackCount) {
+		if (!new CheckConnection().CheckInetConnection(mContext))
+			return "Подключение к интернету отсутствует";
+
 		final TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
 
 		APICalls apiCalls = new APICalls(mContext);
@@ -44,105 +49,38 @@ public class TrackToCache {
 					return "Директория на карте памяти недоступна";
 
 				case DOWNLOAD_FILE_TO_CACHE: {
-					CheckConnection checkConnection = new CheckConnection();
-					boolean internetConnect = checkConnection.CheckInetConnection(mContext);
-//					boolean wifiConnect = checkConnection.CheckWifiConnection(mContext);
-					if (!internetConnect)
-						return "Подключение к интернету отсутствует";
-
 					try {
 						final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
-
-
 						trackId = trackMap.get("id");
 						if (trackDataAccess.CheckTrackExistInDB(trackId)) {
-							queueSize--;
 							Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
 							break;
 						}
-						queue.add(trackMap);
-
+						new Utilites().SendInformationTxt(mContext, "Download track \"" + trackId + "\" is started");
 						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
-						//Загружаем трек и сохраняем информацию о нем в БД
-//						final String trackURL = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + File.separator + trackId + ".mp3";
-
-
-//						ServiceGenerator.createService(APIService.class).getTrackById(trackId).enqueue(new Callback<ResponseBody>() {
-//							@Override
-//							public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-//								if (response.isSuccessful()) {
-//									Log.d(TAG, "server contacted and has file");
-//									try {
-//										boolean writtenToDisk = new WriteTrackToDisk(mContext, trackURL).execute(response.body()).get();
-////										File file = new File(mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + File.separator + trackId + ".mp3");
-//										if(writtenToDisk == true){
-//											ContentValues track = new ContentValues();
-//											track.put("id", trackId);
-//											track.put("trackurl", trackURL);
-//											track.put("datetimelastlisten", "");
-//											track.put("islisten", "0");
-//											track.put("isexist", "1");
-//											try {
-//												track.put("title", trackMap.get("name"));
-//												track.put("artist", trackMap.get("artist"));
-//												track.put("length", trackMap.get("length"));
-//												track.put("methodid", trackMap.get("methodid"));
-//											}catch (Exception ex){
-//												Log.d(TAG, " " + ex.getLocalizedMessage());
-//											}
-//											trackDataAccess.SaveTrack(track);
-//											Log.d(TAG, "File " + trackId + " is load, queque size = " + queue.size());
-//											queue.remove(queue.indexOf(trackMap));
-//											queueSize--;
-//
-//											Intent i = new Intent(ActionTrackInfoUpdate);
-//											mContext.sendBroadcast(i);
-//										}
-//									} catch (Exception ex) {
-//										queueSize--;
-//									}
-//								} else {
-//									Log.d("", "server contact failed");
-//									queue.remove(queue.indexOf(trackMap));
-//									queueSize--;
-//								}
-//							}
-//
-//							@Override
-//							public void onFailure(Call<ResponseBody> call, Throwable t) {
-//								queue.remove(queue.indexOf(trackMap));
-//								queueSize--;
-//								if (call.isCanceled()) {
-//									Log.e(TAG, "request was cancelled");
-//								}
-//								else {
-//									Log.e(TAG, "other larger issue, i.e. no network connection?");
-//								}
-//							}
-//						});
-
-
-						Log.d(TAG, "Кеширование начато");
 					} catch (Exception ex) {
 						Log.d(TAG, "Error in SaveTrackToCache at file download. Ex.mess:" + ex.getLocalizedMessage());
-						return ex.getLocalizedMessage();
+						return " " + ex.getLocalizedMessage();
 					}
 					break;
 				}
 
 				case DELETE_FILE_FROM_CACHE: {
-					ContentValues track = trackDataAccess.GetTrackForDel();
+					ContentValues track = trackDataAccess.GetTrackWithMaxCountPlay();
 					if(track == null)
 						return "Отсутствуют файлы для удаления";
-					if(DeleteTrackFromCache(track))
-						i--;
+					DeleteTrackFromCache(track);
 					break;
 				}
 			}
 		}
-		return "Кеширование треков";
+		Intent i = new Intent(ActionProgressBarFirstTracksLoad);
+		i.putExtra("ProgressOn", false);
+		mContext.sendBroadcast(i);
+		return "Кеширование треков завершено";
 	}
 
+	//функция возвращает количество памяти, занимаемое кешированными треками
 	public static long FolderSize(File directory) {
 		long length = 0;
 		try {
@@ -160,25 +98,53 @@ public class TrackToCache {
 		return length;
 	}
 
+	//функция возвращает количество треков в папке
+	public int TrackCountInFolder(File directory){
+		int count = 0;
+		try {
+			if (directory.listFiles() != null) {
+				for (File file : directory.listFiles()) {
+					if (file.isFile())
+						if (FilenameUtils.getExtension(file.getPath()).equals("mp3"))
+							count ++;
+					else
+						count += FolderSize(file);
+				}
+			}
+		} catch (Exception ex) {
+			return ex.hashCode();
+		}
+		return count;
+	}
+
+	//функция возвращает свободное количество памяти
+	public long FreeSpace(){
+		long availableSpace = 0;
+		if (Build.VERSION.SDK_INT <= 17) {
+			StatFs stat = new StatFs(pathToCache.getPath());
+			availableSpace = (long) stat.getFreeBlocks() * (long) stat.getBlockSize();
+			Log.d(TAG, "availableSpace :" + availableSpace / 1048576);
+		}
+		if (Build.VERSION.SDK_INT >= 18) {
+			availableSpace = new StatFs(pathToCache.getPath()).getAvailableBytes();
+			Log.d(TAG, "availableSpace :" + availableSpace / 1048576);
+		}
+		return  availableSpace;
+	}
+
+	//функция сканирует директорию хранения треков, отсутствующие в БД - добавляет в неё
 	public void ScanTrackToCache() {
 		try {
-			File directory = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
+			File directory = pathToCache;
 			if (directory.listFiles() != null) {
 				if(directory.listFiles().length == new TrackDataAccess(mContext).GetExistTracksCount())
 					return;
-				ContentValues track = new ContentValues();
 				for (File file : directory.listFiles()) {
 					if (file.isFile()) {
-						track.put("id", file.getName().substring(0, 36));
-						track.put("trackurl", file.getAbsolutePath());
-						track.put("datetimelastlisten", "");
-						track.put("islisten", "0");
-						track.put("isexist", "1");
-						new TrackDataAccess(mContext).SaveTrack(track);
+						if(!new TrackDataAccess(mContext).CheckTrackExistInDB(file.getName().substring(0, 36)))
+							file.delete();
 					}
 				}
-//				Intent i = new Intent(ActionTrackInfoUpdate);
-//				mContext.sendBroadcast(i);
 			}
 		} catch (Exception ex) {
 			ex.getLocalizedMessage();
@@ -186,23 +152,18 @@ public class TrackToCache {
 	}
 
 	public int CheckCacheDoing(){
-			File[] externalStoragesPaths = ContextCompat.getExternalFilesDirs(mContext, null);
-			File externalStoragePath;
-			if (externalStoragesPaths == null)
-				return EXTERNAL_STORAGE_NOT_AVAILABLE;
+		long cacheSize = FolderSize(pathToCache);
 
-			externalStoragePath = externalStoragesPaths[0];
-			long availableSpace = 0;
-			long cacheSize = FolderSize(mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC));
-			if (Build.VERSION.SDK_INT <= 17) {
-				StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
-				availableSpace = (long) stat.getFreeBlocks() * (long) stat.getBlockSize();
-				Log.d(TAG, "availableSpace :" + availableSpace / 1048576);
-			}
-			if (Build.VERSION.SDK_INT >= 18) {
-				availableSpace = new StatFs(externalStoragePath.getPath()).getAvailableBytes();
-				Log.d(TAG, "availableSpace :" + availableSpace / 1048576);
-			}
+
+//		File[] externalStoragesPaths = ContextCompat.getExternalFilesDirs(mContext, null);
+//		File externalStoragePath;
+//		if (externalStoragesPaths == null)
+//			return EXTERNAL_STORAGE_NOT_AVAILABLE;
+//		externalStoragePath = externalStoragesPaths[0];
+
+
+//		long availableSpace = FreeSpace(externalStoragePath);
+		long availableSpace = FreeSpace();
 
 			if (cacheSize < (cacheSize + availableSpace) * 0.3)
 				return DOWNLOAD_FILE_TO_CACHE;
@@ -217,23 +178,23 @@ public class TrackToCache {
 				Log.d(TAG, "Отсутствует файл для удаления.");
 				return false;
 			}
-				File file = new File(track.getAsString("trackurl"));
-//				File file = new File(mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + "/" + file1.getName());
-				if (file.exists()) {
-					if (file.delete()) {
-						trackDataAccess.DeleteTrackFromCache(track);
-//						Intent i = new Intent(ActionTrackInfoUpdate);
-//						mContext.sendBroadcast(i);
-						Log.d(TAG, "File is deleted");
-						return true;
-					}
-					Log.d(TAG, "File not deleted. Something error");
-					return false;
-				} else {
+
+			File file = new File(track.getAsString("trackurl"));
+			if (file.exists()) {
+				if (file.delete()) {
 					trackDataAccess.DeleteTrackFromCache(track);
-					Log.d(TAG, "File for delete is not exist. Rec about track deleted from DB");
-					return false;
+					Log.d(TAG, "File is deleted");
+					Intent in = new Intent(ActionTrackInfoUpdate);
+					mContext.sendBroadcast(in);
+					return true;
 				}
+				Log.d(TAG, "File not deleted. Something error");
+				return false;
+			} else {
+				trackDataAccess.DeleteTrackFromCache(track);
+				Log.d(TAG, "File for delete is not exist. Rec about track deleted from DB");
+				return false;
+			}
 
 		} catch (Exception ex) {
 			Log.d(TAG, "Error in SaveTrackToCache at file delete. Ex.mess:" + ex.getLocalizedMessage());

@@ -3,10 +3,10 @@
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 	<item
 		android:id="@+id/clear_cache"
-		android:title="Clear cache"
+		android:name="Clear cache"
 		app:showAsAction="never" />
 	<item
 		android:id="@+id/action_exit"
-		android:title="Exit"
+		android:name="Exit"
 		app:showAsAction="never" />
 </menu>

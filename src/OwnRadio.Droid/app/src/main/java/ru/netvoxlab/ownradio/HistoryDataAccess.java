@@ -68,24 +68,15 @@ public class HistoryDataAccess {
 				for(int i = 0; i<rows; i++) {
 					contentValues[i]= new ContentValues();
 
-//			String data;
-//			data = "{";
-//			data += "\"lastListen\":\"" + userCursor.getString(3) + "\",";
-//			data += "\"isListen\":" + userCursor.getInt(4) + "," ;
-//			data += "\"methodid\":" + userCursor.getInt(5);
-//			data +="}";
 					HistoryModel historyModel = new HistoryModel(userCursor.getString(3), userCursor.getInt(4), userCursor.getInt(5));
 					contentValues[i].put("id", userCursor.getString(0));
 					contentValues[i].put("trackid", userCursor.getString(1));
-//			contentValues.put("data", data);
 					contentValues[i].put("lastListen", userCursor.getString(3));
 					contentValues[i].put("isListen", userCursor.getInt(4));
 					contentValues[i].put("methodid", userCursor.getInt(5));
 					userCursor.moveToNext();
 				}
-
 				userCursor.close();
-
 //			db.close();
 				return contentValues;
 			} else {
