@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.util.Log;
 
 import java.io.File;
@@ -17,8 +16,9 @@ import java.util.Map;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
-import static android.content.ContentValues.TAG;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
+import static ru.netvoxlab.ownradio.MainActivity.TAG;
+import static ru.netvoxlab.ownradio.MainActivity.filePath;
 import static ru.netvoxlab.ownradio.MediaPlayerService.queue;
 import static ru.netvoxlab.ownradio.MediaPlayerService.queueSize;
 
@@ -28,7 +28,6 @@ import static ru.netvoxlab.ownradio.MediaPlayerService.queueSize;
 
 public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolean> {
 	Context mContext;
-	Boolean flag;
 
 	public DownloadTracks(Context context) {
 		mContext = context;
@@ -37,20 +36,19 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 	@Override
 	protected Boolean doInBackground(Map<String, String>... trackMap) {
 
-
 		try {
 			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id")).execute();
 			if (response.isSuccessful()) {
 				Log.d(TAG, "server contacted and has file");
-				final String trackURL = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + File.separator + trackMap[0].get("id") + ".mp3";
+				final String trackURL = filePath + File.separator + trackMap[0].get("id") + ".mp3";
+//				final String trackURL = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + File.separator + trackMap[0].get("id") + ".mp3";
 				boolean writtenToDisk = WriteTrackToDisk2(trackURL, response.body());
-//										File file = new File(mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + File.separator + trackId + ".mp3");
 				if (writtenToDisk == true) {
 					ContentValues track = new ContentValues();
 					track.put("id", trackMap[0].get("id"));
 					track.put("trackurl", trackURL);
 					track.put("datetimelastlisten", "");
-					track.put("islisten", "0");
+//					track.put("islisten", "0");
 					track.put("isexist", "1");
 					try {
 						track.put("title", trackMap[0].get("name"));
@@ -61,16 +59,39 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 						Log.d(TAG, " " + ex.getLocalizedMessage());
 					}
 					new TrackDataAccess(mContext).SaveTrack(track);
-					Log.d(TAG, "File " + trackMap[0].get("id") + " is load, queque size = " + queue.size());
+					new Utilites().SendInformationTxt(mContext, "File " + trackMap[0].get("id") + " is load");
 					queue.remove(trackMap[0]);
 					queueSize--;
 
 					Intent in = new Intent(ActionTrackInfoUpdate);
 					mContext.sendBroadcast(in);
+
+
+//					Process process = null;
+//					DataOutputStream dataOutputStream = null;
+
+//					try {
+//						process = Runtime.getRuntime().exec("su");
+//						dataOutputStream = new DataOutputStream(process.getOutputStream());
+//						dataOutputStream.writeBytes("chmod 644 " + trackURL + "\n");
+//						dataOutputStream.writeBytes("exit\n");
+//						dataOutputStream.flush();
+//						process.waitFor();
+//					} catch (Exception e) {
+//						return false;
+//					} finally {
+//						try {
+//							if (dataOutputStream != null) {
+//								dataOutputStream.close();
+//							}
+//							process.destroy();
+//						} catch (Exception e) {
+//						}
+//					}
 					return true;
 				}
 			} else {
-				Log.d("", "server contact failed");
+				new Utilites().SendInformationTxt(mContext, "server contact failed");
 				queue.remove(trackMap[0]);
 				queueSize--;
 			}

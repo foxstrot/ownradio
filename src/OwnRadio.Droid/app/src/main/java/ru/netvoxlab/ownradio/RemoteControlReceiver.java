@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.view.KeyEvent;
 
+import static ru.netvoxlab.ownradio.MediaPlayerService.playbackWithHSisInterrupted;
+
 public class RemoteControlReceiver extends BroadcastReceiver {
 	public RemoteControlReceiver() {
 	}
@@ -50,6 +52,7 @@ public class RemoteControlReceiver extends BroadcastReceiver {
 				return;
 		}
 
+		playbackWithHSisInterrupted = false;
 		Intent remoteIntent = new Intent(action);
 		context.startService(remoteIntent);
 	}

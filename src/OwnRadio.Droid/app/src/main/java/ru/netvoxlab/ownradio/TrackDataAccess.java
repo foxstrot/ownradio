@@ -22,28 +22,22 @@ public class TrackDataAccess {
 		trackDB = new TrackDB(mContext, DB_VER);
 	}
 
-	public void CleanTrackTable() {
-		db = trackDB.getWritableDatabase();
-		db.execSQL("DELETE FROM " + TrackTableName);
-//        db.close();
-	}
-
 	public void SaveTrack(ContentValues trackInstance) {
 		db = trackDB.getWritableDatabase();
-		long rowID = db.insert(TrackTableName, null, trackInstance);
-//        db.close();
-	}
-
-	public void UpdateTrack(ContentValues trackInstance) {
-		db = trackDB.getWritableDatabase();
-		long rowID = db.update(TrackTableName, trackInstance, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
+		//Получаем текущее время - 10 лет
+		Cursor userCursor  = db.rawQuery("SELECT strftime('%Y-%m-%dT%H:%M:%S', 'now','-10 year')", null);
+		if(userCursor.moveToFirst())
+			trackInstance.put("datetimelastlisten", userCursor.getString(0));
+		trackInstance.put("countplay", 0);
+		db.insert(TrackTableName, null, trackInstance);
+		//db.close();
 	}
 
 	public boolean CheckTrackExistInDB(String trackId) {
 		db = trackDB.getWritableDatabase();
 		Cursor userCursor = db.rawQuery("SELECT * FROM track WHERE id = ?", new String[]{String.valueOf(trackId)});
 		boolean result = true;
-//        db.close();
+		//db.close();
 		if (userCursor.moveToFirst())
 			result = true;
 		else
@@ -55,64 +49,33 @@ public class TrackDataAccess {
 	public ContentValues GetMostOldTrack() {
 		ContentValues result = new ContentValues();
 		db = trackDB.getWritableDatabase();
-		Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE isexist = ? ORDER BY datetimelastlisten", new String[]{String.valueOf(1)});
-		if (userCursor.moveToFirst()) {
-
-			result.put("id", userCursor.getString(0));
-			result.put("trackurl", userCursor.getString(1));
-		} else {
-			result = null;
-		}
-//        db.close();
-		userCursor.close();
-		return result;
-	}
-
-	public ContentValues GetMostOldTrackNEW() {
-		ContentValues result = new ContentValues();
-		db = trackDB.getWritableDatabase();
 		Cursor userCursor = db.rawQuery("SELECT id, trackurl, title, artist, methodid, length FROM track WHERE isexist = ? ORDER BY datetimelastlisten", new String[]{String.valueOf(1)});
 		if (userCursor.moveToFirst()) {
 			result.put("id", userCursor.getString(0));
 			result.put("trackurl", userCursor.getString(1));
-			result.put("name", userCursor.getString(2));
+			result.put("title", userCursor.getString(2));
 			result.put("artist", userCursor.getString(3));
 			result.put("methodid", userCursor.getInt(4));
 			result.put("length", userCursor.getInt(5));
 		} else {
 			result = null;
 		}
-//        db.close();
+		//db.close();
 		userCursor.close();
 		return result;
 	}
 
-	public ContentValues GetTrackForDel() {
+	public ContentValues GetTrackWithMaxCountPlay() {
 		ContentValues result = new ContentValues();
 		db = trackDB.getWritableDatabase();
-		Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE islisten != ? AND isexist = ? AND datetimelastlisten != ? ORDER BY datetimelastlisten", new String[]{String.valueOf(0), String.valueOf(1), String.valueOf("")});
+		Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE countplay != ? AND isexist = ? ORDER BY countplay DESC LIMIT 1", new String[]{String.valueOf(0), String.valueOf(1)});
 		if (userCursor.moveToFirst()) {
 			result.put("id", userCursor.getString(0));
 			result.put("trackurl", userCursor.getString(1));
 		} else {
 			result = null;
 		}
-//        db.close();
-		userCursor.close();
-		return result;
-	}
-
-	public ContentValues GetPathById(String trackid) {
-		ContentValues result = new ContentValues();
-		db = trackDB.getWritableDatabase();
-		Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE id = ?", new String[]{String.valueOf(trackid)});
-		if (userCursor.moveToFirst()) {
-			result.put("id", userCursor.getString(0));
-			result.put("trackurl", userCursor.getString(1));
-		} else {
-			result = null;
-		}
-//        db.close();
+		//db.close();
 		userCursor.close();
 		return result;
 	}
@@ -126,29 +89,61 @@ public class TrackDataAccess {
 		} else {
 			result = 0;
 		}
-//        db.close();
+		//db.close();
 		userCursor.close();
 		return result;
 	}
 
-	public void SetStatusTrack(ContentValues trackInstance) {
-		int isListen = Integer.parseInt(trackInstance.get("islisten").toString());
+	//Функция сохраняет время начала попытки проигрывания трека и увеличивает счетчик попыток проигрывания на 1
+	public void SetTimeAndCountStartPlayback(ContentValues trackInstance){
+		int countPlay = 1;
+		String currentDatetime = "2000-01-01T12:00:00";
+
 		db = trackDB.getWritableDatabase();
-		Cursor userCursor = db.rawQuery("SELECT islisten FROM track WHERE id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
-		if (userCursor.moveToFirst()) {
-			isListen += userCursor.getInt(0);
+
+		//Получаем из базы количетво попыток прослушивания трека
+		Cursor userCursorCount = db.rawQuery("SELECT countplay FROM track WHERE id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
+		if (userCursorCount.moveToFirst()) {
+			countPlay += userCursorCount.getInt(0);
 		}
-		trackInstance.put("islisten", isListen);
-		long rowID = db.update(TrackTableName, trackInstance, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
-		userCursor.close();
-//        db.close();
+		trackInstance.put("countplay", countPlay);
+		userCursorCount.close();
+		//Получаем текущее время
+		Cursor userCursorTime = db.rawQuery("SELECT strftime('%Y-%m-%dT%H:%M:%S', 'now')", null);
+		if(userCursorTime.moveToFirst())
+			currentDatetime = userCursorTime.getString(0);
+		userCursorTime.close();
+			trackInstance.put("datetimelastlisten", currentDatetime);
+//		db.rawQuery("UPDATE track SET datetimelastlisten=?, countplay=? WHERE id = ?", new String[]{String.valueOf(currentDatetime), String.valueOf(trackInstance.get("id")), String.valueOf(countPlay)});
+		int row = db.update(TrackTableName, trackInstance, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
+		//db.close();
 	}
 
-	public void DeleteTrackFromCache(ContentValues trackInstance) {
-		int isExist = 0;
-		trackInstance.put("isexist", isExist);
+	public String GetCountPlayTracks(){
 		db = trackDB.getWritableDatabase();
-		db.update(TrackTableName, trackInstance, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
-//        db.close();
+		Cursor userCursor = db.rawQuery("SELECT COUNT(*) AS tracks, countplay FROM track GROUP BY countplay ORDER BY countplay DESC", null);
+
+		String tableString = null;
+		if (userCursor.moveToFirst() ){
+			String[] columnNames = userCursor.getColumnNames();
+			tableString = columnNames[0] + " | " + columnNames[1] + "\n";
+			do {
+				tableString += userCursor.getInt(userCursor.getColumnIndex(columnNames[0])) + ": \t" +
+						userCursor.getInt(userCursor.getColumnIndex(columnNames[1]));
+				tableString += "\n";
+
+			} while (userCursor.moveToNext());
+		} else
+			tableString = "Информация не найдена";
+		userCursor.close();
+		//db.close();
+		return tableString;
+	}
+
+	//Функция удаляет запись о треке из БД
+	public void DeleteTrackFromCache(ContentValues trackInstance) {
+		db = trackDB.getWritableDatabase();
+		db.delete(TrackTableName, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
+		//db.close();
 	}
 }

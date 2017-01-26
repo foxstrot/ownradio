@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:backgroundTintMode="add"
+				android:background="@drawable/background">
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 			  xmlns:app="http://schemas.android.com/apk/res-auto"
 			  android:id="@+id/content_main"
 			  android:layout_width="match_parent"
 			  android:layout_height="match_parent"
-			  android:backgroundTintMode="add"
-			  android:background="@drawable/background"
 			  android:orientation="vertical">
 	<!--app:layout_behavior="@string/appbar_scrolling_view_behavior"-->
 	<!--tools:context="ru.netvoxlab.ownradio.MainActivity">-->
@@ -75,7 +78,7 @@
 					android:layout_height="@dimen/progress_size"
 					android:progressDrawable="@drawable/progress"
 					android:layout_centerInParent="true"
-					android:elevation="10dp"/>
+					android:elevation="20dp"/>
 
 				<ImageButton
 					android:src="@drawable/btn_play"
@@ -101,95 +104,104 @@
 		</RelativeLayout>
 	</LinearLayout>
 
-	<TextView
-		android:id="@+id/text"
-		android:textColor="#000000"
-		android:layout_width="fill_parent"
-		android:layout_height="wrap_content"
-		android:layout_weight="1"
-		android:gravity="bottom"/>
+
+
+</LinearLayout>
 
 	<LinearLayout
-		android:id="@+id/linearLayoutInformation"
+		android:id="@+id/linearLayoutDevelopersInfo"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
+		android:layout_height="match_parent"
 		android:layout_gravity="center_horizontal"
 		android:background="#70ffffff"
 		android:paddingLeft="@dimen/activity_horizontal_margin"
 		android:orientation="vertical">
-
 		<TextView
-			android:id="@+id/textViewInfo"
-			android:text=" "
-			android:textSize="12dp"
+			android:id="@+id/text"
 			android:textColor="#000000"
-			android:layout_width="wrap_content"
+			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
+			android:layout_weight="1"
 			android:gravity="bottom"/>
 
-		<TextView
-			android:id="@+id/versionName"
-			android:textSize="12dp"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:textColor="#000000"
-			android:text="Version Name:" />
+			<TextView
+				android:id="@+id/versionName"
+				android:textSize="12dp"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textColor="#000000"
+				android:text="Version Name:" />
 
-		<TextView
-			android:id="@+id/deviceID"
-			android:textSize="12dp"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:textColor="#000000"
-			android:text="Device ID:" />
+			<TextView
+				android:id="@+id/deviceID"
+				android:textSize="12dp"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:textColor="#000000"
+				android:text="Device ID:" />
 
-		<TextView
-			android:id="@+id/trackID"
-			android:textSize="12dp"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:clickable="true"
-			android:textColor="#000000"
-			android:text="Track ID:" />
+			<TextView
+				android:id="@+id/userID"
+				android:textSize="12dp"
+				android:visibility="gone"
+				android:layout_weight="0"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:clickable="true"
+				android:textColor="#000000"
+				android:text="User ID:" />
 
-		<TextView
-			android:id="@+id/userID"
-			android:textSize="12dp"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:clickable="true"
-			android:textColor="#000000"
-			android:text="User ID:" />
+			<TextView
+				android:id="@+id/trackID"
+				android:textSize="12dp"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:clickable="true"
+				android:textColor="#000000"
+				android:text="Track ID:" />
 
+			<TextView
+				android:id="@+id/textViewInfo"
+				android:text=" "
+				android:lines="3"
+				android:textSize="12dp"
+				android:textColor="#000000"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:gravity="bottom"/>
+
+			<TextView
+				android:id="@+id/txtTrackCount"
+				android:textSize="12dp"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginRight="10dp"
+				android:textColor="#000000"
+				android:text="Track count:"/>
+
+			<TextView
+				android:id="@+id/txtCountTrackInFolder"
+				android:textSize="12dp"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:layout_marginRight="10dp"
+				android:textColor="#000000"
+				android:text="Tracks in folder:"/>
+
+			<TextView
+				android:id="@+id/txtCountPlayTracks"
+				android:textSize="12dp"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textColor="#000000"
+				android:text="Count play tracks:"/>
+
+			<TextView
+				android:id="@+id/txtMemoryUsed"
+				android:textSize="12dp"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textColor="#000000"
+				android:text="Memory used:"/>
 	</LinearLayout>
-
-	<LinearLayout
-		android:id="@+id/linearLayoutInformation2"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:layout_gravity="center_horizontal"
-		android:background="#70ffffff"
-		android:paddingLeft="@dimen/activity_horizontal_margin"
-		android:orientation="horizontal">
-
-		<TextView
-			android:id="@+id/txtTrackCount"
-			android:textSize="12dp"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginRight="10dp"
-			android:textColor="#000000"
-			android:text="Track count"/>
-
-		<TextView
-
-			android:id="@+id/txtMemoryUsed"
-			android:textSize="12dp"
-			android:layout_width="match_parent"
-			android:layout_height="wrap_content"
-			android:textColor="#000000"
-			android:text="Memory used"/>
-
-	</LinearLayout>
-
-</LinearLayout>
+</RelativeLayout>

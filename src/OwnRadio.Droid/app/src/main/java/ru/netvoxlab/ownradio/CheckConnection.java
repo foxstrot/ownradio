@@ -10,8 +10,8 @@ import android.net.NetworkInfo;
 
 public class CheckConnection {
 
-	public boolean CheckWifiConnection(Context context) {
-		ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(context.CONNECTIVITY_SERVICE);
+	public boolean CheckWifiConnection(Context mCcontext) {
+		ConnectivityManager connectivityManager = (ConnectivityManager) mCcontext.getSystemService(mCcontext.CONNECTIVITY_SERVICE);
 		NetworkInfo wifiInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 		NetworkInfo inetInfo = connectivityManager.getActiveNetworkInfo();
 
@@ -24,14 +24,18 @@ public class CheckConnection {
 			return true;
 	}
 
-	public boolean CheckInetConnection(Context context) {
-		ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(context.CONNECTIVITY_SERVICE);
+	public boolean CheckInetConnection(Context mCcontext) {
+		ConnectivityManager connectivityManager = (ConnectivityManager) mCcontext.getSystemService(mCcontext.CONNECTIVITY_SERVICE);
 		NetworkInfo inetInfo = connectivityManager.getActiveNetworkInfo();
-		if(inetInfo == null)
+		if(inetInfo == null){
+			new Utilites().SendInformationTxt(mCcontext, "Internet is disconnected");
 			return false;
+		}
 
-		if (!inetInfo.isConnected())
+		if (!inetInfo.isConnected()) {
+			new Utilites().SendInformationTxt(mCcontext, "Internet is disconnected");
 			return false;
+		}
 		else
 			return true;
 	}

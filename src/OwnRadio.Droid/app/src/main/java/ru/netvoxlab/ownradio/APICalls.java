@@ -2,12 +2,8 @@ package ru.netvoxlab.ownradio;
 
 import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
-import android.util.Log;
 
 import java.net.HttpURLConnection;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
 
@@ -20,54 +16,44 @@ import retrofit2.Response;
  */
 
 public class APICalls {
-	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
-	final String TAG = "ownRadio";
-	Context MainContext;
-	String serverPath = "http://api.ownradio.ru/v3/";
+	Context mContext;
 
 	public APICalls(Context context) {
-		this.MainContext = context;
+		this.mContext = context;
 	}
 
-	//Получает ID пользователя по DeviceID
+	//Возращает ID пользователя по DeviceID
 	public String GetUserId(String deviceID) {
 		//Пока не реализована привязка пользователей
 		//userid=deviceid
 		return deviceID;
 	}
 
-	//Получает ID следующего трека
+	//Возращает ID следующего трека
 	public Map<String, String> GetNextTrackID(String deviceId) {
 		CheckConnection checkConnection = new CheckConnection();
-		boolean internetConnect = checkConnection.CheckInetConnection(MainContext);
-		if (!internetConnect){
-			Log.d(TAG, "Internet is disconnected");
-			Intent i = new Intent(ActionSendInfoTxt);
-			i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + " Internet is disconnected");
-			MainContext.sendBroadcast(i);
+		boolean internetConnect = checkConnection.CheckInetConnection(mContext);
+		if (!internetConnect)
 			return null;
-		}
 
 		try {
-			Map<String, String> result = new GetNextTrack(MainContext).execute(deviceId).get();
+			Map<String, String> result = new GetNextTrack(mContext).execute(deviceId).get();
 			UUID.fromString(result.get("id")).toString();
 			return result;
 		}catch (Exception ex) {
+			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
 			return null;
 		}
 	}
 
+	//Пытается отправить count записей истории прослушивания треков
 	public void SendHistory(String deviceId, int count){
 		CheckConnection checkConnection = new CheckConnection();
-		boolean internetConnect = checkConnection.CheckInetConnection(MainContext);
-		if (!internetConnect) {
-			Intent i = new Intent(ActionSendInfoTxt);
-			i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + " Internet is disconnected");
-			MainContext.sendBroadcast(i);
-			return; //Подключение к интернету отсутствует
+		if (!checkConnection.CheckInetConnection(mContext)) {
+			return;
 		}
 
-		final HistoryDataAccess historyDataAccess = new HistoryDataAccess(MainContext);
+		final HistoryDataAccess historyDataAccess = new HistoryDataAccess(mContext);
 		final ContentValues[] historyRecs = historyDataAccess.GetHistoryRec(count);
 
 		if(historyRecs == null)
@@ -98,26 +84,21 @@ public class APICalls {
 						if(response.isSuccessful()){
 							if(response.code() == HttpURLConnection.HTTP_OK){
 								historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
-								Log.i(TAG, "History is sending");
-								Intent i = new Intent(ActionSendInfoTxt);
-								i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + " Connection is successful");
-								MainContext.sendBroadcast(i);
+								new Utilites().SendInformationTxt(mContext, "History is sending");
 							} else {
-								Log.i(TAG, "SendHistory: Server response: " + response.code());
-								Intent i = new Intent(ActionSendInfoTxt);
-								i.putExtra("TEXTINFO", new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new Date()) + "Server response: " + response.code());
-								MainContext.sendBroadcast(i);
+								new Utilites().SendInformationTxt(mContext, "SendHistory: Server response: " + response.code());
 							}
 						}
 					}
 					@Override
 					public void onFailure(Call<Void> call, Throwable t) {
-						Log.i(TAG, "An error occurred during networking");
+						new Utilites().SendInformationTxt(mContext, "SendHistory: An error occurred during networking");
 					}
 				});
 			}
 		}catch (Exception ex){
 			ex.printStackTrace();
+			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
 		}
 	}
 }
