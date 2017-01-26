@@ -4,13 +4,11 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.ContentValues;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.Handler;
@@ -24,25 +22,20 @@ import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.RemoteViews;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.TimeZone;
 
 import static android.app.PendingIntent.getActivity;
 import static ru.netvoxlab.ownradio.MainActivity.ActionButtonImgUpdate;
-import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
 
@@ -263,25 +256,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		//Сохраняем информацию о прослушивании в локальную БД.
 		int listedTillTheEnd = 1;
 		SaveHistory(listedTillTheEnd, track);
-
 		PlayNext();
-
-		//Сохраняем информацию о прослушивании в локальную БД.
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-				try {
-					//Отправка на сервер накопленной истории прослушивания треков
-					new APICalls(getApplicationContext()).SendHistory(DeviceID, 3);
-					return;
-				}catch (Exception ex){
-					Log.d(TAG, " " + ex.getLocalizedMessage());
-					Thread.currentThread().interrupt();
-					return;
-				}
-			}
-		}).start();
+		utilites.SendInformationTxt(getApplicationContext(), "Completion playback");
+		Intent historySenderIntent = new Intent(this, HistoryService.class);
+		historySenderIntent.putExtra("DeviceID", DeviceID);
+		startService(historySenderIntent);
 	}
 
 	public void Play() {
@@ -316,73 +295,25 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 
 		try {
-			if (trackDataAccess.GetExistTracksCount() >= 3) {
-				SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
-				startPosition = settings.getInt("LastPosition", 0);
-				startTrackID = settings.getString("LastTrackID", "");
-				track = trackDataAccess.GetMostOldTrack();
-				Intent i = new Intent(ActionTrackInfoUpdate);
-				getApplicationContext().sendBroadcast(i);
-				if (track != null) {
-					FlagDownloadTrack = false;
-					TrackID = track.getAsString("id");
-					trackURL = track.getAsString("trackurl");
-					if (!new File(trackURL).exists()) {
-						trackDataAccess.DeleteTrackFromCache(track);
-						Play();
-					}
-					player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
-					utilites.SendInformationTxt(getApplicationContext(), "Play(): cache");
-				}
-			} else {
-//				utilites.SendInformationTxt(getApplicationContext(), "Play(): stream");
-//				trackMap = new APICalls((getApplicationContext())).GetNextTrackID(DeviceID);
-//				if(trackMap == null)
-//					return;
-//				Log.d(TAG, "Play(): GetNextTrackID: " + trackMap);
-//				track = new ContentValues();
-//				track.put("id", trackMap.get("id"));
-//				track.put("title", trackMap.get("name"));
-//				track.put("artist", trackMap.get("artist"));
-//				track.put("methodid", trackMap.get("methodid"));
-//				track.put("length", trackMap.get("length"));
-//
-//				TrackID = trackMap.get("id");
-//
-//
-//				String uri = "http://api.ownradio.ru/v3/tracks/" + TrackID;
-//				Log.d(TAG, "Play(): URI: " + uri);
-//
-//				player.setDataSource(getApplicationContext(), Uri.parse(uri));
 
-				if(new CheckConnection().CheckInetConnection(getApplicationContext())) {
-					utilites.SendInformationTxt(getApplicationContext(), "Подождите пока наполнится кеш");
-//					UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
-					Intent i = new Intent(ActionProgressBarFirstTracksLoad);
-					i.putExtra("ProgressOn", true);
-					sendBroadcast(i);
-
-					//		Запускаем кеширование треков - 3 шт
-					Intent downloaderIntent = new Intent(this, DownloadService.class);
-					downloaderIntent.putExtra("DeviceID", DeviceID);
-					startService(downloaderIntent);
-				}else {
-					AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext());
-								builder.setTitle("Error")
-										.setMessage("It is impossible to cache tracks. Check your internet connection.")
-										.setCancelable(false)
-										.setNegativeButton("OK",
-												new DialogInterface.OnClickListener() {
-													@Override
-													public void onClick(DialogInterface dialogInterface, int i) {
-														dialogInterface.cancel();
-													}
-												});
-								AlertDialog alert = builder.create();
-								alert.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-								alert.show();
-				}
+			if (!new Utilites().CheckCountTracksAndDownloadIfNotEnought(getApplicationContext(), DeviceID))
 				return;
+//			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
+//			startPosition = settings.getInt("LastPosition", 0);
+//			startTrackID = settings.getString("LastTrackID", "");
+			track = trackDataAccess.GetMostOldTrack();
+			Intent i = new Intent(ActionTrackInfoUpdate);
+			getApplicationContext().sendBroadcast(i);
+			if (track != null) {
+				FlagDownloadTrack = false;
+				TrackID = track.getAsString("id");
+				trackURL = track.getAsString("trackurl");
+				if (!new File(trackURL).exists()) {
+					trackDataAccess.DeleteTrackFromCache(track);
+					Play();
+				}
+//				player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
+				player.setDataSource(trackURL);
 			}
 
 			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
@@ -407,8 +338,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //				UpdateButtonPlayPauseImg();
 //			}
 
-			Intent i = new Intent(ActionProgressBarUpdate);
-			sendBroadcast(i);
+			Intent progressIntent = new Intent(ActionProgressBarUpdate);
+			sendBroadcast(progressIntent);
 			Log.d(TAG, "Play(): sendBroadcast");
 		} catch (Exception ex) {
 			utilites.SendInformationTxt(getApplicationContext(), "Error in Play(): " + ex.getLocalizedMessage());
@@ -475,30 +406,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		SaveHistory(listedTillTheEnd, track);
 		// Удаление пропущенного трека
 		new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
-
 		PlayNext();
+		utilites.SendInformationTxt(getApplicationContext(), "Skip track to next");
 
-		try {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND);
-					try {
-						//Отправка на сервер накопленной истории прослушивания треков
-						new APICalls(getApplicationContext()).SendHistory(DeviceID, 3);
-						Thread.currentThread().interrupt();
-						return;
-					}catch (Exception ex){
-						Log.d(TAG, " " + ex.getLocalizedMessage());
-						Thread.currentThread().interrupt();
-						return;
-					}
-				}
-			}).start();
-
-		} catch (Exception ex) {
-			ex.getLocalizedMessage();
-		}
+		Intent historySenderIntent = new Intent(this, HistoryService.class);
+		historySenderIntent.putExtra("DeviceID", DeviceID);
+		startService(historySenderIntent);
 	}
 
 	private void SaveHistory(int listedTillTheEnd, ContentValues trackInstance){
@@ -540,11 +453,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 	public void onPrepared(MediaPlayer mp) {
 		//Mediaplayer is prepared start track playback
-		if (startTrackID.equals(TrackID)) {
-			player.seekTo(startPosition);
-			startPosition = 0;
-		}
+//		if (startTrackID.equals(TrackID)) {
+//			player.seekTo(startPosition);
+//			startPosition = 0;
+//		}
 		mp.start();
+		utilites.SendInformationTxt(getApplicationContext(), "Start playback");
 		UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 	}
 

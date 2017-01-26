@@ -94,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
 		setContentView(R.layout.activity_main);
 
-		filePath = new File(this.getFilesDir() + File.separator + "Music");
+		filePath = new File(this.getFilesDir() + File.separator + "music");
 		if(!filePath.exists())
 			filePath.mkdirs();
 		textUserID = (TextView) findViewById(R.id.userID);
@@ -334,7 +334,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				if(intent.getBooleanExtra("ProgressOn", false)) {
 					btnPlayPause.setClickable(false);
 					btnNext.setClickable(false);
-					dialog = new ProgressDialog(MainActivity.this);
+					if(dialog == null)
+						dialog = new ProgressDialog(MainActivity.this);
 					dialog.setTitle("Caching...");
 					dialog.setMessage("There are no tracks to play. Wait until the tracks are cached and try again.");
 					dialog.setIndeterminate(true);
@@ -394,7 +395,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				btnNext.setClickable(false);
 			}
 
-//		sp.edit().putBoolean("DevelopersInfo",false).commit();
 			SetDevelopersInfo();
 
 			try {
@@ -411,7 +411,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 					DeviceId = UUID.randomUUID().toString();
 					String UserName = "NewUser";
 					String DeviceName = Build.BRAND;
-//				APICalls.RegisterDevice(DeviceId, UserName, DeviceName);
 					UserId = apiCalls.GetUserId(DeviceId);
 					sp.edit().putString("DeviceID", DeviceId).commit();
 					sp.edit().putString("UserID", UserId);
@@ -436,11 +435,15 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
 			SetTrackInfoText();
 
+			new Utilites().CheckCountTracksAndDownloadIfNotEnought(MainActivity.this, DeviceId);
+
 			return;
 		}catch (Exception ex) {
 			Log.d(TAG, " " + ex.getLocalizedMessage());
 			return;
 		}
+
+
 	}
 
 	public void SetTrackInfoText(){

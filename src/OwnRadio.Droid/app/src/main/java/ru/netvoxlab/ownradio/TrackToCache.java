@@ -58,6 +58,11 @@ public class TrackToCache {
 						}
 						new Utilites().SendInformationTxt(mContext, "Download track \"" + trackId + "\" is started");
 						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
+						if(new TrackDataAccess(mContext).GetExistTracksCount() >=3){
+							Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
+							progressIntent.putExtra("ProgressOn", false);
+							mContext.sendBroadcast(progressIntent);
+						}
 					} catch (Exception ex) {
 						Log.d(TAG, "Error in SaveTrackToCache at file download. Ex.mess:" + ex.getLocalizedMessage());
 						return " " + ex.getLocalizedMessage();
@@ -74,9 +79,6 @@ public class TrackToCache {
 				}
 			}
 		}
-		Intent i = new Intent(ActionProgressBarFirstTracksLoad);
-		i.putExtra("ProgressOn", false);
-		mContext.sendBroadcast(i);
 		return "Кеширование треков завершено";
 	}
 
@@ -153,16 +155,6 @@ public class TrackToCache {
 
 	public int CheckCacheDoing(){
 		long cacheSize = FolderSize(pathToCache);
-
-
-//		File[] externalStoragesPaths = ContextCompat.getExternalFilesDirs(mContext, null);
-//		File externalStoragePath;
-//		if (externalStoragesPaths == null)
-//			return EXTERNAL_STORAGE_NOT_AVAILABLE;
-//		externalStoragePath = externalStoragesPaths[0];
-
-
-//		long availableSpace = FreeSpace(externalStoragePath);
 		long availableSpace = FreeSpace();
 
 			if (cacheSize < (cacheSize + availableSpace) * 0.3)

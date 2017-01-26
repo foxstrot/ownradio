@@ -41,6 +41,7 @@ public class APICalls {
 			UUID.fromString(result.get("id")).toString();
 			return result;
 		}catch (Exception ex) {
+			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
 			return null;
 		}
 	}
@@ -97,6 +98,7 @@ public class APICalls {
 			}
 		}catch (Exception ex){
 			ex.printStackTrace();
+			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
 		}
 	}
 }
