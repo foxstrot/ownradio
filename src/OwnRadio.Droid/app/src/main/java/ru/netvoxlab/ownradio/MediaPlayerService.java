@@ -566,7 +566,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		contentView.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
 
 		NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
-				.setSmallIcon(R.drawable.logo)
+				.setSmallIcon(getNotificationIcon())
 				.setContentIntent(pendingIntent)
 				.setCustomContentView(contentView)
 				.setShowWhen(false)
@@ -579,6 +579,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			builder.setOngoing(false);
 //        style.setShowActionsInCompactView(0,1,2);
 		NotificationManagerCompat.from(getApplicationContext()).notify(NotificationId, builder.build());
+	}
+
+	private int getNotificationIcon() {
+		boolean useWhiteIcon = (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP);
+		return useWhiteIcon ? R.drawable.logo_white : R.drawable.logo;
 	}
 
 	public void StopNotification() {
