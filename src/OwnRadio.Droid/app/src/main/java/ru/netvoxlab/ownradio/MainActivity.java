@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -86,12 +87,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 	int numberOfTaps = 0;
 	long lastTapTimeMs = 0;
 	long touchDownMs = 0;
+	private PowerManager.WakeLock mWakeLock;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-
+//this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 		setContentView(R.layout.activity_main);
 
 		filePath = new File(this.getFilesDir() + File.separator + "music");
@@ -233,7 +235,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				String title;
 				String artist;
 				try {
-					if (binder == null) {
+					if (binder == null || binder.GetMediaPlayerService().player == null) {
 						txtTrackTitle.setText("");
 						txtTrackArtist.setText("ownRadio");
 						return;
@@ -283,6 +285,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
+						if(binder.GetMediaPlayerService().player == null){
+							progressBar.setMax(10000);
+							progressBar.setProgress(0);
+							return;
+						}
 						int duration;
 						try {
 							duration = binder.GetMediaPlayerService().track.getAsInteger("length");
@@ -332,19 +339,19 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
 			if(intent.getAction() == ActionProgressBarFirstTracksLoad){
 				if(intent.getBooleanExtra("ProgressOn", false)) {
-					btnPlayPause.setClickable(false);
+//					btnPlayPause.setClickable(false);
 					btnNext.setClickable(false);
 					if(dialog == null)
 						dialog = new ProgressDialog(MainActivity.this);
 					dialog.setTitle("Caching...");
-					dialog.setMessage("There are no tracks to play. Wait until the tracks are cached and try again.");
+					dialog.setMessage("There are no tracks to play. Wait until the tracks are cached.");
 					dialog.setIndeterminate(true);
-					dialog.setCancelable(false);
+					dialog.setCancelable(true);
 					dialog.show();
 				}else {
 					if (dialog != null)
 						dialog.dismiss();
-					btnPlayPause.setClickable(true);
+//					btnPlayPause.setClickable(true);
 					btnNext.setClickable(true);
 				}
 			}

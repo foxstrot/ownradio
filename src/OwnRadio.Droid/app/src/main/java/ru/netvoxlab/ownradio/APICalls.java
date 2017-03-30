@@ -75,7 +75,6 @@ public class APICalls {
 				HistoryModel data = new HistoryModel();
 				data.setLastListen(historyRec.getAsString("lastListen"));
 				data.setIsListen(historyRec.getAsInteger("isListen"));
-				data.setMethodid(historyRec.getAsInteger("methodid"));
 
 				ServiceGenerator.createService(APIService.class).sendHistory(deviceId,historyRec.getAsString("trackid"), data)
 				.enqueue(new Callback<Void>() {

@@ -19,8 +19,6 @@ import retrofit2.Response;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.TAG;
 import static ru.netvoxlab.ownradio.MainActivity.filePath;
-import static ru.netvoxlab.ownradio.MediaPlayerService.queue;
-import static ru.netvoxlab.ownradio.MediaPlayerService.queueSize;
 
 /**
  * Created by a.polunina on 13.12.2016.
@@ -48,25 +46,15 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 					track.put("id", trackMap[0].get("id"));
 					track.put("trackurl", trackURL);
 					track.put("datetimelastlisten", "");
-//					track.put("islisten", "0");
 					track.put("isexist", "1");
-					try {
-						track.put("title", trackMap[0].get("name"));
-						track.put("artist", trackMap[0].get("artist"));
-						track.put("length", trackMap[0].get("length"));
-						track.put("methodid", trackMap[0].get("methodid"));
-					} catch (Exception ex) {
-						Log.d(TAG, " " + ex.getLocalizedMessage());
-					}
+					track.put("title", trackMap[0].get("name"));
+					track.put("artist", trackMap[0].get("artist"));
+					track.put("length", trackMap[0].get("length"));
 					new TrackDataAccess(mContext).SaveTrack(track);
 					new Utilites().SendInformationTxt(mContext, "File " + trackMap[0].get("id") + " is load");
-					queue.remove(trackMap[0]);
-					queueSize--;
 
 					Intent in = new Intent(ActionTrackInfoUpdate);
 					mContext.sendBroadcast(in);
-
-
 //					Process process = null;
 //					DataOutputStream dataOutputStream = null;
 
@@ -92,11 +80,9 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 				}
 			} else {
 				new Utilites().SendInformationTxt(mContext, "server contact failed");
-				queue.remove(trackMap[0]);
-				queueSize--;
 			}
 		} catch (Exception ex) {
-			queueSize--;
+			Log.d(TAG, " " + ex.getLocalizedMessage());
 		}
 		return false;
 	}

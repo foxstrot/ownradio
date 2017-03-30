@@ -14,9 +14,9 @@ public class HistoryModel {
 	@SerializedName("isListen")
 	@Expose
 	private int isListen;
-	@SerializedName("methodid")
-	@Expose
-	private int methodid;
+//	@SerializedName("methodid")
+//	@Expose
+//	private int methodid;
 
 	public HistoryModel() {
 		super();
@@ -25,14 +25,14 @@ public class HistoryModel {
 	/**
 	 *
 	 * @param lastListen
-	 * @param methodid
+//	 * @param methodid
 	 * @param isListen
 	 */
-	public HistoryModel(String lastListen, int isListen, int methodid) {
+	public HistoryModel(String lastListen, int isListen/*, int methodid*/) {
 		super();
 		this.lastListen = lastListen;
 		this.isListen = isListen;
-		this.methodid = methodid;
+//		this.methodid = methodid;
 	}
 	/**
 	 *
@@ -75,17 +75,17 @@ public class HistoryModel {
 	 * @return
 	 * The methodid
 	 */
-	public int getMethodid() {
-		return methodid;
-	}
+//	public int getMethodid() {
+//		return methodid;
+//	}
 
 	/**
 	 *
 	 * @param methodid
 	 * The methodid
 	 */
-	public void setMethodid(int methodid) {
-		this.methodid = methodid;
-	}
+//	public void setMethodid(int methodid) {
+//		this.methodid = methodid;
+//	}
 
 }

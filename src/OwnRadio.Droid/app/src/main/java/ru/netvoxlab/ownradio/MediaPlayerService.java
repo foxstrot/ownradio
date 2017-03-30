@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
@@ -13,6 +14,7 @@ import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationCompat;
@@ -28,10 +30,7 @@ import android.widget.RemoteViews;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 
 import static android.app.PendingIntent.getActivity;
@@ -50,6 +49,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	private AudioManager audioManager;
 	private WifiManager wifiManager;
 	private WifiManager.WifiLock wifiLock;
+
+	private PowerManager pm;
+	private PowerManager.WakeLock wl;
+
 	private ComponentName remoteComponentName;
 	private int NotificationId = 1;
 
@@ -68,9 +71,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	Boolean FlagDownloadTrack = true;
 	final String TAG = "ownRadio";
 
-	Map<String, String> trackMap;
-	public static List<Map<String,String>> queue = new ArrayList<>();
-	public static int queueSize = 0;
 	ContentValues track;
 	int startPosition = 0;
 	String startTrackID = "";
@@ -90,6 +90,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 		wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
 		remoteComponentName = new ComponentName(getPackageName(), new RemoteControlReceiver().ComponentName());
+		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 	}
 
 	@Override
@@ -165,7 +166,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public boolean onUnbind(Intent intent) {
 		StopNotification();
 		stopForeground(true);
-//		ReleaseWifiLock();
+		ReleaseWifiLock();
+		if(wl != null && wl.isHeld())
+			wl.release();
 		UnregisterMediaSessionCompat();
 		return super.onUnbind(intent);
 	}
@@ -314,6 +317,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				}
 //				player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
 				player.setDataSource(trackURL);
+			} else {
+				new Utilites().CheckCountTracksAndDownloadIfNotEnought(getApplicationContext(), DeviceID);
+				return;
 			}
 
 			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
@@ -331,7 +337,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			new TrackDataAccess(getApplicationContext()).SetTimeAndCountStartPlayback(track);
 
 
-//			AcquireWifiLock();
+			wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
+			if(!wl.isHeld())
+				wl.acquire();
+
+			AcquireWifiLock();
 			UpdateMediaMetadataCompat();
 //			if (GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
 //				StartNotification();
@@ -343,7 +353,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			Log.d(TAG, "Play(): sendBroadcast");
 		} catch (Exception ex) {
 			utilites.SendInformationTxt(getApplicationContext(), "Error in Play(): " + ex.getLocalizedMessage());
-			player.reset();
+			//player.reset();
 			player.release();
 			player = null;
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
@@ -390,10 +400,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		try {
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
 //			UpdateButtonPlayPauseImg();
-			player.reset();
+//			player.reset();
+			player.release();
+			player = null;
 //			StartNotification();
 //			super.stopForeground(true);
-//			ReleaseWifiLock();
+			ReleaseWifiLock();
+			if(wl != null && wl.isHeld())
+				wl.release();
 //			UnregisterMediaSessionCompat();
 		}catch (Exception ex){
 			Log.d(TAG, " " + ex.getLocalizedMessage());
@@ -427,7 +441,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				history.put("userid", UserID);
 				history.put("datetimelisten", currentDateTime);
 				history.put("islisten", listedTillTheEnd);
-				history.put("methodid", trackInstance.getAsInteger("methodid"));
+//				history.put("methodid", trackInstance.getAsInteger("methodid"));
 				HistoryDataAccess historyDataAccess = new HistoryDataAccess(getApplicationContext());
 				historyDataAccess.SaveHistoryRec(history);//сохраняет информацию в history для последующей отправки на сервер
 			}
@@ -593,7 +607,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 	public void PlayNext() {
 		if (player != null) {
-			player.reset();
+//			player.reset();
 			player.release();
 			player = null;
 		}
@@ -690,7 +704,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			sendBroadcast(intent);
 			StopNotification();
 			stopForeground(true);
-//			ReleaseWifiLock();
+			ReleaseWifiLock();
+			if(wl != null && wl.isHeld())
+				wl.release();
 			UnregisterMediaSessionCompat();
 		}
 	}

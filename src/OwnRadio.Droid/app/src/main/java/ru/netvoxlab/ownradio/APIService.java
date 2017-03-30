@@ -17,15 +17,15 @@ import retrofit2.http.Streaming;
 
 public interface APIService {
 
-	@GET("/v3/tracks/{deviceid}/next")
+	@GET("v4/tracks/{deviceid}/next")
 	@Headers("Content-Type: application/json")
 	Call<Map<String, String>> getNextTrackID(@Path("deviceid") String deviceId);
 
 	@Streaming
-	@GET("v3/tracks/{trackid}")
+	@GET("v4/tracks/{trackid}")
 	Call<ResponseBody> getTrackById(@Path("trackid") String trackId);
 
-	@POST("/v3/histories/{deviceid}/{trackid}")
+	@POST("v4/histories/{deviceid}/{trackid}")
 	@Headers("Content-Type: application/json")
 	Call<Void> sendHistory(@Path("deviceid") String deviceId, @Path("trackid") String trackId, @Body HistoryModel data);
 
