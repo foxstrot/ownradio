@@ -58,7 +58,7 @@ public class TrackToCache {
 						}
 						new Utilites().SendInformationTxt(mContext, "Download track \"" + trackId + "\" is started");
 						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
-						if(new TrackDataAccess(mContext).GetExistTracksCount() >=3){
+						if(new TrackDataAccess(mContext).GetExistTracksCount() >=1){
 							Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
 							progressIntent.putExtra("ProgressOn", false);
 							mContext.sendBroadcast(progressIntent);

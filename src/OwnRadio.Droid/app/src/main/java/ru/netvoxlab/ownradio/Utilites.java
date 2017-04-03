@@ -27,20 +27,21 @@ public class Utilites {
 	}
 
 	public boolean CheckCountTracksAndDownloadIfNotEnought(Context mContext, String DeviceId){
-		if (new TrackDataAccess(mContext).GetExistTracksCount() < 3) {
+		if (new TrackDataAccess(mContext).GetExistTracksCount() < 1) {
 			if (new CheckConnection().CheckInetConnection(mContext)) {
 				new Utilites().SendInformationTxt(mContext, "Подождите пока наполнится кеш");
 				Intent i = new Intent(ActionProgressBarFirstTracksLoad);
 				i.putExtra("ProgressOn", true);
 				mContext.sendBroadcast(i);
-				//		Запускаем кеширование треков - 3 шт
+				//		Запускаем кеширование треков - 1 шт
 				Intent downloaderIntent = new Intent(mContext, DownloadService.class);
 				downloaderIntent.putExtra("DeviceID", DeviceId);
+				downloaderIntent.putExtra("CountTracks", 1);
 				mContext.startService(downloaderIntent);
 			} else {
 				android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(mContext);
-				builder.setTitle("Error")
-						.setMessage("It is impossible to cache tracks. Check your internet connection.")
+				builder.setTitle("Ошибка")
+						.setMessage("Невозможно кешировать треки. Проверьте интернет подключение.")
 						.setCancelable(false)
 						.setNegativeButton("OK",
 								new DialogInterface.OnClickListener() {

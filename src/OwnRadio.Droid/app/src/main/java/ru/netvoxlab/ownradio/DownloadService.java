@@ -19,7 +19,7 @@ public class DownloadService extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		if (intent != null) {
-			new TrackToCache(getApplicationContext()).SaveTrackToCache(intent.getStringExtra("DeviceID"), 3);
+			new TrackToCache(getApplicationContext()).SaveTrackToCache(intent.getStringExtra("DeviceID"), intent.getIntExtra("CountTracks", 3));
 		}
 	}
 }

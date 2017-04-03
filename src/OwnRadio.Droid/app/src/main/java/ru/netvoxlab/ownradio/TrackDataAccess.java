@@ -120,7 +120,7 @@ public class TrackDataAccess {
 
 	public String GetCountPlayTracks(){
 		db = trackDB.getWritableDatabase();
-		Cursor userCursor = db.rawQuery("SELECT COUNT(*) AS tracks, countplay FROM track GROUP BY countplay ORDER BY countplay DESC", null);
+		Cursor userCursor = db.rawQuery("SELECT countplay, COUNT(*) AS tracks FROM track GROUP BY countplay ORDER BY countplay DESC", null);
 
 		String tableString = null;
 		if (userCursor.moveToFirst() ){

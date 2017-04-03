@@ -88,7 +88,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		DeviceID = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID", "");
 		UserID = DeviceID;//PreferenceManager.getDefaultSharedPreferences(this).getString("UserID", "");
 		audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-		wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+		wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 		remoteComponentName = new ComponentName(getPackageName(), new RemoteControlReceiver().ComponentName());
 		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 	}
@@ -362,6 +362,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 		Intent i = new Intent(this, DownloadService.class);
 		i.putExtra("DeviceID", DeviceID);
+		i.putExtra("CountTracks", 3);
 		startService(i);
 	}
 
@@ -441,7 +442,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				history.put("userid", UserID);
 				history.put("datetimelisten", currentDateTime);
 				history.put("islisten", listedTillTheEnd);
-//				history.put("methodid", trackInstance.getAsInteger("methodid"));
 				HistoryDataAccess historyDataAccess = new HistoryDataAccess(getApplicationContext());
 				historyDataAccess.SaveHistoryRec(history);//сохраняет информацию в history для последующей отправки на сервер
 			}
@@ -630,7 +630,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //				.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, track.getAsString("name"))
 //				.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, track.getAsString("artist"))
 				.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, track.getAsString("artist"))
-				.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "ownRadio");
+				.putString(MediaMetadataCompat.METADATA_KEY_ALBUM,  track.getAsString("artist"));
 
 		mediaSessionCompat.setMetadata(builder.build());
 	}
