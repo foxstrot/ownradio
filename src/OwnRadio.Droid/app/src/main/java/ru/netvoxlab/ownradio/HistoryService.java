@@ -22,7 +22,9 @@ public class HistoryService extends IntentService {
 		if (intent != null) {
 			final String action = intent.getAction();
 			//Отправка на сервер накопленной истории прослушивания треков
-			new APICalls(getApplicationContext()).SendHistory(intent.getStringExtra("DeviceID"), 3);
+			for (int i = 0; i < 3; i++) {
+				new APICalls(getApplicationContext()).SendHistory(intent.getStringExtra("DeviceID"));
+			}
 		}
 	}
 }

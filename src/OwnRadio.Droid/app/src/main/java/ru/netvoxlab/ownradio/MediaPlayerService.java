@@ -35,6 +35,7 @@ import java.util.TimeZone;
 
 import static android.app.PendingIntent.getActivity;
 import static ru.netvoxlab.ownradio.MainActivity.ActionButtonImgUpdate;
+import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
 
@@ -416,6 +417,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	public void Next() {
+		if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() <3){
+			Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
+			getApplicationContext().sendBroadcast(progressIntent);
+			return;
+		}
+		
 		//Сохраняем информацию о прослушивании в локальную БД.
 		int listedTillTheEnd = -1;
 		SaveHistory(listedTillTheEnd, track);
@@ -574,7 +581,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		Intent nextIntent = new Intent(this, MediaPlayerService.class);
 		nextIntent.setAction(ActionNext);
 		PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
-
 
 		contentView.setOnClickPendingIntent(R.id.viewsNext, pnextIntent);
 		contentView.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);

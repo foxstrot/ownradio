@@ -1,5 +1,6 @@
 package ru.netvoxlab.ownradio;
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -39,7 +40,7 @@ public class Utilites {
 				downloaderIntent.putExtra("CountTracks", 1);
 				mContext.startService(downloaderIntent);
 			} else {
-				android.support.v7.app.AlertDialog.Builder builder = new android.support.v7.app.AlertDialog.Builder(mContext);
+				AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 				builder.setTitle("Ошибка")
 						.setMessage("Невозможно кешировать треки. Проверьте интернет подключение.")
 						.setCancelable(false)
@@ -50,7 +51,7 @@ public class Utilites {
 										dialogInterface.cancel();
 									}
 								});
-				android.support.v7.app.AlertDialog alert = builder.create();
+				AlertDialog alert = builder.create();
 				alert.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
 				alert.show();
 			}

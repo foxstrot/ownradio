@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 	private Intent mediaPlayerServiceIntent;
 	ImageButton btnPlayPause;
 	ImageButton btnNext;
+	ImageButton btnSkipTrack;
 	TrackDB trackDB;
 	private Handler handler = new Handler();
 	private Handler handlerEvent = new Handler();
@@ -170,11 +171,24 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		btnNext.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() != PlaybackStateCompat.STATE_SKIPPING_TO_NEXT && binder.GetMediaPlayerService().GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
-					binder.GetMediaPlayerService().Next();
-					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
-					Log.e(TAG, "Next");
-				}
+//				if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() >=3){
+					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() != PlaybackStateCompat.STATE_SKIPPING_TO_NEXT && binder.GetMediaPlayerService().GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
+						binder.GetMediaPlayerService().Next();
+						textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
+						Log.e(TAG, "Next");
+					}
+//				}else {
+//					btnNext.setClickable(false);
+//				}
+			}
+		});
+		
+		btnSkipTrack = (ImageButton) findViewById(R.id.btnSkipTrack);
+		btnSkipTrack.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				if(binder.GetMediaPlayerService().player != null)
+					binder.GetMediaPlayerService().onCompletion(binder.GetMediaPlayerService().player);
 			}
 		});
 	}
@@ -238,6 +252,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 					if (binder == null || binder.GetMediaPlayerService().player == null) {
 						txtTrackTitle.setText("");
 						txtTrackArtist.setText("ownRadio");
+						btnPlayPause.setImageResource(R.drawable.btn_play);
+						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 						return;
 					}
 
@@ -339,20 +355,24 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 
 			if(intent.getAction() == ActionProgressBarFirstTracksLoad){
 				if(intent.getBooleanExtra("ProgressOn", false)) {
-//					btnPlayPause.setClickable(false);
+					btnPlayPause.setClickable(false);
 					btnNext.setClickable(false);
 					if(dialog == null)
 						dialog = new ProgressDialog(MainActivity.this);
 					dialog.setTitle("Caching...");
 					dialog.setMessage("There are no tracks to play. Wait until the tracks are cached.");
 					dialog.setIndeterminate(true);
-					dialog.setCancelable(true);
+					dialog.setCancelable(false);
 					dialog.show();
 				}else {
 					if (dialog != null)
 						dialog.dismiss();
-//					btnPlayPause.setClickable(true);
-					btnNext.setClickable(true);
+					btnPlayPause.setClickable(true);
+					
+					if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<3)
+						btnNext.setClickable(false);
+					else
+						btnNext.setClickable(true);
 				}
 			}
 		}
