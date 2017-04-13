@@ -34,10 +34,10 @@ public class Utilites {
 				Intent i = new Intent(ActionProgressBarFirstTracksLoad);
 				i.putExtra("ProgressOn", true);
 				mContext.sendBroadcast(i);
-				//		Запускаем кеширование треков - 1 шт
+				//		Запускаем кеширование треков - 3 шт
 				Intent downloaderIntent = new Intent(mContext, DownloadService.class);
 				downloaderIntent.putExtra("DeviceID", DeviceId);
-				downloaderIntent.putExtra("CountTracks", 1);
+				downloaderIntent.putExtra("CountTracks", 3);
 				mContext.startService(downloaderIntent);
 			} else {
 				AlertDialog.Builder builder = new AlertDialog.Builder(mContext);

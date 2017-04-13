@@ -585,10 +585,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		contentView.setOnClickPendingIntent(R.id.viewsNext, pnextIntent);
 		contentView.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
 
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
+		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
 				.setSmallIcon(getNotificationIcon())
 				.setContentIntent(pendingIntent)
 				.setCustomContentView(contentView)
+				.setContentTitle(trackTitle)
+				.setContentText(trackArtist)
 				.setShowWhen(false)
 				.setPriority(NotificationCompat.PRIORITY_HIGH)
 				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
@@ -598,7 +600,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		else
 			builder.setOngoing(false);
 //        style.setShowActionsInCompactView(0,1,2);
-		NotificationManagerCompat.from(getApplicationContext()).notify(NotificationId, builder.build());
+		NotificationManagerCompat.from(this).notify(NotificationId, builder.build());
+		
 	}
 
 	private int getNotificationIcon() {
@@ -633,10 +636,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //				.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeResource(getResources(), R.drawable.icon))
 //				.putBitmap(MediaMetadataCompat.METADATA_KEY_ART, BitmapFactory.decodeResource(getResources(), R.drawable.icon))
 				.putString(MediaMetadataCompat.METADATA_KEY_TITLE, track.getAsString("title"))
-//				.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, track.getAsString("name"))
-//				.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, track.getAsString("artist"))
+				.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, track.getAsString("name"))
+				.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, track.getAsString("artist"))
 				.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, track.getAsString("artist"))
-				.putString(MediaMetadataCompat.METADATA_KEY_ALBUM,  track.getAsString("artist"));
+				.putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ARTIST,  track.getAsString("artist"))
+//				.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR,  track.getAsString("artist"))
+				.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "ownRadio");
 
 		mediaSessionCompat.setMetadata(builder.build());
 	}
