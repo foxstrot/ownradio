@@ -39,12 +39,13 @@ public class HistorySend extends AsyncTask <String, Void, Boolean>{
 
 //				HistoryModel data = new HistoryModel("2016-11-16T13:15:15",1,1);
 				HistoryModel historyData = new HistoryModel();
+				historyData.setRecId(historyRec.getAsString("id"));
 				historyData.setLastListen(historyRec.getAsString("lastListen"));
 				historyData.setIsListen(historyRec.getAsInteger("isListen"));
 				
 				Response<Void> response = ServiceGenerator.createService(APIService.class).sendHistory(data[0], historyRec.getAsString("trackid"), historyData).execute();
 				if (response.isSuccessful())
-					if (response.code() == HttpURLConnection.HTTP_OK) {
+					if (response.code() == HttpURLConnection.HTTP_OK  || response.code() == 208) {
 						historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
 						new Utilites().SendInformationTxt(mContext, "History is sending");
 						

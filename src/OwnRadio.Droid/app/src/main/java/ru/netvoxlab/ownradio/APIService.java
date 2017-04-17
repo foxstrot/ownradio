@@ -28,5 +28,8 @@ public interface APIService {
 	@POST("v4/histories/{deviceid}/{trackid}")
 	@Headers("Content-Type: application/json")
 	Call<Void> sendHistory(@Path("deviceid") String deviceId, @Path("trackid") String trackId, @Body HistoryModel data);
-
+	
+	@GET("v4/devices/{deviceid}/{devicename}/registerdevice")
+	@Headers("Content-Type: application/json")
+	Call<Void> registerDevice(@Path("deviceid") String deviceId, @Path("devicename") String deviceName);
 }

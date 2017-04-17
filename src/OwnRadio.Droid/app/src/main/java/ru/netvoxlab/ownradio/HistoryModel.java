@@ -8,6 +8,9 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class HistoryModel {
+	@SerializedName("recid")
+	@Expose
+	private String recId;
 	@SerializedName("lastListen")
 	@Expose
 	private String lastListen;
@@ -28,12 +31,20 @@ public class HistoryModel {
 //	 * @param methodid
 	 * @param isListen
 	 */
-	public HistoryModel(String lastListen, int isListen/*, int methodid*/) {
+	public HistoryModel(String recId, String lastListen, int isListen/*, int methodid*/) {
 		super();
+		this.recId = recId;
 		this.lastListen = lastListen;
 		this.isListen = isListen;
 //		this.methodid = methodid;
 	}
+	/**
+	 *
+	 * @return
+	 * The recId
+	 */
+	public String getRecId() { return recId; }
+	
 	/**
 	 *
 	 * @return
@@ -42,7 +53,14 @@ public class HistoryModel {
 	public String getLastListen() {
 		return lastListen;
 	}
-
+	
+	/**
+	 *
+	 * @param recId
+	 * The recId
+	 */
+	public void setRecId(String recId) { this.recId = recId; }
+	
 	/**
 	 *
 	 * @param lastListen
@@ -70,22 +88,5 @@ public class HistoryModel {
 		this.isListen = isListen;
 	}
 
-	/**
-	 *
-	 * @return
-	 * The methodid
-	 */
-//	public int getMethodid() {
-//		return methodid;
-//	}
-
-	/**
-	 *
-	 * @param methodid
-	 * The methodid
-	 */
-//	public void setMethodid(int methodid) {
-//		this.methodid = methodid;
-//	}
 
 }

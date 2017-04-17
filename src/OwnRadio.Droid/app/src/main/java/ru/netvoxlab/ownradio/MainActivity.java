@@ -437,7 +437,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				if (DeviceId.isEmpty()) {
 					DeviceId = UUID.randomUUID().toString();
 					String UserName = "NewUser";
-					String DeviceName = Build.BRAND;
+					String DeviceName = DeviceName = Build.BRAND + " " + Build.PRODUCT;
+					new APICalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
 					UserId = apiCalls.GetUserId(DeviceId);
 					sp.edit().putString("DeviceID", DeviceId).commit();
 					sp.edit().putString("UserID", UserId);

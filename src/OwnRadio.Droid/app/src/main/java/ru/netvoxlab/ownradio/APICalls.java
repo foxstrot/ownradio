@@ -54,4 +54,18 @@ public class APICalls {
 		}
 
 	}
+	
+	public void RegisterDevice(String deviceId, String deviceName){
+		CheckConnection checkConnection = new CheckConnection();
+		if (!checkConnection.CheckInetConnection(mContext)) {
+			return;
+		}
+		
+		try {
+			Boolean result = new RegisterDevice(mContext).execute(deviceId, deviceName).get();
+		}catch (Exception ex) {
+			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
+		}
+
+	}
 }
