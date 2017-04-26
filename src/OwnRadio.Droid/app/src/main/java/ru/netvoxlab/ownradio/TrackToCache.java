@@ -175,9 +175,9 @@ public class TrackToCache {
 			if (file.exists()) {
 				if (file.delete()) {
 					int resDeleteFromDB = trackDataAccess.DeleteTrackFromCache(track) ;
-					if(resDeleteFromDB == 0)
-						Log.d(TAG, "File " + track.getAsString("id") + " is deleted");
-					else Log.d(TAG, "File " + track.getAsString("id") + " is not deleted from DB with error " + resDeleteFromDB);
+					if(resDeleteFromDB != 0)
+						Log.d(TAG, "Record about file " + track.getAsString("id") + " is deleted");
+					else Log.d(TAG, "Record about file " + track.getAsString("id") + " is not found in DB");
 					Intent in = new Intent(ActionTrackInfoUpdate);
 					mContext.sendBroadcast(in);
 					return true;
@@ -186,7 +186,7 @@ public class TrackToCache {
 				return false;
 			} else {
 				int resDeleteFromDB = trackDataAccess.DeleteTrackFromCache(track) ;
-				if(resDeleteFromDB == 0)
+				if(resDeleteFromDB != 0)
 					Log.d(TAG, "File " + track.getAsString("id") + "for delete is not exist. Rec about track deleted from DB");
 				else
 					Log.d(TAG, "File " + track.getAsString("id") + "for delete is not exist. Rec about track is not deleted from DB");

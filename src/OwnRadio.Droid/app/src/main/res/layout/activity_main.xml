@@ -116,6 +116,11 @@
 		android:background="#70ffffff"
 		android:paddingLeft="@dimen/activity_horizontal_margin"
 		android:orientation="vertical">
+		<Button
+			android:id="@+id/btnTest"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="LogToMail"/>
 		<ImageButton
 			android:id="@+id/btnSkipTrack"
 			android:layout_width="wrap_content"

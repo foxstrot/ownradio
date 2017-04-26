@@ -114,14 +114,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS:
 				Pause();
-				if(isHSConnected)
+				if(isHSConnected && player.isPlaying())
 					playbackWithHSisInterrupted = true;
 //				Stop();
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
 				//We have lost focus for a short time, but likely to resume so pause
 				Pause();
-				if(isHSConnected)
+				if(isHSConnected && player.isPlaying())
 					playbackWithHSisInterrupted = true;
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
@@ -305,17 +305,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 //			startPosition = settings.getInt("LastPosition", 0);
 //			startTrackID = settings.getString("LastTrackID", "");
-			track = trackDataAccess.GetMostOldTrack();
-			Intent i = new Intent(ActionTrackInfoUpdate);
-			getApplicationContext().sendBroadcast(i);
-			if (track != null) {
-				FlagDownloadTrack = false;
-				TrackID = track.getAsString("id");
-				trackURL = track.getAsString("trackurl");
-				if (!new File(trackURL).exists()) {
-					trackDataAccess.DeleteTrackFromCache(track);
-					Play();
-				}
+			
+			if(getTrackForPlayFromDB()){
 //				player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
 				player.setDataSource(trackURL);
 			} else {
@@ -457,6 +448,29 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 	}
 
+	private boolean getTrackForPlayFromDB(){
+		boolean flagFindTrack = false;
+		do {
+			track = trackDataAccess.GetMostOldTrack();
+			Intent i = new Intent(ActionTrackInfoUpdate);
+			getApplicationContext().sendBroadcast(i);
+			if (track != null) {
+				FlagDownloadTrack = false;
+				TrackID = track.getAsString("id");
+				trackURL = track.getAsString("trackurl");
+				if (!new File(trackURL).exists()) {
+					trackDataAccess.DeleteTrackFromCache(track);
+				} else
+					flagFindTrack = true;
+			}else
+				return false;
+			}while(!flagFindTrack);
+			return true;
+//			return true;
+//		}else
+//			return false;
+	}
+	
 	private void AcquireWifiLock() {
 		if (wifiLock == null) {
 			wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL, "OwnRadioWiFiLock");
