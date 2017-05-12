@@ -23,7 +23,7 @@ public class App extends Application {
 		super.onCreate();
 		
 		if ( isExternalStorageWritable() ) {
-			appDirectory =  new File (Environment.getExternalStorageDirectory().getAbsolutePath());//this.getFilesDir();
+			appDirectory = this.getFilesDir();// new File (Environment.getExternalStorageDirectory().getAbsolutePath());//this.getFilesDir();
 			logDirectory = new File( appDirectory + File.separator + "log" );
 			logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
 			

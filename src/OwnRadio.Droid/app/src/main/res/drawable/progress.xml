@@ -5,9 +5,12 @@
 			android:fromDegrees="270"
 			android:pivotX="50%"
 			android:pivotY="50%"
-			android:toDegrees="270" >
+			android:toDegrees="270"
+			>
+			
 			<shape
 				android:innerRadiusRatio="3"
+				android:color="#000"
 				android:shape="ring"
 				android:useLevel="true"
 				android:innerRadius="54dp"
