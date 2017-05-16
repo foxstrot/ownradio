@@ -16,12 +16,13 @@
 			android:id="@+id/toolbar"
 			android:layout_width="match_parent"
 			android:layout_height="?attr/actionBarSize"
-			android:background="?attr/colorPrimary"
+			android:background="@color/colorPrimaryToolbar"
 			app:popupTheme="@style/AppTheme.PopupOverlay">
 			<TextView
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:text="own"
+				android:textStyle="bold"
 				android:textColor="@color/textColorPrimary"
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				android:fontFamily="sans-serif"

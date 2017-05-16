@@ -37,7 +37,7 @@
 		<activity
 			android:name=".MainActivity"
 			android:configChanges="keyboardHidden|orientation|screenSize"
-			android:label=""
+			android:label=" "
 			android:launchMode="singleTop">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>

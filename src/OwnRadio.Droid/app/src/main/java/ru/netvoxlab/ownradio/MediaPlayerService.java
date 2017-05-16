@@ -333,7 +333,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			if(!wl.isHeld())
 				wl.acquire();
 
-			AcquireWifiLock();
+//			AcquireWifiLock();
 			UpdateMediaMetadataCompat();
 //			if (GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
 //				StartNotification();
