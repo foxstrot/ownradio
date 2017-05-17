@@ -52,6 +52,7 @@ public class TrackToCache {
 					try {
 						final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
 						trackId = trackMap.get("id");
+						trackMap.put("deviceid", deviceId);
 						if (trackDataAccess.CheckTrackExistInDB(trackId)) {
 							Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
 							break;

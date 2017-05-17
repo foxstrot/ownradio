@@ -44,17 +44,20 @@ public class HistorySend extends AsyncTask <String, Void, Boolean>{
 				historyData.setIsListen(historyRec.getAsInteger("isListen"));
 				
 				Response<Void> response = ServiceGenerator.createService(APIService.class).sendHistory(data[0], historyRec.getAsString("trackid"), historyData).execute();
-				if (response.isSuccessful())
-					if (response.code() == HttpURLConnection.HTTP_OK  || response.code() == 208) {
+				if (response.isSuccessful()) {
+					if (response.code() == HttpURLConnection.HTTP_OK || response.code() == 208) {
 						historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
-						new Utilites().SendInformationTxt(mContext, "History is sending");
-						
+						new Utilites().SendInformationTxt(mContext, "History by trackId " + historyRec.getAsString("trackid")+ " is sending with response code=" + response.code());
 					} else {
 						new Utilites().SendInformationTxt(mContext, "SendHistory: Server response: " + response.code());
 					}
-//							public void onFailure(Call<Void> call, Throwable t) {
-//								new Utilites().SendInformationTxt(mContext, "SendHistory: An error occurred during networking");
-//							}
+				}
+				else {
+					if(response.code() == HttpURLConnection.HTTP_NOT_FOUND){
+						historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
+						new Utilites().SendInformationTxt(mContext, "Error: History by trackId " + historyRec.getAsString("trackid")+ "not send with response code=" + response.code() +". TrackId or DeviceId not found on server.");
+					}
+				}
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());

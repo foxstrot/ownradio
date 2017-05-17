@@ -13,6 +13,9 @@ import java.util.Date;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionSendInfoTxt;
 import static ru.netvoxlab.ownradio.MainActivity.TAG;
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
 
 /**
  * Created by a.polunina on 11.01.2017.
@@ -35,9 +38,10 @@ public class Utilites {
 				i.putExtra("ProgressOn", true);
 				mContext.sendBroadcast(i);
 				//		Запускаем кеширование треков - 3 шт
-				Intent downloaderIntent = new Intent(mContext, DownloadService.class);
-				downloaderIntent.putExtra("DeviceID", DeviceId);
-				downloaderIntent.putExtra("CountTracks", 3);
+				Intent downloaderIntent = new Intent(mContext, RequestAPIService.class);
+				downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+				downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceId);
+				downloaderIntent.putExtra(EXTRA_COUNT, 3);
 				mContext.startService(downloaderIntent);
 			} else {
 				AlertDialog.Builder builder = new AlertDialog.Builder(mContext);

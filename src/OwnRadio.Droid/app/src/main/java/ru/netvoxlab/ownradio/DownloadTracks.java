@@ -35,7 +35,7 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 	protected Boolean doInBackground(Map<String, String>... trackMap) {
 
 		try {
-			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id")).execute();
+			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id"), trackMap[0].get("deviceid")).execute();
 			if (response.isSuccessful()) {
 				Log.d(TAG, "server contacted and has file");
 				final String trackURL = filePath + File.separator + trackMap[0].get("id") + ".mp3";

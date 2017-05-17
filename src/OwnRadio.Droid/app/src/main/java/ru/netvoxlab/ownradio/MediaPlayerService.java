@@ -38,6 +38,10 @@ import static ru.netvoxlab.ownradio.MainActivity.ActionButtonImgUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_SENDHISTORY;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
 
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener, AudioManager.OnAudioFocusChangeListener {
 	public static final String ActionPlay = "ru.netvoxlab.ownradio.action.PLAY";
@@ -262,8 +266,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		SaveHistory(listedTillTheEnd, track);
 		PlayNext();
 		utilites.SendInformationTxt(getApplicationContext(), "Completion playback");
-		Intent historySenderIntent = new Intent(this, HistoryService.class);
-		historySenderIntent.putExtra("DeviceID", DeviceID);
+		Intent historySenderIntent = new Intent(this, RequestAPIService.class);
+		historySenderIntent.setAction(ACTION_SENDHISTORY);
+		historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
 		startService(historySenderIntent);
 	}
 
@@ -351,11 +356,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
 			return;
 		}
-
-		Intent i = new Intent(this, DownloadService.class);
-		i.putExtra("DeviceID", DeviceID);
-		i.putExtra("CountTracks", 3);
-		startService(i);
+		
+		Intent downloaderIntent = new Intent(this, RequestAPIService.class);
+		downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+		downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
+		downloaderIntent.putExtra(EXTRA_COUNT, 3);
+		startService(downloaderIntent);
 	}
 
 	public void Pause() {
@@ -421,9 +427,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
 		PlayNext();
 		utilites.SendInformationTxt(getApplicationContext(), "Skip track to next");
-
-		Intent historySenderIntent = new Intent(this, HistoryService.class);
-		historySenderIntent.putExtra("DeviceID", DeviceID);
+		
+		Intent historySenderIntent = new Intent(this, RequestAPIService.class);
+		historySenderIntent.setAction(ACTION_SENDHISTORY);
+		historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
 		startService(historySenderIntent);
 	}
 
@@ -559,12 +566,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		String trackTitle;
 		String trackArtist;
 		try {
-			trackTitle = (track.getAsString("title") == null) ? "Unknown track" : track.getAsString("title");
-			trackArtist = (track.getAsString("artist") == null) ? "Unknown artist" : track.getAsString("artist");
+			trackTitle = (track.getAsString("title") == null) ? "Track" : track.getAsString("title");
+			trackArtist = (track.getAsString("artist") == null) ? "Artist" : track.getAsString("artist");
 
 		} catch (Exception ex) {
-			trackTitle = "Unknown track";
-			trackArtist = "Unknown artist";
+			trackTitle = "Track";
+			trackArtist = "Artist";
 			Log.d(TAG, " " + ex.getLocalizedMessage());
 		}
 

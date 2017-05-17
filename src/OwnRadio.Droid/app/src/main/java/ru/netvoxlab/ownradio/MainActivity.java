@@ -25,6 +25,7 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -79,6 +80,9 @@ public class MainActivity extends AppCompatActivity
 	TextView txtMemoryUsed;
 	TextView txtTrackTitle;
 	TextView txtTrackArtist;
+	
+	Toolbar toolbar;
+	
 	LinearLayout layoutDevelopersInfo;
 	public static File filePath;
 	boolean flagDevInfo = false;
@@ -101,7 +105,7 @@ public class MainActivity extends AppCompatActivity
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
-		Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+		toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 		
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -224,20 +228,35 @@ public class MainActivity extends AppCompatActivity
 			@Override
 			public void onClick(View view) {
 				try {
-//					FileUtils.cleanDirectory( new File(getApplicationContext().getFilesDir() + File.separator + "music"));
-//					getApplicationContext().deleteDatabase("ownradiodb3.db3");
-					Intent i = new Intent(Intent.ACTION_SEND);
-					i.setType("vnd.android.cursor.dir/email");
-					i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"alex.polunina@gmail.com"});
-					i.putExtra(Intent.EXTRA_SUBJECT, "android log");
-					i.putExtra(Intent.EXTRA_STREAM, ((App)getApplicationContext()).getLogFile());
-					try {
-						startActivity(Intent.createChooser(i, "Send mail..."));
-					} catch (android.content.ActivityNotFoundException ex) {
+////					FileUtils.cleanDirectory( new File(getApplicationContext().getFilesDir() + File.separator + "music"));
+////					getApplicationContext().deleteDatabase("ownradiodb3.db3");
+//				Intent i = new Intent(Intent.ACTION_SEND);
+//				i.setType("vnd.android.cursor.dir/email");
+//				i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"alex.polunina@gmail.com"});
+//				i.putExtra(Intent.EXTRA_SUBJECT, "android log");
+//				i.putExtra(Intent.EXTRA_STREAM, ((App)getApplicationContext()).getLogFile());
+//				try {
+//					startActivity(Intent.createChooser(i, "Send mail..."));
+//				} catch (android.content.ActivityNotFoundException ex) {
+//				}
+					File directory = ((App)getApplicationContext()).getLogDirectory();
+					if (directory.listFiles() != null) {
+						while(directory.listFiles().length > 0) {
+
+							for (File file : directory.listFiles()) {
+								if (file.isFile()) {
+									if(new SendLogFile(getApplicationContext()).execute(sp.getString("DeviceID", ""), ((App)getApplicationContext()).getLogFile().getAbsolutePath()).get())
+										file.delete();
+								}
+							}
+						}
 					}
-				}catch (Exception ex){
 					
-				}
+					
+					
+			}catch (Exception ex){
+				
+			}
 			}
 		});
 	}
@@ -388,24 +407,28 @@ public class MainActivity extends AppCompatActivity
 					title = binder.GetMediaPlayerService().track.getAsString("title");
 					artist = binder.GetMediaPlayerService().track.getAsString("artist");
 					if (title == null || title.isEmpty() || title.equals("null"))
-						title = "Unknown track";
+						title = "Track";
 					if (artist == null || artist.isEmpty() || artist.equals("null"))
-						artist = "Unknown artist";
+						artist = "Artist";
 					txtTrackTitle.setText(title);
 					txtTrackArtist.setText(artist);
 					textTrackID = (TextView) findViewById(R.id.trackID);
 					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 				} catch (Exception ex) {
 					new Utilites().SendInformationTxt(MainActivity.this, "ActionButtonImgUpdate error:" + ex.getLocalizedMessage());
-					title = "Unknown track";
-					artist = "Unknown artist";
+					title = "Track";
+					artist = "Artist";
 					txtTrackTitle.setText(title);
 					txtTrackArtist.setText(artist);
 				}
 			}
 			
 			if (intent.getAction() == ActionSendInfoTxt) {
-				textInfo.append("Info: " + intent.getStringExtra("TEXTINFO") + "\n");
+				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+					textInfo.append(Html.fromHtml("<b>Info:</b> " + intent.getStringExtra("TEXTINFO") + "<br/>", Html.FROM_HTML_MODE_LEGACY));
+				}else{
+					textInfo.append(Html.fromHtml("<b>Info:</b> " + intent.getStringExtra("TEXTINFO") + "<br/>"));
+				}
 			}
 			
 			if (intent.getAction() == ActionProgressBarUpdate) {
@@ -510,6 +533,7 @@ public class MainActivity extends AppCompatActivity
 		
 		txtTrackTitle.setOnTouchListener(this);
 		txtTrackArtist.setOnTouchListener(this);
+		toolbar.setOnTouchListener(this);
 		try {
 			if (trackToCache.FreeSpace() + trackToCache.FolderSize(filePath) < 104857600) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
