@@ -27,8 +27,10 @@ public class HistorySend extends AsyncTask <String, Void, Boolean>{
 		if (historyRecs == null)
 			return true;
 		
+		final ContentValues historyRec = historyDataAccess.GetHistoryRec();
+		
 		try {
-				final ContentValues historyRec = historyDataAccess.GetHistoryRec();
+//				final ContentValues historyRec = historyDataAccess.GetHistoryRec();
 				if (historyRec == null) //Если неотправленной статистики нет - выходим
 					return true;
 				
@@ -49,18 +51,18 @@ public class HistorySend extends AsyncTask <String, Void, Boolean>{
 						historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
 						new Utilites().SendInformationTxt(mContext, "History by trackId " + historyRec.getAsString("trackid")+ " is sending with response code=" + response.code());
 					} else {
-						new Utilites().SendInformationTxt(mContext, "SendHistory: Server response: " + response.code());
+						new Utilites().SendInformationTxt(mContext, "Error: History by trackId " + historyRec.getAsString("trackid")+ " not send with response code=" + response.code());
 					}
 				}
 				else {
 					if(response.code() == HttpURLConnection.HTTP_NOT_FOUND){
 						historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
-						new Utilites().SendInformationTxt(mContext, "Error: History by trackId " + historyRec.getAsString("trackid")+ "not send with response code=" + response.code() +". TrackId or DeviceId not found on server.");
+						new Utilites().SendInformationTxt(mContext, "Error: History by trackId " + historyRec.getAsString("trackid")+ " not send with response code=" + response.code() +". TrackId or DeviceId not found on server.");
 					}
 				}
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(mContext,"Error: History by trackId " + historyRec.getAsString("trackid")+ " not send with response code="  + ex.getLocalizedMessage());
 			return false;
 		}
 		return true;

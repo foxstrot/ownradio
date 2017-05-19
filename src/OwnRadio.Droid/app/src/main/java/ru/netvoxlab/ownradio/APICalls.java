@@ -32,10 +32,12 @@ public class APICalls {
 
 		try {
 			Map<String, String> result = new GetNextTrack(mContext).execute(deviceId).get();
+			if(result == null)
+				return null;
 			UUID.fromString(result.get("id")).toString();
 			return result;
 		}catch (Exception ex) {
-			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(mContext, "Error by GetNextTrackID " + ex.getLocalizedMessage());
 			return null;
 		}
 	}
@@ -50,7 +52,7 @@ public class APICalls {
 		try {
 			Boolean result = new HistorySend(mContext).execute(deviceId).get();
 		}catch (Exception ex) {
-			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(mContext, "Error by sendHistory " + ex.getLocalizedMessage());
 		}
 
 	}
@@ -64,7 +66,7 @@ public class APICalls {
 		try {
 			Boolean result = new RegisterDevice(mContext).execute(deviceId, deviceName).get();
 		}catch (Exception ex) {
-			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(mContext, "Error by registerDevice " + ex.getLocalizedMessage());
 		}
 
 	}

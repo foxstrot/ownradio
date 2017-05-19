@@ -19,9 +19,11 @@
 	<color name="ColorPrimaryBtnPlay">#03A9F4</color>
 	
 	
-	<color name="ColorPrimaryBtn80">#cc03A9F4</color>
-	<color name="ColorPrimaryBtn70">#b303A9F4</color>
-	<color name="ColorPrimaryBtn50">#8003A9F4</color>
+	<color name="menu_text_color">#7d7e7e</color>
+	
+	<color name="ColorPrimaryBtn80">#ff03A9F4</color>
+	<color name="ColorPrimaryBtn70">#ff03A9F4</color>
+	<color name="ColorPrimaryBtn50">#ff03A9F4</color>
 	
 	<!--button's circle colors-->
 	<color name="btnCircleColorPrimary">#ffffff</color>

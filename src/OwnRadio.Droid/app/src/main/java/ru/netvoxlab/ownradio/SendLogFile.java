@@ -34,7 +34,7 @@ public class SendLogFile extends AsyncTask<String, Void, Boolean> {
 			RequestBody requestFile =
 					RequestBody.create(
 							MediaType.parse("text/*"),
-							file.getAbsolutePath()
+							file
 					);
 			
 			// MultipartBody.Part is used to send also the actual file name
@@ -54,9 +54,10 @@ public class SendLogFile extends AsyncTask<String, Void, Boolean> {
 					if (file.exists())
 						file.delete();
 					new Utilites().SendInformationTxt(mContext, "LogFile " + file.getName() + " is sending and deleted");
-					
+					return true;
 				} else {
 					new Utilites().SendInformationTxt(mContext, "LogFile " + file.getName() + " is not send: Server response: " + response.code());
+					return true;
 				}
 			}else
 				new Utilites().SendInformationTxt(mContext, "LogFile " + file.getName() + " is not send: Server response: " + response.code());
@@ -65,7 +66,7 @@ public class SendLogFile extends AsyncTask<String, Void, Boolean> {
 			new Utilites().SendInformationTxt(mContext, "Error in sendLogFile(): " + ex.getLocalizedMessage());
 			return false;
 		}
-		return null;
+		return false;
 	}
 	
 	@Override

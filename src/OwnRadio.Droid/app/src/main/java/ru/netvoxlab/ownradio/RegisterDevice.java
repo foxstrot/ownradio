@@ -32,7 +32,7 @@ public class RegisterDevice extends AsyncTask <String, Void, Boolean> {
 				}
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(mContext, "Device is not register -  " + ex.getLocalizedMessage());
 			return false;
 		}
 		return true;

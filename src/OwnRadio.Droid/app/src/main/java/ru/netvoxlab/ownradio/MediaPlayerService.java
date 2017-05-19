@@ -25,7 +25,6 @@ import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
-import android.view.View;
 import android.widget.RemoteViews;
 
 import java.io.File;
@@ -314,6 +313,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			if(getTrackForPlayFromDB()){
 //				player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
 				player.setDataSource(trackURL);
+				Intent i = new Intent(ActionTrackInfoUpdate);
+				getApplicationContext().sendBroadcast(i);
 			} else {
 				new Utilites().CheckCountTracksAndDownloadIfNotEnought(getApplicationContext(), DeviceID);
 				return;
@@ -332,7 +333,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 			//записываем время начала проигрывания трека
 			new TrackDataAccess(getApplicationContext()).SetTimeAndCountStartPlayback(track);
-
+			new Utilites().SendInformationTxt(getApplicationContext(), "SetTimeAndCountStartPlayback for track" + track.getAsString("id"));
 
 			wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
 			if(!wl.isHeld())
@@ -459,8 +460,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		boolean flagFindTrack = false;
 		do {
 			track = trackDataAccess.GetMostOldTrack();
-			Intent i = new Intent(ActionTrackInfoUpdate);
-			getApplicationContext().sendBroadcast(i);
+			new Utilites().SendInformationTxt(getApplicationContext(), "getTrackForPlayFromDB, id=" + track.getAsString("id"));
+//			Intent i = new Intent(ActionTrackInfoUpdate);
+//			getApplicationContext().sendBroadcast(i);
 			if (track != null) {
 				FlagDownloadTrack = false;
 				TrackID = track.getAsString("id");
@@ -579,7 +581,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		intent.setAction(ActionPlay);
 		RemoteViews contentView = new RemoteViews(getApplicationContext().getPackageName(), R.layout.notification);
 
-		contentView.setViewVisibility(R.id.viewsIcon, View.VISIBLE);
+//		contentView.setViewVisibility(R.id.viewsIcon, View.VISIBLE);
 
 		Intent mainIntent = new Intent(this, MainActivity.class);
 		mainIntent.setAction(Intent.ACTION_MAIN);
@@ -592,10 +594,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		Intent playIntent = new Intent(this, MediaPlayerService.class);
 		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
 			playIntent.setAction(ActionPause);
-			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_pause_action);
+			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_pause);
 		} else {
 			playIntent.setAction(ActionPlay);
-			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_play_action);
+			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_play);
 		}
 		PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
 

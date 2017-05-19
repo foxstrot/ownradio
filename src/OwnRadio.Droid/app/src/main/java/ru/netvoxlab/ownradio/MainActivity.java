@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity
 		setContentView(R.layout.activity_main);
 		toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
+		getSupportActionBar().setDisplayShowTitleEnabled(false);
 		
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -164,7 +165,7 @@ public class MainActivity extends AppCompatActivity
 				this.deleteDatabase("ownradiodb.db3");
 			}
 		}catch (Exception ex){
-			new Utilites().SendInformationTxt(getApplicationContext(), " " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(getApplicationContext(), "Error by get app version " + ex.getLocalizedMessage());
 		}
 
 //         полная очистка настроек
@@ -267,13 +268,12 @@ public class MainActivity extends AppCompatActivity
 		if (drawer.isDrawerOpen(GravityCompat.START)) {
 			drawer.closeDrawer(GravityCompat.START);
 		} else {
-			super.onBackPressed();
+//			super.onBackPressed();
+			Intent startMain = new Intent(Intent.ACTION_MAIN);
+			startMain.addCategory(Intent.CATEGORY_HOME);
+			startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(startMain);
 		}
-		
-		Intent startMain = new Intent(Intent.ACTION_MAIN);
-		startMain.addCategory(Intent.CATEGORY_HOME);
-		startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		startActivity(startMain);
 	}
 	
 
@@ -306,20 +306,20 @@ public class MainActivity extends AppCompatActivity
 		// Handle navigation view item clicks here.
 		int id = item.getItemId();
 		
-		if (id == R.id.nav_camera) {
-			// Handle the camera action
-		} else if (id == R.id.nav_gallery) {
-			
-		} else if (id == R.id.nav_slideshow) {
-			
-		} else if (id == R.id.nav_manage) {
-			
-		} else if (id == R.id.nav_share) {
-			
-		} else if (id == R.id.nav_send) {
-			
-		}
-		
+//		if (id == R.id.nav_camera) {
+//			// Handle the camera action
+//		} else if (id == R.id.nav_gallery) {
+//
+//		} else if (id == R.id.nav_slideshow) {
+//
+//		} else if (id == R.id.nav_manage) {
+//
+//		} else if (id == R.id.nav_share) {
+//
+//		} else if (id == R.id.nav_send) {
+//
+//		}
+//
 		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		drawer.closeDrawer(GravityCompat.START);
 		return true;
