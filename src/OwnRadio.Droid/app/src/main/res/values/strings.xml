@@ -8,4 +8,8 @@
 	<string name="navigation_drawer_close">Close navigation drawer</string>
 	
 	<string name="action_settings">Settings</string>
+	
+	<string name="label_pause">Pause</string>
+	<string name="label_play">Play</string>
+	<string name="label_next">Next</string>
 </resources>
