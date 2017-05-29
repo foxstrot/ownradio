@@ -29,6 +29,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -227,15 +228,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				else
 					Play();
 				break;
-			case ActionUpdateNotification: {
-//				mMediaNotificationManager.startNotification(track.getAsString("title"), track.getAsString("artist"));
-
-				Notification notification = createNotification();
-				if (notification != null) {
-					mNotificationManager.notify(NOTIFICATION_ID, notification);
-				}
-			}
-				//StartNotification();
+			case ActionUpdateNotification:
+//				{
+////				mMediaNotificationManager.startNotification(track.getAsString("title"), track.getAsString("artist"));
+//
+//				Notification notification = createNotification();
+//				if (notification != null) {
+//					mNotificationManager.notify(NOTIFICATION_ID, notification);
+//				}
+//			}
+				StartNotification();
 				break;
 //            case ActionSaveCurrentPosition: SaveLastPosition();
 //                android.os.Process.killProcess(android.os.Process.myPid());
@@ -566,12 +568,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			mediaSessionCompat.setPlaybackState(stateBuilder.build());
 
 			if (state != PlaybackStateCompat.STATE_BUFFERING) {
-				//StartNotification();
+				StartNotification();
 				
-					Notification notification = createNotification();
-					if (notification != null) {
-						mNotificationManager.notify(NOTIFICATION_ID, notification);
-					}
+//					Notification notification = createNotification();
+//					if (notification != null) {
+//						mNotificationManager.notify(NOTIFICATION_ID, notification);
+//					}
 
 //				mMediaNotificationManager.startNotification(track.getAsString("title"), track.getAsString("artist"));
 				UpdateButtonPlayPauseImg();
@@ -587,82 +589,89 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		sendBroadcast(intent);
 	}
 
-//	private void StartNotification() {
-//		android.support.v7.app.NotificationCompat.MediaStyle style = new android.support.v7.app.NotificationCompat.MediaStyle();
-//		style.setMediaSession(mediaSessionCompat.getSessionToken());
-//
-//		PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
-//		PendingIntent pendingCancelIntent = PendingIntent.getService(getApplicationContext(), 1, new Intent(this, MediaPlayerService.class), PendingIntent.FLAG_CANCEL_CURRENT);
-//		style.setShowCancelButton(true);
-//		style.setCancelButtonIntent(pendingCancelIntent);
-//		String trackTitle;
-//		String trackArtist;
-//		try {
-//			trackTitle = (track.getAsString("title") == null) ? "Track" : track.getAsString("title");
-//			trackArtist = (track.getAsString("artist") == null) ? "Artist" : track.getAsString("artist");
-//
-//		} catch (Exception ex) {
-//			trackTitle = "Track";
-//			trackArtist = "Artist";
-//			Log.d(TAG, " " + ex.getLocalizedMessage());
-//		}
-//
-//		Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
-//		intent.setAction(ActionPlay);
-//		RemoteViews contentView = new RemoteViews(getApplicationContext().getPackageName(), R.layout.notification);
-//
-////		contentView.setViewVisibility(R.id.viewsIcon, View.VISIBLE);
-//
-//		Intent mainIntent = new Intent(this, MainActivity.class);
-//		mainIntent.setAction(Intent.ACTION_MAIN);
-//		mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-//		PendingIntent pmainIntent = PendingIntent.getActivity(getApplicationContext(), 0,
-//				mainIntent, 0);
-//
-//		contentView.setTextViewText(R.id.viewsTitle, trackTitle);
-//		contentView.setTextViewText(R.id.viewsArtist, trackArtist);
-//		Intent playIntent = new Intent(this, MediaPlayerService.class);
-//		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
-//			playIntent.setAction(ActionPause);
-//			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_pause);
-//		} else {
-//			playIntent.setAction(ActionPlay);
-//			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_play);
-//		}
-//		PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
-//
-//		Intent nextIntent = new Intent(this, MediaPlayerService.class);
-//		nextIntent.setAction(ActionNext);
-//		PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
-//
-//		contentView.setOnClickPendingIntent(R.id.viewsNext, pnextIntent);
-//		contentView.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
-//
-//		NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
-//				.setSmallIcon(getNotificationIcon())
-//				.setContentIntent(pendingIntent)
-//				.setContentText()
-//
-//
-//		NotificationCompat.Builder builder1 = new NotificationCompat.Builder(this)
-//				.setSmallIcon(getNotificationIcon())
-//				.setContentIntent(pendingIntent)
-//				.setCustomContentView(contentView)
-//				.setContentTitle(trackTitle)
-//				.setContentText(trackArtist)
-//				.setShowWhen(false)
-//				.setPriority(NotificationCompat.PRIORITY_HIGH)
-//				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
-//
-//
-//		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
-//			builder.setOngoing(true);
-//		else
-//			builder.setOngoing(false);
-////        style.setShowActionsInCompactView(0,1,2);
-//		NotificationManagerCompat.from(this).notify(NotificationId, builder.build());
-//
-//	}
+	private void StartNotification() {
+		android.support.v7.app.NotificationCompat.MediaStyle style = new android.support.v7.app.NotificationCompat.MediaStyle();
+		style.setMediaSession(mediaSessionCompat.getSessionToken());
+
+		PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+		PendingIntent pendingCancelIntent = PendingIntent.getService(getApplicationContext(), 1, new Intent(this, MediaPlayerService.class), PendingIntent.FLAG_CANCEL_CURRENT);
+		style.setShowCancelButton(true);
+		style.setCancelButtonIntent(pendingCancelIntent);
+		String trackTitle;
+		String trackArtist;
+		try {
+			trackTitle = (track.getAsString("title") == null) ? "Track" : track.getAsString("title");
+			trackArtist = (track.getAsString("artist") == null) ? "Artist" : track.getAsString("artist");
+
+		} catch (Exception ex) {
+			trackTitle = "Track";
+			trackArtist = "Artist";
+			Log.d(TAG, " " + ex.getLocalizedMessage());
+		}
+
+		Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
+		intent.setAction(ActionPlay);
+		RemoteViews contentView = new RemoteViews(getApplicationContext().getPackageName(), R.layout.notification);
+		RemoteViews contentViewBig = new RemoteViews(getApplicationContext().getPackageName(), R.layout.notification2);
+
+//		contentView.setViewVisibility(R.id.viewsIcon, View.VISIBLE);
+
+		Intent mainIntent = new Intent(this, MainActivity.class);
+		mainIntent.setAction(Intent.ACTION_MAIN);
+		mainIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+		PendingIntent pmainIntent = PendingIntent.getActivity(getApplicationContext(), 0,
+				mainIntent, 0);
+
+		contentView.setTextViewText(R.id.viewsTitle, trackTitle);
+		contentView.setTextViewText(R.id.viewsArtist, trackArtist);
+		Intent playIntent = new Intent(this, MediaPlayerService.class);
+		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
+			playIntent.setAction(ActionPause);
+			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_pause);
+			contentViewBig.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_pause);
+			
+		} else {
+			playIntent.setAction(ActionPlay);
+			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_play);
+			contentViewBig.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_play);
+		}
+		PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
+
+		Intent nextIntent = new Intent(this, MediaPlayerService.class);
+		nextIntent.setAction(ActionNext);
+		PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
+
+		contentView.setOnClickPendingIntent(R.id.viewsNext, pnextIntent);
+		contentViewBig.setOnClickPendingIntent(R.id.viewsNext, pnextIntent);
+		contentView.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
+		contentViewBig.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
+		
+		
+		contentViewBig.setTextViewText(R.id.viewsTitle, trackTitle);
+		contentViewBig.setTextViewText(R.id.viewsArtist, trackArtist);
+		
+		
+		
+		android.support.v4.app.NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+				.setSmallIcon(R.drawable.ic_notification)
+				.setContentIntent(pendingIntent)
+				.setCustomContentView(contentView)
+				.setCustomBigContentView(contentViewBig)
+				.setContentTitle(trackTitle)
+				.setContentText(trackArtist)
+				.setShowWhen(false)
+				.setPriority(NotificationCompat.PRIORITY_HIGH)
+				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
+
+		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
+			builder.setOngoing(true);
+		else
+			builder.setOngoing(false);
+//        style.setShowActionsInCompactView(0,1,2);
+		NotificationManagerCompat.from(this).notify(NotificationId, builder.build());
+
+	}
 
 	private Notification createNotification(){
 		mNotificationManager = NotificationManagerCompat.from(this);
@@ -679,13 +688,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		style.setCancelButtonIntent(pendingCancelIntent);
 		
 		
-		PendingIntent mNextIntent = PendingIntent.getBroadcast(this, REQUEST_CODE,
-				new Intent(ActionNext).setPackage(pkg), 0);
-		
-		
-//		Intent nextIntent = new Intent(this, MediaPlayerService.class);
-//		nextIntent.setAction(ActionNext);
-//		PendingIntent mNextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
+		Intent nextIntent = new Intent(this, MediaPlayerService.class);
+		nextIntent.setAction(ActionNext);
+		PendingIntent mNextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
 		
 		
 //		PendingIntent mNextIntent = PendingIntent.getBroadcast(this, REQUEST_CODE,
@@ -721,7 +726,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 						.setShowActionsInCompactView(
 								new int[]{0,1})  // show only play/pause snd next buttons in compact view
 						.setMediaSession(mediaSessionCompat.getSessionToken()))
-				.setSmallIcon(getNotificationIcon())
+				.setSmallIcon(R.drawable.ic_notification)
 				.setColor(mNotificationColor)
 				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 				.setUsesChronometer(true)

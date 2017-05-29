@@ -10,6 +10,8 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -37,6 +39,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import org.apache.commons.io.FileUtils;
 
@@ -80,6 +83,11 @@ public class MainActivity extends AppCompatActivity
 	TextView txtMemoryUsed;
 	TextView txtTrackTitle;
 	TextView txtTrackArtist;
+	
+	VideoView videoView;
+	Uri uriVideoView;
+	MediaPlayer videoPlayer;
+	Boolean videoShow = false;
 	
 	Toolbar toolbar;
 	
@@ -140,6 +148,16 @@ public class MainActivity extends AppCompatActivity
 		
 		txtTrackTitle = (TextView) findViewById(R.id.trackTitle);
 		txtTrackArtist = (TextView) findViewById(R.id.trackArtist);
+		
+		videoView = (VideoView)findViewById(R.id.videoView);
+		
+		videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+			@Override
+			public void onPrepared(MediaPlayer mp) {
+				mp.setLooping(true);
+				videoView.start();
+			}
+		});
 		
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ActionProgressBarUpdate);
@@ -260,6 +278,7 @@ public class MainActivity extends AppCompatActivity
 			}
 			}
 		});
+		
 	}
 	
 	@Override
@@ -333,6 +352,34 @@ public class MainActivity extends AppCompatActivity
 				touchDownMs = System.currentTimeMillis();
 				break;
 			case MotionEvent.ACTION_MOVE: // движение
+//			{
+//				if(videoShow) {
+//					videoView.stopPlayback();
+//					videoView.setVisibility(View.GONE);
+//				}else {
+////					DisplayMetrics metrics = new DisplayMetrics();
+////					getWindowManager().getDefaultDisplay().getMetrics(metrics);
+////					android.widget.LinearLayout.LayoutParams params = (android.widget.LinearLayout.LayoutParams) videoView.getLayoutParams();
+////					params.width = metrics.widthPixels;
+////					params.height = metrics.heightPixels;
+////					params.leftMargin = 0;
+////					videoView.setLayoutParams(params);
+//					if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+//						uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_portrait);
+//
+//					} else if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//						uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_landscape);
+//					} else if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_UNDEFINED) {
+//						//// TODO: 24.05.2017
+//						uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_portrait);
+//					}
+//					videoView.setVisibility(View.VISIBLE);
+////					videoView.setRotation(90);
+//					videoView.setVideoURI(uriVideoView);
+//
+//				}
+//				videoShow = !videoShow;
+//			}
 				break;
 			case MotionEvent.ACTION_UP: // отпускание
 				handlerEvent.removeCallbacksAndMessages(null);
@@ -619,6 +666,32 @@ public class MainActivity extends AppCompatActivity
 	public void onSaveInstanceState(Bundle savedInstanceState){
 		super.onSaveInstanceState(savedInstanceState);
 	}
+	
+//	@Override
+//	public void onConfigurationChanged(Configuration _newConfig) {
+//
+//		if (_newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//			if(videoView.isPlaying()) {
+//				videoView.stopPlayback();
+//				uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_landscape);
+//				videoView.setVideoURI(uriVideoView);
+////				videoView.setRotation(90);
+//
+//			}
+//		}
+//
+//		if (_newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+//			if(videoView.isPlaying()) {
+//				videoView.stopPlayback();
+//				uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_portrait);
+//				videoView.setVideoURI(uriVideoView);
+////				videoView.setRotation(90);
+//			}
+//		}
+//
+//		super.onConfigurationChanged(_newConfig);
+//	}
+	
 	
 	@Override
 	public void onDestroy(){

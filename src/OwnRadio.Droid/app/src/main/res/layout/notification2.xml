@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+			  xmlns:app="http://schemas.android.com/apk/res-auto"
+			  xmlns:tools="http://schemas.android.com/tools"
+			  android:layout_width="fill_parent"
+			  android:layout_height="fill_parent"
+			  android:background="#ffffffff"
+			  android:orientation="horizontal"
+	>
+	
+	<ImageView
+		android:layout_height="120dp"
+		android:layout_width="120dp"
+		android:paddingTop="10dp"
+		android:paddingBottom="10dp"
+		android:src="@drawable/ic_default_art2"
+		android:layout_gravity="center_vertical"/>
+	
+	<LinearLayout
+		android:id="@+id/linearLayoutInfo"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center_vertical"
+		android:orientation="vertical"
+		style="?android:buttonBarStyle"
+		android:layout_margin="5dp">
+			<LinearLayout
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:orientation="vertical"
+				android:layout_gravity="left"
+				android:layout_margin="10dp">
+					<TextView
+						android:id="@+id/viewsTitle"
+						android:textColor="#000000"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:scrollbars = "vertical"
+						android:fontFamily="sans-serif"
+						android:textAppearance="?android:attr/textAppearanceMedium"
+						android:maxLines="1"
+						android:text="Title" />
+					
+					<TextView
+						android:id="@+id/viewsArtist"
+						android:textColor="#000000"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:scrollbars = "vertical"
+						android:fontFamily="sans-serif-light"
+						android:textAppearance="?android:attr/textAppearanceSmall"
+						android:maxLines="1"
+						android:text="Artist"/>
+				</LinearLayout>
+
+		<LinearLayout
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal">
+					<ImageButton
+						android:id="@+id/viewsPlayPause"
+						android:layout_width="@dimen/playback_controls_buttons_notification"
+						android:layout_height="@dimen/playback_controls_buttons_notification"
+						android:src="@drawable/btn_play"
+						android:tint="@color/ColorPrimaryBtnPlay"
+						android:background="@drawable/circular_button_selector_notification"
+						android:padding="10dp"
+						android:layout_marginRight="20dp"
+						android:layout_gravity="center_vertical"
+						/>
+					
+					<ImageButton
+						android:id="@+id/viewsNext"
+						android:layout_width="@dimen/playback_controls_buttons_notification"
+						android:layout_height="@dimen/playback_controls_buttons_notification"
+						android:src="@drawable/btn_next"
+						android:tintMode="src_in"
+						android:drawable="?selectableItemBackgroundBorderless"
+						android:background="@drawable/circular_button_selector_notification"
+						android:tint="@color/colorPrimary"
+						android:padding="10dp"
+						android:layout_marginLeft="20dp"
+						android:layout_gravity="center_vertical"
+						/>
+		</LinearLayout>
+	</LinearLayout>
+
+
+</LinearLayout>
