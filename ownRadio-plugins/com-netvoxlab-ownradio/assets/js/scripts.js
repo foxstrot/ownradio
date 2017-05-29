@@ -78,7 +78,7 @@ function player(){
 			next:document.querySelector('#radioNext'),
 			audio:document.createElement('audio'),
 			name:document.querySelector('#radioName'),
-			group:document.querySelector('#radioGroup'),
+			group:document.querySelector('#radioGroup')
 		},
 		prm = {
 			play:true,//состояние проигрывание/пауза
@@ -112,7 +112,6 @@ function player(){
 						obj.group.innerHTML = prm.nextTrack.artist;
 						
 						obj.audio.src = api+'/tracks/'+prm.nextTrack.id;
-
 						
 						// ОБРЕЗАЕМ ИМЯ ТРЕКА ДЛИННЕЕ 26 СИМВОЛОВ
 						var strTrackName = document.getElementById('radioName');
@@ -130,9 +129,10 @@ function player(){
 							slicedGroup += '...';
 							obj.group.innerHTML = slicedGroup;
 						}
-
-						console.log('upload path ' + prm.nextTrack.pathupload);
-						console.log('time execute: ' + prm.nextTrack.timeexecute);
+					
+					//
+						console.log('upload path ' + prm.nextTrack.pathupload)
+						console.log('time execute: ' + prm.nextTrack.timeexecute)
 					}
 					
 					console.log('play');
@@ -161,15 +161,15 @@ function player(){
 										(date.getMinutes()<10?'0'+date.getMinutes():date.getMinutes())+':'+
 										(date.getSeconds()<10?'0'+date.getSeconds():date.getSeconds()),
 							data = new FormData();
-						data.append('isListen',(prm.ended?'1':'-1'));
-						data.append('lastListen',dateFormat);
+						data.append('islisten',(prm.ended?'1':'-1'));
+						data.append('lastlisten',dateFormat);
 						xhr.open("POST", api+'/histories/'+ownRadioId+'/'+prm.nextTrack.id, true);
 						preloaderTrak();
 						xhr.onreadystatechange = function(){
 							if (xhr.readyState != 4) return;
 							if(xhr.status == 200){
 								console.log('Данные о треке записаны в историю');
-								//var progress = prm.nextTrack.timeexecute;
+								
 							}else{
 								console.log('Ошибка отправки данных о треке.');
 
@@ -198,7 +198,6 @@ function player(){
 
 						if(xhr.status == 200){
 							prm.nextTrack = JSON.parse(xhr.response);
-							console.log(prm.nextTrack);
 
 							if(!prm.nextTrack){
 								//todo
@@ -209,9 +208,7 @@ function player(){
 									obj.name.innerHTML = prm.nextTrack.name;
 									obj.group.innerHTML = prm.nextTrack.artist;
 									obj.audio.src = api+'/tracks/'+prm.nextTrack.id;
-									console.log('upload path' + prm.nextTrack.pathupload);
-
-
+									console.log('upload path' + prm.nextTrack.pathupload)
 								}								
 							}
 							prm.waitNext = false;
@@ -301,7 +298,12 @@ var player = player();
 				
 			if(key == 'type' && params[key] == 'listtrackswithrating')
 				if(params['deviceid'] != null){
-					nvxGetTracksHistoryWithRating(params['deviceid'], params['limit']);
+					nvxGetTracksHistoryWithRating(params['deviceid'], params['devicename'], params['limit']);
+				}
+	
+			if(key == 'type' && params[key] == 'listlogs')
+				if(params['deviceid'] != null){
+					nvxGetLogsByDevice(params['deviceid'], params['devicename']);
 				}
 				
 			if(key == 'type' && params[key] == 'listusersrating')
@@ -400,7 +402,7 @@ var player = player();
 					} else{
 						dateUpdated = null;
 					}			
-						jQuery('#nvxOwnradioSQLTableUserDevices > tbody:last').append('<tr><td>'+(i+1)+'</td><td><a href="'+window.location.origin+window.location.pathname+ '?type=listtrackswithrating&deviceid='+usersDevices[i].recid+'&limit=100">'+ usersDevices[i].recid+'</td><td>'+usersDevices[i].recname+'</td><td>'+dateCreated+'</td><td>'+dateUpdated+'</td><td>'+usersDevices[i].user.recid+'</td></tr>');
+						jQuery('#nvxOwnradioSQLTableUserDevices > tbody:last').append('<tr><td>'+(i+1)+'</td><td><a href="'+window.location.origin+window.location.pathname+ '?type=listtrackswithrating&deviceid='+usersDevices[i].recid+'&devicename='+usersDevices[i].recname+'&limit=100">'+ usersDevices[i].recid+'</td><td>'+usersDevices[i].recname+'</td><td>'+dateCreated+'</td><td>'+dateUpdated+'</td><td>'+usersDevices[i].user.recid+'</td></tr>');
 				}
 				console.log(xhr);
 			}else{
@@ -414,6 +416,8 @@ var player = player();
 	
 	//функция просмотра последних выданных устройству треков
 	function nvxGetLastTracks(deviceId, countTracks) {
+		if(countTracks == null)
+			countTracks = -1;		
 		var apiGetLastTracks = api + '/statistics/' + deviceId + '/' + countTracks + '/getlasttracks';
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET', apiGetLastTracks, true);
@@ -458,7 +462,9 @@ var player = player();
 	}	
 		
 	//функция просмотра последних выданных устройству треков
-	function nvxGetTracksHistory(deviceId, countTracks) {
+	function nvxGetTracksHistory(deviceId, countTracks, deviceName) {
+		if(countTracks == null)
+			countTracks = -1;		
 		var apiTracksHistory = api + '/statistics/' + deviceId + '/' + countTracks + '/gettrackshistorybydevice';
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET', apiTracksHistory, true);
@@ -468,7 +474,7 @@ var player = player();
 			if(xhr.status == 200){
 				tracksHistory = JSON.parse(xhr.response);//Object.assign({},JSON.parse(xhr.response));
 				
-				document.getElementById('nvxOwnradioSQLGetRequests').innerHTML = '<div id="nvxOwnradioSQLGetRequests"><h3>История выданных устройству ' + deviceId + ' треков и их прослушивания</h3><table id="nvxOwnradioSQLTableLastTracks" class="table table-bordered">    <thead>     <tr>   <th>№</th>      <th>trackID</th>        <th>title</th>  <th>artist</th>      <th>recCreated</th>        <th>isListen</th>        <th>methodid</th>     <th>txtrecommendinfo</th>  <th>userrecommend</th>  <th>localdevicepathupload</th> </tr>    </thead>    <tbody></tbody></table> </div>';
+				document.getElementById('nvxOwnradioSQLGetRequests').innerHTML = '<div id="nvxOwnradioSQLGetRequests"><h3>История выданных устройству ' + deviceId + ' треков и их прослушивания</h3><br/><form name="nvxFormaLogs"><input type="button" onclick="return nvxBtnLogs(\''+deviceId+'\',\''+deviceName+'\')"  value="Просмотреть логи устройства"></form><table id="nvxOwnradioSQLTableLastTracks" class="table table-bordered">    <thead>     <tr>   <th>№</th>      <th>trackID</th>        <th>title</th>  <th>artist</th>      <th>recCreated</th>        <th>isListen</th>        <th>methodid</th>     <th>txtrecommendinfo</th>  <th>userrecommend</th>  <th>localdevicepathupload</th> </tr>    </thead>    <tbody></tbody></table> </div>';
 
 				for(i=0;i<tracksHistory.length;i++) {
 					var date = new Date();
@@ -503,7 +509,9 @@ var player = player();
 	}	
 
 	//функция просмотра последних выданных устройству треков
-	function nvxGetTracksHistoryWithRating(deviceId, countTracks) {
+	function nvxGetTracksHistoryWithRating(deviceId, deviceName, countTracks) {
+		if(countTracks == null)
+			countTracks = -1;
 		var apiTracksHistoryWithRating = api + '/statistics/' + deviceId + '/' + countTracks + '/gettracksratingbydevice';
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET', apiTracksHistoryWithRating, true);
@@ -513,11 +521,11 @@ var player = player();
 			if(xhr.status == 200){
 				tracksHistory = JSON.parse(xhr.response);//Object.assign({},JSON.parse(xhr.response));
 				
-				document.getElementById('nvxOwnradioSQLGetRequests').innerHTML = '<div id="nvxOwnradioSQLGetRequests"><h3>История выданных устройству ' + deviceId + ' треков и их прослушивания</h3><table id="nvxOwnradioSQLTableLastTracks" class="table table-bordered">    <thead>   <tr>  <th>№</th>         <th>trackID</th>        <th>title</th>  <th>artist</th>      <th>recCreated</th>        <th>rating</th>        <th>methodid</th>     <th>txtrecommendinfo</th>  <th>userrecommend</th>  <th>localdevicepathupload</th> </tr>    </thead>    <tbody></tbody></table> </div>';
+				document.getElementById('nvxOwnradioSQLGetRequests').innerHTML = '<div id="nvxOwnradioSQLGetRequests"><h3>История выданных устройству '+ decodeURI(deviceName) + " (" + deviceId + ') треков и их прослушивания</h3><br/><form name="nvxFormaLogs"><input type="button" onclick="return nvxBtnLogs(\''+deviceId+'\',\''+deviceName+'\')" value="Просмотреть логи устройства"></form><br/><table id="nvxOwnradioSQLTableLastTracks" class="table table-bordered">    <thead>   <tr>  <th>№</th>         <th>trackID</th>        <th>title</th>  <th>artist</th>      <th>recCreated</th>        <th>rating</th>    <th>lastListen</th>      <th>methodid</th>     <th>txtrecommendinfo</th>  <th>localdevicepathupload</th> <th>userrecommend</th>  </tr>    </thead>    <tbody></tbody></table> </div>';
 
 				for(i=0;i<tracksHistory.length;i++) {
 					var date = new Date();
-					var dateCreated, dateUpdated;
+					var dateCreated, dateUpdated, dateLastListen;
 					if(tracksHistory[i].downloadTrack.reccreated != null) {
 						date.setTime(tracksHistory[i].downloadTrack.reccreated);
 						dateCreated =  date.getFullYear()+'-'+(date.getMonth()<9?'0'+(date.getMonth()+1):date.getMonth()+1)+'-'+(date.getDate()<10?'0'+date.getDate():date.getDate())+" "+
@@ -528,15 +536,25 @@ var player = player();
 						dateCreated = null;
 					}
 					if(tracksHistory[i].downloadTrack.recupdated != null){
-						date = date.setTime(tracksHistory[i].downloadTrack.recupdated);
+						date.setTime(tracksHistory[i].downloadTrack.recupdated);
 						dateUpdated = date.getFullYear()+'-'+(date.getMonth()<9?'0'+(date.getMonth()+1):date.getMonth()+1)+'-'+(date.getDate()<10?'0'+date.getDate():date.getDate())+" "+
 										(date.getHours()<10?'0'+date.getHours():date.getHours())+':'+
 										(date.getMinutes()<10?'0'+date.getMinutes():date.getMinutes())+':'+
 										(date.getSeconds()<10?'0'+date.getSeconds():date.getSeconds())+'.'+date.getMilliseconds();
 					} else{
 						dateUpdated = null;
-					}			
-						jQuery('#nvxOwnradioSQLTableLastTracks > tbody:last').append('<tr><td>'+(i+1)+'</td><td>'+ tracksHistory[i].downloadTrack.track.recid +'</td><td>'+ tracksHistory[i].downloadTrack.track.recname +'</td><td>' + tracksHistory[i].downloadTrack.track.artist +'</td><td>'+dateCreated+'</td><td>'+/*dateUpdated+'</td><td>'+*/(tracksHistory[i].rating != null ? tracksHistory[i].rating.ratingsum : null) +'</td><td>'+tracksHistory[i].downloadTrack.methodid+'</td><td>'+tracksHistory[i].downloadTrack.txtrecommendinfo+'</td><td>'+tracksHistory[i].downloadTrack.userrecommend+'</td><td>'+tracksHistory[i].downloadTrack.track.localdevicepathupload+'</td></tr>');
+					}
+					if(tracksHistory[i].rating != null){
+						date.setTime(tracksHistory[i].rating.lastlisten);
+						dateLastListen = date.getFullYear()+'-'+(date.getMonth()<9?'0'+(date.getMonth()+1):date.getMonth()+1)+'-'+(date.getDate()<10?'0'+date.getDate():date.getDate())+" "+
+										(date.getHours()<10?'0'+date.getHours():date.getHours())+':'+
+										(date.getMinutes()<10?'0'+date.getMinutes():date.getMinutes())+':'+
+										(date.getSeconds()<10?'0'+date.getSeconds():date.getSeconds())+'.'+date.getMilliseconds();
+					}else{
+						dateLastListen = null;
+					}
+					
+						jQuery('#nvxOwnradioSQLTableLastTracks > tbody:last').append('<tr><td>'+(i+1)+'</td><td>'+ tracksHistory[i].downloadTrack.track.recid +'</td><td>'+ tracksHistory[i].downloadTrack.track.recname +'</td><td>' + tracksHistory[i].downloadTrack.track.artist +'</td><td>'+dateCreated+'</td><td>'+/*dateUpdated+'</td><td>'+*/(tracksHistory[i].rating != null ? tracksHistory[i].rating.ratingsum : null) +'</td><td>'+ dateLastListen +'</td><td>'+tracksHistory[i].downloadTrack.methodid+'</td><td>'+tracksHistory[i].downloadTrack.txtrecommendinfo+'</td><td>'+tracksHistory[i].downloadTrack.track.localdevicepathupload+'</td><td>'+tracksHistory[i].downloadTrack.userrecommend+'</td></tr>');
 				}
 				console.log(xhr);
 			}else{
@@ -589,6 +607,8 @@ var player = player();
 
 	//функция возвращает последниx активных пользователей
 	function nvxGetLastUsers(countTracks) {
+		if(countTracks == null)
+			countTracks = -1;		
 		var apiGetLastUsers = api + '/statistics/getlastusers/' + countTracks;
 		var xhr = new XMLHttpRequest();
 		xhr.open('GET', apiGetLastUsers, true);
@@ -597,10 +617,55 @@ var player = player();
 			
 			if(xhr.status == 200){
 				lastUsers = JSON.parse(xhr.response);
-				document.getElementById('nvxOwnradioSQLGetRequests').innerHTML = '<div id="nvxOwnradioSQLGetRequests"><h3>Последниx активных пользователей</h3><table id="nvxOwnradioSQLTableLastDevices" class="table table-bordered">    <thead>      <tr>    <th>№</th>    <th>useridId</th>        <th>userName</th> <th>recCreated</th> <th>lastActive</th>  <th>owntracks</th> <th>downloadtracks</th> </tr>    </thead>    <tbody></tbody></table> </div>';
+				document.getElementById('nvxOwnradioSQLGetRequests').innerHTML = '<div id="nvxOwnradioSQLGetRequests"><br/><h3>Последние активные пользователи</h3><table id="nvxOwnradioSQLTableLastDevices" class="table table-bordered">    <thead>      <tr>    <th>№</th>    <th>useridId</th>        <th>userName</th> <th>recCreated</th> <th>lastActive</th>  <th>owntracks</th> <th>downloadtracks</th> </tr>    </thead>    <tbody></tbody></table> </div>';
 
 				for(i=0;i<lastUsers.length;i++) {
-					jQuery('#nvxOwnradioSQLTableLastDevices > tbody:last').append('<tr><td>'+(i+1)+'</td><td>'+'<a href="'+window.location.origin+window.location.pathname+ '?type=listtrackswithrating&deviceid='+lastUsers[i].userid+'&limit=100">'+lastUsers[i].userid +'</a></td><td>'+ lastUsers[i].recname +'</td><td>'+ lastUsers[i].reccreated +'</td><td>'+ lastUsers[i].lastactive +'</td><td>'+ lastUsers[i].owntracks +'</td><td>'+ lastUsers[i].downloadtracks +'</td></tr>');
+					jQuery('#nvxOwnradioSQLTableLastDevices > tbody:last').append('<tr><td>'+(i+1)+'</td><td>'+'<a href="'+window.location.origin+window.location.pathname+ '?type=listtrackswithrating&deviceid='+lastUsers[i].userid+'&devicename='+ decodeURI(lastUsers[i].recname)+' &limit=100">'+lastUsers[i].userid +'</a></td><td>'+ lastUsers[i].recname +'</td><td>'+ lastUsers[i].reccreated +'</td><td>'+ lastUsers[i].lastactive +'</td><td>'+ lastUsers[i].owntracks +'</td><td>'+ lastUsers[i].downloadtracks +'</td></tr>');
+				}
+				console.log(xhr);
+			}else{
+				console.log('Ошибка получения данных с сервера.');
+				console.log(xhr);
+			}
+		}
+		xhr.send();
+	}
+	
+	//функция возвращает логи устройства
+	function nvxGetLogsByDevice(deviceId, deviceName) {
+		var apiGetLogs = api + '/statistics/getlogbydeviceid/' + deviceId;
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', apiGetLogs, true);
+		xhr.onreadystatechange = function(){
+			if (xhr.readyState != 4) return;
+			
+			if(xhr.status == 200){
+				logs = JSON.parse(xhr.response);
+				document.getElementById('nvxOwnradioSQLGetRequests').innerHTML = '<div id="nvxOwnradioSQLGetRequests"><h3> Логи устройства '+decodeURI(deviceName)+'('+deviceId+')</h3><table id="nvxOwnradioSQLTableLastDevices" class="table table-bordered">    <thead>      <tr>    <th>№</th>    <th>logId</th>        <th>logName</th> <th>deviceId</th> <th>recCreated</th> <th>recUpdated</th>   <th>request</th> <th>response</th></tr>    </thead>    <tbody></tbody></table> </div>';
+
+				for(i=0;i<logs.length;i++) {
+					var date = new Date();
+					var dateCreated, dateUpdated, dateLastListen;
+					if(logs[i].reccreated != null) {
+						date.setTime(logs[i].reccreated);
+						dateCreated =  date.getFullYear()+'-'+(date.getMonth()<9?'0'+(date.getMonth()+1):date.getMonth()+1)+'-'+(date.getDate()<10?'0'+date.getDate():date.getDate())+" "+
+										(date.getHours()<10?'0'+date.getHours():date.getHours())+':'+
+										(date.getMinutes()<10?'0'+date.getMinutes():date.getMinutes())+':'+
+										(date.getSeconds()<10?'0'+date.getSeconds():date.getSeconds())+'.'+date.getMilliseconds();
+					} else{
+						dateCreated = null;
+					}
+					if(logs[i].recupdated != null){
+						date.setTime(logs[i].recupdated);
+						dateUpdated = date.getFullYear()+'-'+(date.getMonth()<9?'0'+(date.getMonth()+1):date.getMonth()+1)+'-'+(date.getDate()<10?'0'+date.getDate():date.getDate())+" "+
+										(date.getHours()<10?'0'+date.getHours():date.getHours())+':'+
+										(date.getMinutes()<10?'0'+date.getMinutes():date.getMinutes())+':'+
+										(date.getSeconds()<10?'0'+date.getSeconds():date.getSeconds())+'.'+date.getMilliseconds();
+					} else{
+						dateUpdated = null;
+					}
+					
+					jQuery('#nvxOwnradioSQLTableLastDevices > tbody:last').append('<tr><td>'+(i+1)+'</td><td>'+logs[i].recid+'</td><td>'+ logs[i].recname+'</td><td>'+ logs[i].deviceid+'</td><td>'+ dateCreated +'</td><td>'+ dateUpdated +'</td><td>'+ logs[i].logtext +'</td><td>'+ logs[i].response +'</td></tr>');
 				}
 				console.log(xhr);
 			}else{
@@ -621,4 +686,8 @@ var player = player();
 	
 	function nvxBtnUsersRating(){
 		window.location.search = "type=listusersrating&limit=200";
+	}
+
+	function nvxBtnLogs(deviceId, deviceName){
+		window.location.search = 'type=listlogs&deviceid='+deviceId+'&devicename='+decodeURI(deviceName);
 	}
