@@ -175,6 +175,7 @@ public class TrackToCache {
 			File file = new File(track.getAsString("trackurl"));
 			if (file.exists()) {
 				if (file.delete()) {
+					Log.d(TAG, "File " + track.getAsString("id") + " is deleted");
 					int resDeleteFromDB = trackDataAccess.DeleteTrackFromCache(track) ;
 					if(resDeleteFromDB != 0)
 						Log.d(TAG, "Record about file " + track.getAsString("id") + " is deleted");
@@ -188,9 +189,9 @@ public class TrackToCache {
 			} else {
 				int resDeleteFromDB = trackDataAccess.DeleteTrackFromCache(track) ;
 				if(resDeleteFromDB != 0)
-					Log.d(TAG, "File " + track.getAsString("id") + "for delete is not exist. Rec about track deleted from DB");
+					Log.d(TAG, "File " + track.getAsString("id") + " for delete is not exist. Rec about track deleted from DB");
 				else
-					Log.d(TAG, "File " + track.getAsString("id") + "for delete is not exist. Rec about track is not deleted from DB");
+					Log.d(TAG, "File " + track.getAsString("id") + " for delete is not exist. Rec about track is not deleted from DB");
 
 				return false;
 			}

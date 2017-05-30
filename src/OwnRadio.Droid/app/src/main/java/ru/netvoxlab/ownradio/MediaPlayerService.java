@@ -358,7 +358,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 			//записываем время начала проигрывания трека
 			new TrackDataAccess(getApplicationContext()).SetTimeAndCountStartPlayback(track);
-			new Utilites().SendInformationTxt(getApplicationContext(), "SetTimeAndCountStartPlayback for track" + track.getAsString("id"));
+			new Utilites().SendInformationTxt(getApplicationContext(), "SetTimeAndCountStartPlayback for track " + track.getAsString("id"));
 
 			wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
 			if(!wl.isHeld())
@@ -380,6 +380,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			player.release();
 			player = null;
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
+			if(new File(trackURL).length() <= 0) {
+				new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+				Play();
+			}
 			return;
 		}
 		
@@ -527,7 +531,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			startPosition = 0;
 //		}
 		mp.start();
-		utilites.SendInformationTxt(getApplicationContext(), "Start playback");
+		utilites.SendInformationTxt(getApplicationContext(), "Start playback" + track.getAsString("id"));
 		UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 	}
 
@@ -589,6 +593,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		sendBroadcast(intent);
 	}
 
+	//кастомное уведомление
 	private void StartNotification() {
 		android.support.v7.app.NotificationCompat.MediaStyle style = new android.support.v7.app.NotificationCompat.MediaStyle();
 		style.setMediaSession(mediaSessionCompat.getSessionToken());
@@ -673,6 +678,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 	}
 
+	
+	//стандартное уведомление
 	private Notification createNotification(){
 		mNotificationManager = NotificationManagerCompat.from(this);
 		int mNotificationColor = ResourceHelper.getThemeColor(this, R.attr.colorPrimary,
