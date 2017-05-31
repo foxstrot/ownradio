@@ -49,6 +49,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_SENDLOGS;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_LOGFILEPATH;
+
 public class MainActivity extends AppCompatActivity
 		implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
 	
@@ -247,38 +251,29 @@ public class MainActivity extends AppCompatActivity
 			@Override
 			public void onClick(View view) {
 				try {
-////					FileUtils.cleanDirectory( new File(getApplicationContext().getFilesDir() + File.separator + "music"));
-////					getApplicationContext().deleteDatabase("ownradiodb3.db3");
-//				Intent i = new Intent(Intent.ACTION_SEND);
-//				i.setType("vnd.android.cursor.dir/email");
-//				i.putExtra(Intent.EXTRA_EMAIL  , new String[]{"alex.polunina@gmail.com"});
-//				i.putExtra(Intent.EXTRA_SUBJECT, "android log");
-//				i.putExtra(Intent.EXTRA_STREAM, ((App)getApplicationContext()).getLogFile());
-//				try {
-//					startActivity(Intent.createChooser(i, "Send mail..."));
-//				} catch (android.content.ActivityNotFoundException ex) {
-//				}
-					File directory = ((App)getApplicationContext()).getLogDirectory();
-					if (directory.listFiles() != null) {
-						while(directory.listFiles().length > 0) {
-
-							for (File file : directory.listFiles()) {
-								if (file.isFile()) {
-									if(new SendLogFile(getApplicationContext()).execute(sp.getString("DeviceID", ""), ((App)getApplicationContext()).getLogFile().getAbsolutePath()).get())
-										file.delete();
-								}
-							}
-						}
+					File appDirectory = getApplicationContext().getFilesDir();
+					File logDirectory = new File( appDirectory + File.separator + "log" );
+					// create app folder
+					if ( !appDirectory.exists() ) {
+						appDirectory.mkdir();
 					}
-					
-					
-					
-			}catch (Exception ex){
-				
-			}
+					// create log folder
+					if ( !logDirectory.exists() ) {
+						logDirectory.mkdir();
+					}
+					File logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
+					Runtime.getRuntime().exec("logcat -d -f " + logFile.getAbsolutePath());
+					Runtime.getRuntime().exec("logcat -c");
+						Intent logSenderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
+						logSenderIntent.setAction(ACTION_SENDLOGS);
+						logSenderIntent.putExtra(EXTRA_DEVICEID, DeviceId); //getApplicationContext()).execute(sp.getString("DeviceID", "")
+						logSenderIntent.putExtra(EXTRA_LOGFILEPATH, logFile.getAbsolutePath());
+						startService(logSenderIntent);
+				}catch (Exception ex){
+					new Utilites().SendInformationTxt(getApplicationContext(), "Error in sendLogFile(): " + ex.getLocalizedMessage());
+				}
 			}
 		});
-		
 	}
 	
 	@Override
@@ -472,9 +467,9 @@ public class MainActivity extends AppCompatActivity
 			
 			if (intent.getAction() == ActionSendInfoTxt) {
 				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-					textInfo.append(Html.fromHtml("<b>Info:</b> " + intent.getStringExtra("TEXTINFO") + "<br/>", Html.FROM_HTML_MODE_LEGACY));
+					textInfo.append(Html.fromHtml("<p><b>Info:</b> " + intent.getStringExtra("TEXTINFO") + "<br/></p>", Html.FROM_HTML_MODE_LEGACY));
 				}else{
-					textInfo.append(Html.fromHtml("<b>Info:</b> " + intent.getStringExtra("TEXTINFO") + "<br/>"));
+					textInfo.append(Html.fromHtml("<p><b>Info:</b> " + intent.getStringExtra("TEXTINFO") + "<br/></p>"));
 				}
 			}
 			

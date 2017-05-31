@@ -30,6 +30,7 @@
 			android:fontFamily="sans-serif"
 			android:textAppearance="?android:attr/textAppearanceMedium"
 			android:maxLines="1"
+			android:ellipsize="end"
 			android:text="Title" />
 
 		<TextView
@@ -40,6 +41,7 @@
 			android:fontFamily="sans-serif-light"
 			android:textAppearance="?android:attr/textAppearanceSmall"
 			android:maxLines="1"
+			android:ellipsize="end"
 			android:text="Artist"
 			/>
 

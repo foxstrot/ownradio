@@ -57,6 +57,19 @@ public class APICalls {
 
 	}
 	
+	public void SendLogs(String deviceId, String path){
+		CheckConnection checkConnection = new CheckConnection();
+		if (!checkConnection.CheckInetConnection(mContext)) {
+			return;
+		}
+		
+		try {
+			Boolean result = new SendLogFile(mContext).execute(deviceId, path).get();
+		}catch (Exception ex) {
+			new Utilites().SendInformationTxt(mContext, "Error by sendLogs " + ex.getLocalizedMessage());
+		}
+	}
+	
 	public void RegisterDevice(String deviceId, String deviceName){
 		CheckConnection checkConnection = new CheckConnection();
 		if (!checkConnection.CheckInetConnection(mContext)) {

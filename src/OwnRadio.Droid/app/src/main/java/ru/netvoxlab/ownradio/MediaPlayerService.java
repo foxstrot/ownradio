@@ -531,7 +531,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			startPosition = 0;
 //		}
 		mp.start();
-		utilites.SendInformationTxt(getApplicationContext(), "Start playback" + track.getAsString("id"));
+		utilites.SendInformationTxt(getApplicationContext(), "Start playback " + track.getAsString("id"));
 		UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 	}
 
