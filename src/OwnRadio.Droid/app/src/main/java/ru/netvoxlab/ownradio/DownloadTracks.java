@@ -16,11 +16,10 @@ import java.util.Map;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
+import static ru.netvoxlab.ownradio.MainActivity.ActionButtonImgUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.TAG;
 import static ru.netvoxlab.ownradio.MainActivity.filePath;
-import static ru.netvoxlab.ownradio.MediaPlayerService.queue;
-import static ru.netvoxlab.ownradio.MediaPlayerService.queueSize;
 
 /**
  * Created by a.polunina on 13.12.2016.
@@ -35,38 +34,35 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 
 	@Override
 	protected Boolean doInBackground(Map<String, String>... trackMap) {
-
+		
+		Long fileLength;
 		try {
-			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id")).execute();
+			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id"), trackMap[0].get("deviceid")).execute();
 			if (response.isSuccessful()) {
 				Log.d(TAG, "server contacted and has file");
 				final String trackURL = filePath + File.separator + trackMap[0].get("id") + ".mp3";
 //				final String trackURL = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + File.separator + trackMap[0].get("id") + ".mp3";
 				boolean writtenToDisk = WriteTrackToDisk2(trackURL, response.body());
+				
 				if (writtenToDisk == true) {
+					fileLength = new File(trackURL).length();
+					
 					ContentValues track = new ContentValues();
 					track.put("id", trackMap[0].get("id"));
 					track.put("trackurl", trackURL);
 					track.put("datetimelastlisten", "");
-//					track.put("islisten", "0");
 					track.put("isexist", "1");
-					try {
-						track.put("title", trackMap[0].get("name"));
-						track.put("artist", trackMap[0].get("artist"));
-						track.put("length", trackMap[0].get("length"));
-						track.put("methodid", trackMap[0].get("methodid"));
-					} catch (Exception ex) {
-						Log.d(TAG, " " + ex.getLocalizedMessage());
-					}
-					new TrackDataAccess(mContext).SaveTrack(track);
-					new Utilites().SendInformationTxt(mContext, "File " + trackMap[0].get("id") + " is load");
-					queue.remove(trackMap[0]);
-					queueSize--;
-
-					Intent in = new Intent(ActionTrackInfoUpdate);
-					mContext.sendBroadcast(in);
-
-
+					track.put("title", trackMap[0].get("name"));
+					track.put("artist", trackMap[0].get("artist"));
+					track.put("length", trackMap[0].get("length"));
+					
+					if (fileLength.equals(Long.valueOf(response.headers().get("Content-Length")))) {
+						
+						new TrackDataAccess(mContext).SaveTrack(track);
+						new Utilites().SendInformationTxt(mContext, "File " + trackMap[0].get("id") + " is load");
+						
+						Intent in = new Intent(ActionTrackInfoUpdate);
+						mContext.sendBroadcast(in);
 //					Process process = null;
 //					DataOutputStream dataOutputStream = null;
 
@@ -88,15 +84,22 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 //						} catch (Exception e) {
 //						}
 //					}
-					return true;
+						return true;
+					} else {
+						new Utilites().SendInformationTxt(mContext, "<font color='red'>При загрузке трека " + trackMap[0].get("id") +
+								" не совпала длина файла: <br/>" + response.headers().get("Content-Length").toString() + " байт отдано с сервера (Content-length), <br/>" +
+								fileLength.toString() + " байт скачано</font>");
+						new TrackToCache(mContext).DeleteTrackFromCache(track);
+						MediaPlayerService.player.pause();
+						Intent intent = new Intent(ActionButtonImgUpdate);
+						mContext.sendBroadcast(intent);
+					}
 				}
 			} else {
 				new Utilites().SendInformationTxt(mContext, "server contact failed");
-				queue.remove(trackMap[0]);
-				queueSize--;
 			}
 		} catch (Exception ex) {
-			queueSize--;
+			Log.d(TAG, " " + ex.getLocalizedMessage());
 		}
 		return false;
 	}

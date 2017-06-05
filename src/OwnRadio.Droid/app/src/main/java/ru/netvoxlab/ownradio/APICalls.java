@@ -1,15 +1,9 @@
 package ru.netvoxlab.ownradio;
 
-import android.content.ContentValues;
 import android.content.Context;
 
-import java.net.HttpURLConnection;
 import java.util.Map;
 import java.util.UUID;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 /**
  * Created by a.polunina on 21.10.2016.
@@ -38,67 +32,55 @@ public class APICalls {
 
 		try {
 			Map<String, String> result = new GetNextTrack(mContext).execute(deviceId).get();
+			if(result == null)
+				return null;
 			UUID.fromString(result.get("id")).toString();
 			return result;
 		}catch (Exception ex) {
-			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(mContext, "Error by GetNextTrackID " + ex.getLocalizedMessage());
 			return null;
 		}
 	}
 
 	//Пытается отправить count записей истории прослушивания треков
-	public void SendHistory(String deviceId, int count){
+	public void SendHistory(String deviceId){
 		CheckConnection checkConnection = new CheckConnection();
 		if (!checkConnection.CheckInetConnection(mContext)) {
 			return;
 		}
-
-		final HistoryDataAccess historyDataAccess = new HistoryDataAccess(mContext);
-		final ContentValues[] historyRecs = historyDataAccess.GetHistoryRec(count);
-
-		if(historyRecs == null)
-			return;
-
+		
 		try {
-			for( int rec = 0; rec < count; rec++) {
-//				final ContentValues historyRec = historyDataAccess.GetHistoryRec();
-				final ContentValues historyRec = historyRecs[rec];
-				if(historyRec == null) //Если неотправленной статистики нет - выходим
-					return;
-
-				if(historyRec.getAsString("trackid").equals("")){
-					historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
-					break;
-				}
-
-//				HistoryModel data = new HistoryModel("2016-11-16T13:15:15",1,1);
-				HistoryModel data = new HistoryModel();
-				data.setLastListen(historyRec.getAsString("lastListen"));
-				data.setIsListen(historyRec.getAsInteger("isListen"));
-				data.setMethodid(historyRec.getAsInteger("methodid"));
-
-				ServiceGenerator.createService(APIService.class).sendHistory(deviceId,historyRec.getAsString("trackid"), data)
-				.enqueue(new Callback<Void>() {
-					@Override
-					public void onResponse(Call<Void> call, Response<Void> response) {
-						if(response.isSuccessful()){
-							if(response.code() == HttpURLConnection.HTTP_OK){
-								historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
-								new Utilites().SendInformationTxt(mContext, "History is sending");
-							} else {
-								new Utilites().SendInformationTxt(mContext, "SendHistory: Server response: " + response.code());
-							}
-						}
-					}
-					@Override
-					public void onFailure(Call<Void> call, Throwable t) {
-						new Utilites().SendInformationTxt(mContext, "SendHistory: An error occurred during networking");
-					}
-				});
-			}
-		}catch (Exception ex){
-			ex.printStackTrace();
-			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
+			Boolean result = new HistorySend(mContext).execute(deviceId).get();
+		}catch (Exception ex) {
+			new Utilites().SendInformationTxt(mContext, "Error by sendHistory " + ex.getLocalizedMessage());
 		}
+
+	}
+	
+	public void SendLogs(String deviceId, String path){
+		CheckConnection checkConnection = new CheckConnection();
+		if (!checkConnection.CheckInetConnection(mContext)) {
+			return;
+		}
+		
+		try {
+			Boolean result = new SendLogFile(mContext).execute(deviceId, path).get();
+		}catch (Exception ex) {
+			new Utilites().SendInformationTxt(mContext, "Error by sendLogs " + ex.getLocalizedMessage());
+		}
+	}
+	
+	public void RegisterDevice(String deviceId, String deviceName){
+		CheckConnection checkConnection = new CheckConnection();
+		if (!checkConnection.CheckInetConnection(mContext)) {
+			return;
+		}
+		
+		try {
+			Boolean result = new RegisterDevice(mContext).execute(deviceId, deviceName).get();
+		}catch (Exception ex) {
+			new Utilites().SendInformationTxt(mContext, "Error by registerDevice " + ex.getLocalizedMessage());
+		}
+
 	}
 }

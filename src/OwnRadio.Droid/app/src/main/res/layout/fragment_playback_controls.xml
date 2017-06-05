@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+				xmlns:tools="http://schemas.android.com/tools"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="#3a404c"
+				android:paddingTop="@dimen/playback_controls_padding_top"
+				android:paddingBottom="@dimen/playback_controls_padding_bottom"
+				android:paddingLeft="@dimen/playback_controls_padding_left"
+				android:paddingRight="@dimen/playback_controls_padding_right">
+	<ImageButton
+		android:id="@+id/btnPlayPause"
+		android:layout_width="@dimen/playback_controls_buttons"
+		android:layout_height="@dimen/playback_controls_buttons"
+		android:background="@drawable/circular_button_selector"
+		android:src="@drawable/btn_play"
+		android:layout_centerVertical="true"
+		android:layout_alignParentStart="true"/>
+
+
+		<TextView
+			android:id="@+id/trackTitle"
+			android:ellipsize="end"
+			android:maxLines="1"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="10dp"
+			android:contentDescription="@string/currently_playing_artist"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			android:clickable="true"
+			android:layout_centerHorizontal="true"
+			android:textColor="#ffffff"
+			android:text="Les feuilles mortes" />
+		
+		<ProgressBar
+			android:id="@+id/progressBar"
+			style="?android:attr/progressBarStyleHorizontal"
+			android:layout_width="fill_parent"
+			android:layout_height="3dip"
+			android:layout_marginRight="10dp"
+			android:layout_marginLeft="10dp"
+			android:layout_marginTop="5dp"
+			android:layout_marginBottom="5dp"
+			android:progress="50"
+			android:progressDrawable="@drawable/progress_bar"
+			android:indeterminate="false"
+			android:layout_toRightOf="@+id/btnPlayPause"
+			android:layout_toLeftOf="@+id/btnNext"
+			android:layout_centerVertical="true"
+			android:layout_below="@id/trackTitle"	/>
+		
+		<TextView
+			android:id="@+id/trackArtist"
+			android:ellipsize="end"
+			android:maxLines="1"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:gravity="center_horizontal"
+			android:contentDescription="@string/currently_playing_song"
+			android:textAppearance="?android:attr/textAppearanceSmall"
+			android:clickable="true"
+			android:textColor="#5e6971"
+			android:layout_centerHorizontal="true"
+			android:text="Paul Mauriat And His Orchestra"
+			android:layout_marginBottom="24dp"
+			android:layout_below="@id/progressBar"/>
+	
+	
+
+	<ImageButton
+		android:id="@+id/btnNext"
+		android:layout_width="@dimen/playback_controls_buttons"
+		android:layout_height="@dimen/playback_controls_buttons"
+		android:background="@drawable/circular_button_selector"
+		android:src="@drawable/btn_next"
+		android:layout_centerVertical="true"
+		android:layout_alignParentEnd="true"/>
+</RelativeLayout>

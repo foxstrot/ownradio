@@ -9,7 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 
 public class ServiceGenerator {
-	public static final String API_BASE_URL = "http://api.ownradio.ru/";//Базовая часть адреса
+	public static final String API_BASE_URL = "http://api.ownradio.ru/";//Базовая часть адреса //localhost for emulator "http://10.0.2.2:8080"
 
 	private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 

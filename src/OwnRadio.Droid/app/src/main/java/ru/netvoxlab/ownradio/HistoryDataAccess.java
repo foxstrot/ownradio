@@ -42,12 +42,11 @@ public class HistoryDataAccess {
 				for(int i = 0; i<rows; i++) {
 					contentValues[i]= new ContentValues();
 
-					HistoryModel historyModel = new HistoryModel(userCursor.getString(3), userCursor.getInt(4), userCursor.getInt(5));
+//					HistoryModel historyModel = new HistoryModel(userCursor.getString(3), userCursor.getInt(4));
 					contentValues[i].put("id", userCursor.getString(0));
 					contentValues[i].put("trackid", userCursor.getString(1));
 					contentValues[i].put("lastListen", userCursor.getString(3));
 					contentValues[i].put("isListen", userCursor.getInt(4));
-					contentValues[i].put("methodid", userCursor.getInt(5));
 					userCursor.moveToNext();
 				}
 				userCursor.close();
@@ -60,7 +59,33 @@ public class HistoryDataAccess {
 			return null;
 		}
 	}
+	
+	
+	public ContentValues GetHistoryRec(){
+		db = historyDB.getWritableDatabase();
+		ContentValues contentValues = new ContentValues();
+		Cursor userCursor = db.rawQuery("SELECT * FROM " + HistoryTableName + " LIMIT 1", null);
+		try {
+			if (userCursor.moveToFirst()) {
+				contentValues = new ContentValues();
+//					HistoryModel historyModel = new HistoryModel(userCursor.getString(3), userCursor.getInt(4));
+				contentValues.put("id", userCursor.getString(0));
+				contentValues.put("trackid", userCursor.getString(1));
+				contentValues.put("lastListen", userCursor.getString(3));
+				contentValues.put("isListen", userCursor.getInt(4));
+				userCursor.moveToNext();
 
+				userCursor.close();
+				//db.close();
+				return contentValues;
+			} else {
+				return null;
+			}
+		}catch (Exception ex) {
+			return null;
+		}
+	}
+	
 	public void DeleteHistoryRec(String id){
 		db = historyDB.getWritableDatabase();
 		db.delete(HistoryTableName, "id = ?", new String[]{id});

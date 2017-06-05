@@ -1,43 +1,52 @@
 package ru.netvoxlab.ownradio;
 
+import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ComponentName;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.os.RemoteException;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
-import android.view.View;
 import android.widget.RemoteViews;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
+
+import ru.netvoxlab.ownradio.utils.ResourceHelper;
 
 import static android.app.PendingIntent.getActivity;
 import static ru.netvoxlab.ownradio.MainActivity.ActionButtonImgUpdate;
+import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_SENDHISTORY;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
 
 public class MediaPlayerService extends Service implements MediaPlayer.OnCompletionListener, MediaPlayer.OnPreparedListener, AudioManager.OnAudioFocusChangeListener {
 	public static final String ActionPlay = "ru.netvoxlab.ownradio.action.PLAY";
@@ -50,10 +59,18 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	private AudioManager audioManager;
 	private WifiManager wifiManager;
 	private WifiManager.WifiLock wifiLock;
+	private static final int REQUEST_CODE = 111;
+	private static final int NOTIFICATION_ID = 502;
+	
+	private MediaNotificationManager mMediaNotificationManager;
+	
+	private PowerManager pm;
+	private PowerManager.WakeLock wl;
+
 	private ComponentName remoteComponentName;
 	private int NotificationId = 1;
 
-	private MediaSessionCompat mediaSessionCompat;
+	public MediaSessionCompat mediaSessionCompat;
 	public MediaControllerCompat mediaControllerCompat;
 
 	private Handler handler = new Handler();
@@ -68,14 +85,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	Boolean FlagDownloadTrack = true;
 	final String TAG = "ownRadio";
 
-	Map<String, String> trackMap;
-	public static List<Map<String,String>> queue = new ArrayList<>();
-	public static int queueSize = 0;
 	ContentValues track;
 	int startPosition = 0;
 	String startTrackID = "";
 
-
+	private NotificationManagerCompat mNotificationManager ;
+	
+	
 	public int GetMediaPlayerState() {
 		return (mediaControllerCompat.getPlaybackState() != null ? mediaControllerCompat.getPlaybackState().getState() : PlaybackStateCompat.STATE_NONE);
 	}
@@ -88,8 +104,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		DeviceID = PreferenceManager.getDefaultSharedPreferences(this).getString("DeviceID", "");
 		UserID = DeviceID;//PreferenceManager.getDefaultSharedPreferences(this).getString("UserID", "");
 		audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
-		wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+		wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 		remoteComponentName = new ComponentName(getPackageName(), new RemoteControlReceiver().ComponentName());
+		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+		try {
+			mMediaNotificationManager = new MediaNotificationManager(this, getApplicationContext());
+		} catch (RemoteException e) {
+			throw new IllegalStateException("Could not create a MediaNotificationManager", e);
+		}
 	}
 
 	@Override
@@ -112,14 +134,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS:
 				Pause();
-				if(isHSConnected)
+				if(isHSConnected && player.isPlaying())
 					playbackWithHSisInterrupted = true;
 //				Stop();
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
 				//We have lost focus for a short time, but likely to resume so pause
 				Pause();
-				if(isHSConnected)
+				if(isHSConnected && player.isPlaying())
 					playbackWithHSisInterrupted = true;
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
@@ -165,7 +187,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public boolean onUnbind(Intent intent) {
 		StopNotification();
 		stopForeground(true);
-//		ReleaseWifiLock();
+		ReleaseWifiLock();
+		if(wl != null && wl.isHeld())
+			wl.release();
 		UnregisterMediaSessionCompat();
 		return super.onUnbind(intent);
 	}
@@ -205,6 +229,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 					Play();
 				break;
 			case ActionUpdateNotification:
+//				{
+////				mMediaNotificationManager.startNotification(track.getAsString("title"), track.getAsString("artist"));
+//
+//				Notification notification = createNotification();
+//				if (notification != null) {
+//					mNotificationManager.notify(NOTIFICATION_ID, notification);
+//				}
+//			}
 				StartNotification();
 				break;
 //            case ActionSaveCurrentPosition: SaveLastPosition();
@@ -258,8 +290,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		SaveHistory(listedTillTheEnd, track);
 		PlayNext();
 		utilites.SendInformationTxt(getApplicationContext(), "Completion playback");
-		Intent historySenderIntent = new Intent(this, HistoryService.class);
-		historySenderIntent.putExtra("DeviceID", DeviceID);
+		Intent historySenderIntent = new Intent(this, RequestAPIService.class);
+		historySenderIntent.setAction(ACTION_SENDHISTORY);
+		historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
 		startService(historySenderIntent);
 	}
 
@@ -301,19 +334,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(this);
 //			startPosition = settings.getInt("LastPosition", 0);
 //			startTrackID = settings.getString("LastTrackID", "");
-			track = trackDataAccess.GetMostOldTrack();
-			Intent i = new Intent(ActionTrackInfoUpdate);
-			getApplicationContext().sendBroadcast(i);
-			if (track != null) {
-				FlagDownloadTrack = false;
-				TrackID = track.getAsString("id");
-				trackURL = track.getAsString("trackurl");
-				if (!new File(trackURL).exists()) {
-					trackDataAccess.DeleteTrackFromCache(track);
-					Play();
-				}
+			
+			if(getTrackForPlayFromDB()){
 //				player.setDataSource(getApplicationContext(), Uri.parse(trackURL));
 				player.setDataSource(trackURL);
+				Intent i = new Intent(ActionTrackInfoUpdate);
+				getApplicationContext().sendBroadcast(i);
+			} else {
+				new Utilites().CheckCountTracksAndDownloadIfNotEnought(getApplicationContext(), DeviceID);
+				return;
 			}
 
 			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
@@ -329,7 +358,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 			//записываем время начала проигрывания трека
 			new TrackDataAccess(getApplicationContext()).SetTimeAndCountStartPlayback(track);
+			new Utilites().SendInformationTxt(getApplicationContext(), "SetTimeAndCountStartPlayback for track " + track.getAsString("id"));
 
+			wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
+			if(!wl.isHeld())
+				wl.acquire();
 
 //			AcquireWifiLock();
 			UpdateMediaMetadataCompat();
@@ -343,16 +376,22 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			Log.d(TAG, "Play(): sendBroadcast");
 		} catch (Exception ex) {
 			utilites.SendInformationTxt(getApplicationContext(), "Error in Play(): " + ex.getLocalizedMessage());
-			player.reset();
+			//player.reset();
 			player.release();
 			player = null;
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
+			if(new File(trackURL).length() <= 0) {
+				new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+				Play();
+			}
 			return;
 		}
-
-		Intent i = new Intent(this, DownloadService.class);
-		i.putExtra("DeviceID", DeviceID);
-		startService(i);
+		
+		Intent downloaderIntent = new Intent(this, RequestAPIService.class);
+		downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+		downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
+		downloaderIntent.putExtra(EXTRA_COUNT, 3);
+		startService(downloaderIntent);
 	}
 
 	public void Pause() {
@@ -390,10 +429,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		try {
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
 //			UpdateButtonPlayPauseImg();
-			player.reset();
+//			player.reset();
+			player.release();
+			player = null;
 //			StartNotification();
 //			super.stopForeground(true);
-//			ReleaseWifiLock();
+			ReleaseWifiLock();
+			if(wl != null && wl.isHeld())
+				wl.release();
 //			UnregisterMediaSessionCompat();
 		}catch (Exception ex){
 			Log.d(TAG, " " + ex.getLocalizedMessage());
@@ -401,6 +444,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	public void Next() {
+		if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() <3){
+			Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
+			getApplicationContext().sendBroadcast(progressIntent);
+			return;
+		}
+		
 		//Сохраняем информацию о прослушивании в локальную БД.
 		int listedTillTheEnd = -1;
 		SaveHistory(listedTillTheEnd, track);
@@ -408,9 +457,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
 		PlayNext();
 		utilites.SendInformationTxt(getApplicationContext(), "Skip track to next");
-
-		Intent historySenderIntent = new Intent(this, HistoryService.class);
-		historySenderIntent.putExtra("DeviceID", DeviceID);
+		
+		Intent historySenderIntent = new Intent(this, RequestAPIService.class);
+		historySenderIntent.setAction(ACTION_SENDHISTORY);
+		historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
 		startService(historySenderIntent);
 	}
 
@@ -427,7 +477,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				history.put("userid", UserID);
 				history.put("datetimelisten", currentDateTime);
 				history.put("islisten", listedTillTheEnd);
-				history.put("methodid", trackInstance.getAsInteger("methodid"));
 				HistoryDataAccess historyDataAccess = new HistoryDataAccess(getApplicationContext());
 				historyDataAccess.SaveHistoryRec(history);//сохраняет информацию в history для последующей отправки на сервер
 			}
@@ -436,6 +485,30 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 	}
 
+	private boolean getTrackForPlayFromDB(){
+		boolean flagFindTrack = false;
+		do {
+			track = trackDataAccess.GetMostOldTrack();
+			new Utilites().SendInformationTxt(getApplicationContext(), "getTrackForPlayFromDB, id=" + track.getAsString("id"));
+//			Intent i = new Intent(ActionTrackInfoUpdate);
+//			getApplicationContext().sendBroadcast(i);
+			if (track != null) {
+				FlagDownloadTrack = false;
+				TrackID = track.getAsString("id");
+				trackURL = track.getAsString("trackurl");
+				if (!new File(trackURL).exists()) {
+					trackDataAccess.DeleteTrackFromCache(track);
+				} else
+					flagFindTrack = true;
+			}else
+				return false;
+			}while(!flagFindTrack);
+			return true;
+//			return true;
+//		}else
+//			return false;
+	}
+	
 	private void AcquireWifiLock() {
 		if (wifiLock == null) {
 			wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL, "OwnRadioWiFiLock");
@@ -458,7 +531,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			startPosition = 0;
 //		}
 		mp.start();
-		utilites.SendInformationTxt(getApplicationContext(), "Start playback");
+		utilites.SendInformationTxt(getApplicationContext(), "Start playback " + track.getAsString("id"));
 		UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 	}
 
@@ -500,6 +573,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 			if (state != PlaybackStateCompat.STATE_BUFFERING) {
 				StartNotification();
+				
+//					Notification notification = createNotification();
+//					if (notification != null) {
+//						mNotificationManager.notify(NOTIFICATION_ID, notification);
+//					}
+
+//				mMediaNotificationManager.startNotification(track.getAsString("title"), track.getAsString("artist"));
 				UpdateButtonPlayPauseImg();
 			}
 		} catch (Exception ex) {
@@ -513,6 +593,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		sendBroadcast(intent);
 	}
 
+	//кастомное уведомление
 	private void StartNotification() {
 		android.support.v7.app.NotificationCompat.MediaStyle style = new android.support.v7.app.NotificationCompat.MediaStyle();
 		style.setMediaSession(mediaSessionCompat.getSessionToken());
@@ -524,20 +605,21 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		String trackTitle;
 		String trackArtist;
 		try {
-			trackTitle = (track.getAsString("title") == null) ? "Unknown track" : track.getAsString("title");
-			trackArtist = (track.getAsString("artist") == null) ? "Unknown artist" : track.getAsString("artist");
+			trackTitle = (track.getAsString("title") == null) ? "Track" : track.getAsString("title");
+			trackArtist = (track.getAsString("artist") == null) ? "Artist" : track.getAsString("artist");
 
 		} catch (Exception ex) {
-			trackTitle = "Unknown track";
-			trackArtist = "Unknown artist";
+			trackTitle = "Track";
+			trackArtist = "Artist";
 			Log.d(TAG, " " + ex.getLocalizedMessage());
 		}
 
 		Intent intent = new Intent(getApplicationContext(), MediaPlayerService.class);
 		intent.setAction(ActionPlay);
 		RemoteViews contentView = new RemoteViews(getApplicationContext().getPackageName(), R.layout.notification);
+		RemoteViews contentViewBig = new RemoteViews(getApplicationContext().getPackageName(), R.layout.notification2);
 
-		contentView.setViewVisibility(R.id.viewsIcon, View.VISIBLE);
+//		contentView.setViewVisibility(R.id.viewsIcon, View.VISIBLE);
 
 		Intent mainIntent = new Intent(this, MainActivity.class);
 		mainIntent.setAction(Intent.ACTION_MAIN);
@@ -550,10 +632,13 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		Intent playIntent = new Intent(this, MediaPlayerService.class);
 		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
 			playIntent.setAction(ActionPause);
-			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_pause_action);
+			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_pause);
+			contentViewBig.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_pause);
+			
 		} else {
 			playIntent.setAction(ActionPlay);
-			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_play_action);
+			contentView.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_play);
+			contentViewBig.setImageViewResource(R.id.viewsPlayPause, R.drawable.btn_play);
 		}
 		PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
 
@@ -561,24 +646,155 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		nextIntent.setAction(ActionNext);
 		PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
 
-
 		contentView.setOnClickPendingIntent(R.id.viewsNext, pnextIntent);
+		contentViewBig.setOnClickPendingIntent(R.id.viewsNext, pnextIntent);
 		contentView.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
-
-		NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext())
-				.setSmallIcon(R.drawable.logo)
+		contentViewBig.setOnClickPendingIntent(R.id.viewsPlayPause, pplayIntent);
+		
+		
+		contentViewBig.setTextViewText(R.id.viewsTitle, trackTitle);
+		contentViewBig.setTextViewText(R.id.viewsArtist, trackArtist);
+		
+		
+		
+		android.support.v4.app.NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
+				.setSmallIcon(R.drawable.ic_notification)
 				.setContentIntent(pendingIntent)
 				.setCustomContentView(contentView)
+				.setCustomBigContentView(contentViewBig)
+				.setContentTitle(trackTitle)
+				.setContentText(trackArtist)
 				.setShowWhen(false)
 				.setPriority(NotificationCompat.PRIORITY_HIGH)
 				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
+
 
 		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
 			builder.setOngoing(true);
 		else
 			builder.setOngoing(false);
 //        style.setShowActionsInCompactView(0,1,2);
-		NotificationManagerCompat.from(getApplicationContext()).notify(NotificationId, builder.build());
+		NotificationManagerCompat.from(this).notify(NotificationId, builder.build());
+
+	}
+
+	
+	//стандартное уведомление
+	private Notification createNotification(){
+		mNotificationManager = NotificationManagerCompat.from(this);
+		int mNotificationColor = ResourceHelper.getThemeColor(this, R.attr.colorPrimary,
+				Color.DKGRAY);
+		String pkg = getApplicationContext().getPackageName();
+		
+		android.support.v7.app.NotificationCompat.MediaStyle style = new android.support.v7.app.NotificationCompat.MediaStyle();
+		style.setMediaSession(mediaSessionCompat.getSessionToken());
+		style.setShowCancelButton(true);
+		PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), 0, new Intent(this, MainActivity.class), PendingIntent.FLAG_UPDATE_CURRENT);
+		
+		PendingIntent pendingCancelIntent = PendingIntent.getService(getApplicationContext(), 1, new Intent(this, MediaPlayerService.class), PendingIntent.FLAG_CANCEL_CURRENT);
+		style.setCancelButtonIntent(pendingCancelIntent);
+		
+		
+		Intent nextIntent = new Intent(this, MediaPlayerService.class);
+		nextIntent.setAction(ActionNext);
+		PendingIntent mNextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
+		
+		
+//		PendingIntent mNextIntent = PendingIntent.getBroadcast(this, REQUEST_CODE,
+//				new Intent(ActionNext).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+		
+		String trackTitle;
+		String trackArtist;
+		try {
+			trackTitle = (track.getAsString("title") == null) ? "Track" : track.getAsString("title");
+			trackArtist = (track.getAsString("artist") == null) ? "Artist" : track.getAsString("artist");
+			
+		} catch (Exception ex) {
+			trackTitle = "Track";
+			trackArtist = "Artist";
+			Log.d(TAG, " " + ex.getLocalizedMessage());
+		}
+		
+		NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this);
+		addPlayPauseAction(notificationBuilder);
+		
+		
+		Bitmap art = BitmapFactory.decodeResource(this.getResources(),
+				R.drawable.ic_default_art);
+				
+				
+				// If skip to next action is enabled
+			notificationBuilder.addAction(R.drawable.ic_next,
+					this.getString(R.string.label_next), mNextIntent);
+		
+		
+		notificationBuilder
+				.setStyle(new NotificationCompat.MediaStyle()
+						.setShowActionsInCompactView(
+								new int[]{0,1})  // show only play/pause snd next buttons in compact view
+						.setMediaSession(mediaSessionCompat.getSessionToken()))
+				.setSmallIcon(R.drawable.ic_notification)
+				.setColor(mNotificationColor)
+				.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+				.setUsesChronometer(true)
+				.setContentIntent(pendingIntent)
+				.setContentTitle(trackTitle)
+				.setContentText(trackArtist)
+				.setLargeIcon(art);
+		
+		
+//		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING
+//				) {
+//			notificationBuilder
+////					.setWhen(System.currentTimeMillis() - mPlaybackState.getPosition())
+//					.setShowWhen(true)
+//					.setUsesChronometer(true);
+//		} else {
+//			LogHelper.d(TAG, "updateNotificationPlaybackState. hiding playback position");
+			notificationBuilder
+					.setWhen(0)
+					.setShowWhen(false)
+					.setUsesChronometer(false)
+//					.setPriority(NotificationCompat.PRIORITY_HIGH)
+					.setCategory(NotificationCompat.CATEGORY_TRANSPORT);
+//		}
+		
+		// Make sure that the notification can be dismissed by the user when we are not playing:
+		notificationBuilder.setOngoing(GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING);
+		return notificationBuilder.build();
+		
+	}
+	
+	private void addPlayPauseAction(NotificationCompat.Builder builder) {
+//		String pkg = getApplicationContext().getPackageName();
+//		PendingIntent mPauseIntent = PendingIntent.getBroadcast(this, REQUEST_CODE,
+//				new Intent(ActionPause).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+//		PendingIntent mPlayIntent = PendingIntent.getBroadcast(this, REQUEST_CODE,
+//				new Intent(ActionPlay).setPackage(pkg), PendingIntent.FLAG_CANCEL_CURRENT);
+		int icon;
+		String label;
+//		PendingIntent intent;
+		
+		Intent playIntent = new Intent(this, MediaPlayerService.class);
+		if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
+			label = getString(R.string.label_pause);
+			icon = R.drawable.ic_pause;
+//			intent = mPauseIntent;
+			playIntent.setAction(ActionPause);
+		} else {
+			label = getString(R.string.label_play);
+			icon = R.drawable.ic_play;
+//			intent = mPlayIntent;
+			playIntent.setAction(ActionPlay);
+		}
+		PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
+		
+		builder.addAction(new NotificationCompat.Action(icon, label, pplayIntent));
+	}
+	
+	private int getNotificationIcon() {
+		boolean useWhiteIcon = (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP);
+		return useWhiteIcon ? R.drawable.logo_white : R.drawable.logo;
 	}
 
 	public void StopNotification() {
@@ -588,7 +804,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 	public void PlayNext() {
 		if (player != null) {
-			player.reset();
+//			player.reset();
 			player.release();
 			player = null;
 		}
@@ -608,9 +824,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //				.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, BitmapFactory.decodeResource(getResources(), R.drawable.icon))
 //				.putBitmap(MediaMetadataCompat.METADATA_KEY_ART, BitmapFactory.decodeResource(getResources(), R.drawable.icon))
 				.putString(MediaMetadataCompat.METADATA_KEY_TITLE, track.getAsString("title"))
-//				.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, track.getAsString("name"))
-//				.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, track.getAsString("artist"))
+				.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, track.getAsString("name"))
+				.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, track.getAsString("artist"))
 				.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, track.getAsString("artist"))
+				.putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ARTIST,  track.getAsString("artist"))
+//				.putString(MediaMetadataCompat.METADATA_KEY_AUTHOR,  track.getAsString("artist"))
 				.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "ownRadio");
 
 		mediaSessionCompat.setMetadata(builder.build());
@@ -685,7 +903,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			sendBroadcast(intent);
 			StopNotification();
 			stopForeground(true);
-//			ReleaseWifiLock();
+			ReleaseWifiLock();
+			if(wl != null && wl.isHeld())
+				wl.release();
 			UnregisterMediaSessionCompat();
 		}
 	}

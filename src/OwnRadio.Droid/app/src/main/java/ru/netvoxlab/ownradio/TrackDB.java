@@ -14,15 +14,15 @@ import static ru.netvoxlab.ownradio.MainActivity.filePath;
  */
 
 public class TrackDB extends SQLiteOpenHelper {
-	public final static int DB_VER = 6;
+	public final static int DB_VER = 8;
 	public static final String TABLE_NAME_TRACK = "track";
-	static final String CREATE_TABLE_TRACK = "CREATE TABLE " + TABLE_NAME_TRACK + "(id TEXT NOT NULL UNIQUE, trackurl TEXT NOT NULL," +
-			" title TEXT, artist TEXT, length INTEGER NOT NULL DEFAULT 1000, methodid INTEGER NOT NULL DEFAULT 1, " +
+	static final String CREATE_TABLE_TRACK = "CREATE TABLE " + TABLE_NAME_TRACK + "(id TEXT NOT NULL UNIQUE, trackurl TEXT," +
+			" title TEXT, artist TEXT, length INTEGER NOT NULL DEFAULT 1000, " +
 			" datetimelastlisten TEXT NOT NULL, isexist INTEGER NOT NULL DEFAULT 0, countplay INTEGER NOT NULL DEFAULT 0)";
 
 	public static final String TABLE_NAME_HISTORY = "history";
 	static final String CREATE_TABLE_HISTORY = "CREATE TABLE " + TABLE_NAME_HISTORY + "(id TEXT NOT NULL UNIQUE, trackid TEXT NOT NULL, userid TEXT NOT NULL," +
-			"datetimelisten TEXT NOT NULL, islisten INTEGER NOT NULL DEFAULT 0, methodid INTEGER NOT NULL)";
+			"datetimelisten TEXT NOT NULL, islisten INTEGER NOT NULL DEFAULT 0)";
 
 	public static final String DB_NAME = "ownradiodb34.db3";
 	Context mContext;

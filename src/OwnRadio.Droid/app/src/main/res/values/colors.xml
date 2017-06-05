@@ -1,6 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#63b6e7</color>
-    <color name="colorPrimaryDark">#4face1</color>
-    <color name="colorAccent">#3F51B5</color>
+
+	<color name="colorPrimary">#03A9F4</color>
+	<color name="colorPrimaryDark">#000000</color>
+	<color name="colorAccent">#b53f7c</color>
+	
+	<color name="textColorPrimary">#ffffff</color>
+	<color name="textColorPrimaryDark">#636573</color>
+	
+	
+	<color name="colorPrimarySolid">#FF404654</color>
+	<color name="colorPrimaryNavBar">#404654</color>
+	<color name="colorPrimaryToolbar">#9903A9F4</color>
+	
+	<color name="ColorPrimaryProgressBar">#03A9F4</color>
+	<color name="ColorPrimaryProgressBarLine">#bab8b3</color>
+	
+	<color name="ColorPrimaryBtnPlay">#03A9F4</color>
+	
+	
+	<color name="menu_text_color">#7d7e7e</color>
+	
+	<color name="ColorPrimaryBtn80">#ff03A9F4</color>
+	<color name="ColorPrimaryBtn70">#ff03A9F4</color>
+	<color name="ColorPrimaryBtn50">#ff03A9F4</color>
+	
+	<!--button's circle colors-->
+	<color name="btnCircleColorPrimary">#ffffff</color>
+
+	
 </resources>

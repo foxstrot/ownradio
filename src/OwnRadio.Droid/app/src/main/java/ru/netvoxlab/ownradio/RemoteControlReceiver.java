@@ -8,6 +8,10 @@ import android.view.KeyEvent;
 import static ru.netvoxlab.ownradio.MediaPlayerService.playbackWithHSisInterrupted;
 
 public class RemoteControlReceiver extends BroadcastReceiver {
+	static final long CLICK_DELAY = 500;
+	static long lastClick = 0; // oldValue
+	static long currentClick = System.currentTimeMillis();
+	
 	public RemoteControlReceiver() {
 	}
 
@@ -30,6 +34,13 @@ public class RemoteControlReceiver extends BroadcastReceiver {
 
 		switch (key.getKeyCode()) {
 			case KeyEvent.KEYCODE_HEADSETHOOK:
+				lastClick = currentClick;
+				currentClick = System.currentTimeMillis();
+				if(currentClick - lastClick < CLICK_DELAY) //проверяем сколько раз подряд была нажата кнопка на гарнитуре
+					action = MediaPlayerService.ActionNext;
+				else
+					action = MediaPlayerService.ActionTogglePlayback;
+				break;
 			case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
 				action = MediaPlayerService.ActionTogglePlayback;
 				break;

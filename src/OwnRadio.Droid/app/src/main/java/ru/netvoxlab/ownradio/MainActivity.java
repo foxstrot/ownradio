@@ -1,6 +1,5 @@
 package ru.netvoxlab.ownradio;
 
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -11,23 +10,36 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.preference.PreferenceManager;
+import android.support.design.widget.NavigationView;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.text.Html;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import org.apache.commons.io.FileUtils;
 
@@ -37,12 +49,15 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
-import static ru.netvoxlab.ownradio.MediaPlayerService.playbackWithHSisInterrupted;
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_SENDLOGS;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_LOGFILEPATH;
 
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
-
+public class MainActivity extends AppCompatActivity
+		implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
+	
 	private APICalls apiCalls;
-
+	
 	String DeviceId;
 	String UserId;
 	SharedPreferences sp;
@@ -54,12 +69,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 	private Intent mediaPlayerServiceIntent;
 	ImageButton btnPlayPause;
 	ImageButton btnNext;
+	ImageButton btnSkipTrack;
 	TrackDB trackDB;
 	private Handler handler = new Handler();
 	private Handler handlerEvent = new Handler();
 	ProgressBar progressBar;
 	TextView textInfo;
-
+	
 	TextView textVersionName;
 	TextView textDeviceID;
 	TextView textUserID;
@@ -67,16 +83,24 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 	TextView txtTrackCount;
 	TextView txtTrackCountInFolder;
 	TextView txtCountPlayTracks;
-
+	
 	TextView txtMemoryUsed;
 	TextView txtTrackTitle;
 	TextView txtTrackArtist;
+	
+	VideoView videoView;
+	Uri uriVideoView;
+	MediaPlayer videoPlayer;
+	Boolean videoShow = false;
+	
+	Toolbar toolbar;
+	
 	LinearLayout layoutDevelopersInfo;
 	public static File filePath;
 	boolean flagDevInfo = false;
-
+	
 	public final static String TAG = "ownRadio";
-
+	
 	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
 	public static final String ActionProgressBarFirstTracksLoad = "ru.netvoxlab.ownradio.action.PROGRESSBAR_FIRST_UPDATE";
 	public static final String ActionTrackInfoUpdate = "ru.netvoxlab.ownradio.action.TRACK_INFO_UPDATE";
@@ -86,14 +110,28 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 	int numberOfTaps = 0;
 	long lastTapTimeMs = 0;
 	long touchDownMs = 0;
-
+	private PowerManager.WakeLock mWakeLock;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-
 		setContentView(R.layout.activity_main);
-
+		toolbar = (Toolbar) findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		getSupportActionBar().setDisplayShowTitleEnabled(false);
+		
+		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+		drawer.setDrawerListener(toggle);
+		toggle.syncState();
+		
+		NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+		navigationView.setNavigationItemSelectedListener(this);
+		
+		//
+		
 		filePath = new File(this.getFilesDir() + File.separator + "music");
 		if(!filePath.exists())
 			filePath.mkdirs();
@@ -106,15 +144,25 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
 		txtCountPlayTracks = (TextView) findViewById(R.id.txtCountPlayTracks);
 		txtCountPlayTracks.setMovementMethod(new android.text.method.ScrollingMovementMethod());
-
+		
 		textInfo = (TextView) findViewById(R.id.textViewInfo);
 		textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
-
+		
 		textTrackID = (TextView) findViewById(R.id.trackID);
-
+		
 		txtTrackTitle = (TextView) findViewById(R.id.trackTitle);
 		txtTrackArtist = (TextView) findViewById(R.id.trackArtist);
-
+		
+		videoView = (VideoView)findViewById(R.id.videoView);
+		
+		videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+			@Override
+			public void onPrepared(MediaPlayer mp) {
+				mp.setLooping(true);
+				videoView.start();
+			}
+		});
+		
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ActionProgressBarUpdate);
 		filter.addAction(ActionTrackInfoUpdate);
@@ -122,13 +170,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		filter.addAction(ActionSendInfoTxt);
 		filter.addAction(ActionProgressBarFirstTracksLoad);
 		registerReceiver(myReceiver, filter);
-
+		
 		this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 		this.registerReceiver(remoteControlReceiver, new IntentFilter(Intent.ACTION_MEDIA_BUTTON));
-
+		
 		if (mediaPlayerServiceConnection == null)
 			InitilizeMedia();
-
+		
 		trackDB = new TrackDB(MainActivity.this, 1);
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		try {
@@ -139,13 +187,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				this.deleteDatabase("ownradiodb.db3");
 			}
 		}catch (Exception ex){
-			new Utilites().SendInformationTxt(getApplicationContext(), " " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(getApplicationContext(), "Error by get app version " + ex.getLocalizedMessage());
 		}
 
 //         полная очистка настроек
 //         sp.edit().clear().commit();
 		layoutDevelopersInfo = (LinearLayout) findViewById(R.id.linearLayoutDevelopersInfo);
-
+		
 		btnPlayPause = (ImageButton) findViewById(R.id.btnPlayPause);
 		btnPlayPause.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -158,25 +206,140 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 //					btnPlayPause.setImageResource(R.drawable.btn_pause);
 					btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 					binder.GetMediaPlayerService().Play();
-					playbackWithHSisInterrupted = false;
+					MediaPlayerService.playbackWithHSisInterrupted = false;
 				}
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 			}
 		});
-
+		
 		btnNext = (ImageButton) findViewById(R.id.btnNext);
 		btnNext.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
+//				if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() >=3){
 				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() != PlaybackStateCompat.STATE_SKIPPING_TO_NEXT && binder.GetMediaPlayerService().GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
 					binder.GetMediaPlayerService().Next();
 					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 					Log.e(TAG, "Next");
 				}
+//				}else {
+//					btnNext.setClickable(false);
+//				}
+			}
+		});
+//
+//		btnNext.setOnFocusChangeListener(new View.OnFocusChangeListener(){
+//			public void onFocusChange(View v, boolean hasFocus){
+//				if(hasFocus){
+//					btnNext.setImageTintList();
+//				}
+//			}
+//		});
+		
+		btnSkipTrack = (ImageButton) findViewById(R.id.btnSkipTrack);
+		btnSkipTrack.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				if(binder.GetMediaPlayerService().player != null)
+					binder.GetMediaPlayerService().onCompletion(binder.GetMediaPlayerService().player);
+			}
+		});
+		
+		
+		Button btnTest = (Button) findViewById(R.id.btnTest);
+		btnTest.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				try {
+					File appDirectory = getApplicationContext().getFilesDir();
+					File logDirectory = new File( appDirectory + File.separator + "log" );
+					// create app folder
+					if ( !appDirectory.exists() ) {
+						appDirectory.mkdir();
+					}
+					// create log folder
+					if ( !logDirectory.exists() ) {
+						logDirectory.mkdir();
+					}
+					File logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
+					Runtime.getRuntime().exec("logcat -d -f " + logFile.getAbsolutePath());
+					Runtime.getRuntime().exec("logcat -c");
+						Intent logSenderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
+						logSenderIntent.setAction(ACTION_SENDLOGS);
+						logSenderIntent.putExtra(EXTRA_DEVICEID, DeviceId); //getApplicationContext()).execute(sp.getString("DeviceID", "")
+						logSenderIntent.putExtra(EXTRA_LOGFILEPATH, logFile.getAbsolutePath());
+						startService(logSenderIntent);
+				}catch (Exception ex){
+					new Utilites().SendInformationTxt(getApplicationContext(), "Error in sendLogFile(): " + ex.getLocalizedMessage());
+				}
 			}
 		});
 	}
+	
+	@Override
+	public void onBackPressed() {
+		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		if (drawer.isDrawerOpen(GravityCompat.START)) {
+			drawer.closeDrawer(GravityCompat.START);
+		} else {
+//			super.onBackPressed();
+			Intent startMain = new Intent(Intent.ACTION_MAIN);
+			startMain.addCategory(Intent.CATEGORY_HOME);
+			startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			startActivity(startMain);
+		}
+	}
+	
 
+//
+//	@Override
+//	public boolean onCreateOptionsMenu(Menu menu) {
+//		// Inflate the menu; this adds items to the action bar if it is present.
+//		getMenuInflater().inflate(R.menu.main, menu);
+//		return true;
+//	}
+//
+//	@Override
+//	public boolean onOptionsItemSelected(MenuItem item) {
+//		// Handle action bar item clicks here. The action bar will
+//		// automatically handle clicks on the Home/Up button, so long
+//		// as you specify a parent activity in AndroidManifest.xml.
+//		int id = item.getItemId();
+//
+//		//noinspection SimplifiableIfStatement
+//		if (id == R.id.action_settings) {
+//			return true;
+//		}
+//
+//		return super.onOptionsItemSelected(item);
+//	}
+//
+	@SuppressWarnings("StatementWithEmptyBody")
+	@Override
+	public boolean onNavigationItemSelected(MenuItem item) {
+		// Handle navigation view item clicks here.
+		int id = item.getItemId();
+		
+//		if (id == R.id.nav_camera) {
+//			// Handle the camera action
+//		} else if (id == R.id.nav_gallery) {
+//
+//		} else if (id == R.id.nav_slideshow) {
+//
+//		} else if (id == R.id.nav_manage) {
+//
+//		} else if (id == R.id.nav_share) {
+//
+//		} else if (id == R.id.nav_send) {
+//
+//		}
+//
+		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		drawer.closeDrawer(GravityCompat.START);
+		return true;
+	}
+	
+	
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
 		switch (event.getAction()) {
@@ -184,6 +347,34 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				touchDownMs = System.currentTimeMillis();
 				break;
 			case MotionEvent.ACTION_MOVE: // движение
+//			{
+//				if(videoShow) {
+//					videoView.stopPlayback();
+//					videoView.setVisibility(View.GONE);
+//				}else {
+////					DisplayMetrics metrics = new DisplayMetrics();
+////					getWindowManager().getDefaultDisplay().getMetrics(metrics);
+////					android.widget.LinearLayout.LayoutParams params = (android.widget.LinearLayout.LayoutParams) videoView.getLayoutParams();
+////					params.width = metrics.widthPixels;
+////					params.height = metrics.heightPixels;
+////					params.leftMargin = 0;
+////					videoView.setLayoutParams(params);
+//					if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+//						uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_portrait);
+//
+//					} else if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//						uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_landscape);
+//					} else if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_UNDEFINED) {
+//						//// TODO: 24.05.2017
+//						uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_portrait);
+//					}
+//					videoView.setVisibility(View.VISIBLE);
+////					videoView.setRotation(90);
+//					videoView.setVideoURI(uriVideoView);
+//
+//				}
+//				videoShow = !videoShow;
+//			}
 				break;
 			case MotionEvent.ACTION_UP: // отпускание
 				handlerEvent.removeCallbacksAndMessages(null);
@@ -193,16 +384,16 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 					lastTapTimeMs = 0;
 					break;
 				}
-
+				
 				if (numberOfTaps > 0
 						&& (System.currentTimeMillis() - lastTapTimeMs) < 2*ViewConfiguration.getDoubleTapTimeout()) {
 					numberOfTaps += 1;
 				} else {
 					numberOfTaps = 1;
 				}
-
+				
 				lastTapTimeMs = System.currentTimeMillis();
-
+				
 				//3 тапа - отобразить/скрыть инфрмацию для разработчиков
 				if (numberOfTaps == 3) {
 					flagDevInfo = !flagDevInfo;
@@ -214,37 +405,39 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		}
 		return true;
 	}
-
+	
 	public void SetDevelopersInfo(){
 		if(!flagDevInfo)
 			layoutDevelopersInfo.setVisibility(View.GONE);
 		else
 			layoutDevelopersInfo.setVisibility(View.VISIBLE);
 	}
-
+	
 	private BroadcastReceiver myReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, final Intent intent) {
-
+			
 			if (intent.getAction() == ActionTrackInfoUpdate)
 				SetTrackInfoText();
-
+			
 			if (intent.getAction() == ActionButtonImgUpdate) {
 				String title;
 				String artist;
 				try {
-					if (binder == null) {
+					if (binder == null || binder.GetMediaPlayerService().player == null) {
 						txtTrackTitle.setText("");
 						txtTrackArtist.setText("ownRadio");
+						btnPlayPause.setImageResource(R.drawable.btn_play);
+						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 						return;
 					}
-
+					
 					if (binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_STOPPED) {
 						btnPlayPause.setImageResource(R.drawable.btn_play);
 						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 						return;
 					}
-
+					
 					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
 						btnPlayPause.setImageResource(R.drawable.btn_pause);
 						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
@@ -252,37 +445,46 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 						btnPlayPause.setImageResource(R.drawable.btn_play);
 						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 					}
-
+					
 					title = binder.GetMediaPlayerService().track.getAsString("title");
 					artist = binder.GetMediaPlayerService().track.getAsString("artist");
 					if (title == null || title.isEmpty() || title.equals("null"))
-						title = "Unknown track";
+						title = "Track";
 					if (artist == null || artist.isEmpty() || artist.equals("null"))
-						artist = "Unknown artist";
+						artist = "Artist";
 					txtTrackTitle.setText(title);
 					txtTrackArtist.setText(artist);
 					textTrackID = (TextView) findViewById(R.id.trackID);
 					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 				} catch (Exception ex) {
 					new Utilites().SendInformationTxt(MainActivity.this, "ActionButtonImgUpdate error:" + ex.getLocalizedMessage());
-					title = "Unknown track";
-					artist = "Unknown artist";
+					title = "Track";
+					artist = "Artist";
 					txtTrackTitle.setText(title);
 					txtTrackArtist.setText(artist);
 				}
 			}
-
+			
 			if (intent.getAction() == ActionSendInfoTxt) {
-				textInfo.append("Info: " + intent.getStringExtra("TEXTINFO") + "\n");
+				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+					textInfo.append(Html.fromHtml("<p><b>Info:</b> " + intent.getStringExtra("TEXTINFO") + "<br/></p>", Html.FROM_HTML_MODE_LEGACY));
+				}else{
+					textInfo.append(Html.fromHtml("<p><b>Info:</b> " + intent.getStringExtra("TEXTINFO") + "<br/></p>"));
+				}
 			}
-
+			
 			if (intent.getAction() == ActionProgressBarUpdate) {
-
+				
 				if (progressBar == null)
-					progressBar = (ProgressBar) findViewById(R.id.progressBarPlayback);
+					progressBar = (ProgressBar) findViewById(R.id.progressBar);
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
+						if(binder.GetMediaPlayerService().player == null){
+							progressBar.setMax(10000);
+							progressBar.setProgress(0);
+							return;
+						}
 						int duration;
 						try {
 							duration = binder.GetMediaPlayerService().track.getAsInteger("length");
@@ -292,10 +494,10 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 						int currentPosition = 0;
 						if (duration <= 0)
 							duration = 1000000;
-
+						
 						progressBar.setMax(duration);
 						progressBar.setSecondaryProgress(0);
-
+						
 						while (currentPosition < duration) {
 							try {
 								Thread.sleep(1000);
@@ -310,7 +512,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 							} catch (Exception e) {
 								e.getLocalizedMessage();
 							}
-
+							
 							// Update the progress bar
 							handler.post(new Runnable() {
 								@Override
@@ -329,7 +531,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 					}
 				}).start();
 			}
-
+			
 			if(intent.getAction() == ActionProgressBarFirstTracksLoad){
 				if(intent.getBooleanExtra("ProgressOn", false)) {
 					btnPlayPause.setClickable(false);
@@ -337,7 +539,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 					if(dialog == null)
 						dialog = new ProgressDialog(MainActivity.this);
 					dialog.setTitle("Caching...");
-					dialog.setMessage("There are no tracks to play. Wait until the tracks are cached and try again.");
+					dialog.setMessage("There are no tracks to play. Wait until the tracks are cached.");
 					dialog.setIndeterminate(true);
 					dialog.setCancelable(false);
 					dialog.show();
@@ -345,36 +547,35 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 					if (dialog != null)
 						dialog.dismiss();
 					btnPlayPause.setClickable(true);
-					btnNext.setClickable(true);
+					
+					if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<3)
+						btnNext.setClickable(false);
+					else
+						btnNext.setClickable(true);
 				}
 			}
 		}
 	};
+	
 
-	@Override
-	public void onBackPressed(){
-		Intent startMain = new Intent(Intent.ACTION_MAIN);
-		startMain.addCategory(Intent.CATEGORY_HOME);
-		startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		startActivity(startMain);
-	}
-
+	
 	private void InitilizeMedia() {
 		mediaPlayerServiceIntent = new Intent(this, MediaPlayerService.class);
 		mediaPlayerServiceConnection = new MediaPlayerServiceConnection(this);
 		bindService(mediaPlayerServiceIntent, mediaPlayerServiceConnection, BIND_AUTO_CREATE);
 	}
-
+	
 	@Override
 	public void onStart() {
 		super.onStart();
 		TrackToCache trackToCache = new TrackToCache(MainActivity.this);
-
+		
 		if (mediaPlayerServiceConnection == null)
 			InitilizeMedia();
-
+		
 		txtTrackTitle.setOnTouchListener(this);
 		txtTrackArtist.setOnTouchListener(this);
+		toolbar.setOnTouchListener(this);
 		try {
 			if (trackToCache.FreeSpace() + trackToCache.FolderSize(filePath) < 104857600) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
@@ -390,27 +591,28 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 								});
 				AlertDialog alert = builder.create();
 				alert.show();
-
+				
 				btnPlayPause.setClickable(false);
 				btnNext.setClickable(false);
 			}
-
+			
 			SetDevelopersInfo();
-
+			
 			try {
 				String info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName;
 				textVersionName.setText("Version name: " + info);
 			} catch (PackageManager.NameNotFoundException e) {
 				e.printStackTrace();
 			}
-
+			
 			apiCalls = new APICalls(MainActivity.this);
 			try {
 				DeviceId = sp.getString("DeviceID", "");
 				if (DeviceId.isEmpty()) {
 					DeviceId = UUID.randomUUID().toString();
 					String UserName = "NewUser";
-					String DeviceName = Build.BRAND;
+					String DeviceName = DeviceName = Build.BRAND + " " + Build.PRODUCT;
+					new APICalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
 					UserId = apiCalls.GetUserId(DeviceId);
 					sp.edit().putString("DeviceID", DeviceId).commit();
 					sp.edit().putString("UserID", UserId);
@@ -430,22 +632,22 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 			}
 			textDeviceID.setText("Device ID: " + DeviceId);
 			textUserID.setText("User ID: " + UserId);
-
+			
 			trackToCache.ScanTrackToCache();
-
+			
 			SetTrackInfoText();
-
+			
 			new Utilites().CheckCountTracksAndDownloadIfNotEnought(MainActivity.this, DeviceId);
-
+			
 			return;
 		}catch (Exception ex) {
 			Log.d(TAG, " " + ex.getLocalizedMessage());
 			return;
 		}
-
-
+		
+		
 	}
-
+	
 	public void SetTrackInfoText(){
 		TrackDataAccess trackDataAccess = new TrackDataAccess(this);
 		TrackToCache trackToCache = new TrackToCache(this);
@@ -454,12 +656,38 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		txtCountPlayTracks.setText(trackDataAccess.GetCountPlayTracks());
 		txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(filePath) / 1048576 + " MB.");
 	}
-
+	
 	@Override
 	public void onSaveInstanceState(Bundle savedInstanceState){
 		super.onSaveInstanceState(savedInstanceState);
 	}
-
+	
+//	@Override
+//	public void onConfigurationChanged(Configuration _newConfig) {
+//
+//		if (_newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//			if(videoView.isPlaying()) {
+//				videoView.stopPlayback();
+//				uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_landscape);
+//				videoView.setVideoURI(uriVideoView);
+////				videoView.setRotation(90);
+//
+//			}
+//		}
+//
+//		if (_newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+//			if(videoView.isPlaying()) {
+//				videoView.stopPlayback();
+//				uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_portrait);
+//				videoView.setVideoURI(uriVideoView);
+////				videoView.setRotation(90);
+//			}
+//		}
+//
+//		super.onConfigurationChanged(_newConfig);
+//	}
+	
+	
 	@Override
 	public void onDestroy(){
 		try {
@@ -487,92 +715,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		android.os.Process.killProcess(android.os.Process.myPid());
 		super.onDestroy();
 	}
-
-//	@Override
-//	public boolean onCreateOptionsMenu(Menu menu) {
-//		getMenuInflater().inflate(R.menu.menu, menu);
-//		return super.onCreateOptionsMenu(menu);
-//	}
-//
-//	@Override
-//	public boolean onOptionsItemSelected(MenuItem item) {
-//		switch (item.getItemId()) {
-//			case android.R.id.home:
-//				NavUtils.navigateUpFromSameTask(this);
-//				return true;
-//
-////			case R.id.action_settings:
-////				startActivity(new Intent(this, SettingsActivity.class));
-////				return true;
-//
-//			case R.id.clear_cache:
-//				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-//                builder.setName("Clear cache?")
-//                        .setMessage("All cached tracks will be removed.")
-//                        .setCancelable(false)
-//                        .setPositiveButton("OK",
-//                                new DialogInterface.OnClickListener() {
-//                                    @Override
-//                                    public void onClick(DialogInterface dialogInterface, int i) {
-//										File dir = new File(MainActivity.this.getExternalFilesDir(Environment.DIRECTORY_MUSIC).getPath());
-//										if (dir.isDirectory()) {
-//											String[] children = dir.list();
-//											for (int j = 0; j < children.length; j++) {
-//												new File(dir, children[j]).delete();
-//											}
-//										}
-//										TrackDataAccess trackDataAccess = new TrackDataAccess(MainActivity.this);
-//										trackDataAccess.CleanTrackTable();
-//										HistoryDataAccess historyDataAccess = new HistoryDataAccess(MainActivity.this);
-//										historyDataAccess.CleanHistoryTable();
-//
-//										TrackToCache trackToCache = new TrackToCache(MainActivity.this);
-//										TextView txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
-//										txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
-//										TextView txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
-//										txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(MainActivity.this.getExternalFilesDir(Environment.DIRECTORY_MUSIC)) / 1048576 + " MB.");
-//										dialogInterface.cancel();
-//									}
-//                                })
-//						.setNegativeButton("Cancel",
-//								new DialogInterface.OnClickListener(){
-//									@Override
-//									public void onClick(DialogInterface dialogInterface, int i) {
-//										dialogInterface.cancel();
-//									}
-//								});
-//                AlertDialog alert = builder.create();
-//                alert.show();
-//				break;
-//
-//			case R.id.action_exit:
-//				try {
-//					unregisterReceiver(headSetReceiver);
-//					unregisterReceiver(remoteControlReceiver);
-//				} catch (Exception ex) {
-//					Log.e(TAG, " " + ex.getLocalizedMessage());
-//				}
-//				binder.GetMediaPlayerService().SaveLastPosition();
-//				binder.GetMediaPlayerService().StopNotification();
-////				unbindService(mediaPlayerServiceConnection);
-//                stopService(new Intent(this, MediaPlayerService.class));
-////                Intent intent = new Intent(MainActivity.this, MediaPlayerService.class);
-////                intent.setAction("ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION");
-////                startService(intent);
-//				android.os.Process.killProcess(android.os.Process.myPid());
-////                System.exit(0);
-//				return true;
-//		}
-//		return super.onOptionsItemSelected(item);
-//	}
-
-
+	
 	public void LogToTextView() {
 		try {
 			Process process = Runtime.getRuntime().exec("logcat -d");
 			BufferedReader bufferedReader = new BufferedReader(
 					new InputStreamReader(process.getInputStream()));
-
+			
 			StringBuilder log = new StringBuilder();
 			String line;
 			while ((line = bufferedReader.readLine()) != null) {
@@ -585,14 +734,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		} catch (IOException e) {
 		}
 	}
-
+	
 	class MediaPlayerServiceConnection extends java.lang.Object implements ServiceConnection {
 		MainActivity instance;
-
+		
 		public MediaPlayerServiceConnection(MainActivity player) {
 			this.instance = player;
 		}
-
+		
 		@Override
 		public void onServiceConnected(ComponentName componentName, IBinder service) {
 			MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder = (MediaPlayerService.MediaPlayerServiceBinder) service;
@@ -602,11 +751,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				instance.isBound = true;
 			}
 		}
-
+		
 		@Override
 		public void onServiceDisconnected(ComponentName componentName) {
 			instance.isBound = false;
 		}
 	}
+	
 }
-

@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+
+	android:id="@+id/linearLayoutDevelopersInfo"
+	android:layout_gravity="center_horizontal"
+	android:background="#CCffffff"
+	android:paddingLeft="@dimen/activity_horizontal_margin"
+	android:orientation="vertical"
+	android:elevation="10dp"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	app:layout_behavior="@string/appbar_scrolling_view_behavior"
+	tools:context="ru.netvoxlab.ownradio.MainActivity"
+	tools:showIn="@layout/app_bar_main">
+	
+	<VideoView
+		android:id="@+id/videoView"
+		android:layout_alignParentRight="true"
+		android:layout_alignParentLeft="true"
+		android:layout_alignParentTop="true"
+		android:layout_alignParentBottom="true"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:elevation="20dp"
+		android:visibility="gone"
+		/>
+	<LinearLayout
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content">
+		<Button
+			android:id="@+id/btnTest"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:visibility="visible"
+			android:text="SendLogs"/>
+		<ImageButton
+			android:id="@+id/btnSkipTrack"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:src="@android:drawable/ic_media_ff"
+			android:layout_gravity="left"
+			/>
+	</LinearLayout>
+
+<TextView
+	android:id="@+id/text"
+	android:textColor="#000000"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	android:layout_weight="0"
+	android:gravity="bottom"/>
+
+<TextView
+	android:id="@+id/versionName"
+	android:textSize="12dp"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:textColor="#000000"
+	android:text="Version Name: " />
+
+<TextView
+	android:id="@+id/deviceID"
+	android:textSize="12dp"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:textColor="#000000"
+	android:text="Device ID:" />
+
+<TextView
+	android:id="@+id/userID"
+	android:textSize="12dp"
+	android:visibility="gone"
+	android:layout_weight="0"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:clickable="true"
+	android:textColor="#000000"
+	android:text="User ID:" />
+
+<TextView
+	android:id="@+id/trackID"
+	android:textSize="12dp"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:clickable="true"
+	android:textColor="#000000"
+	android:text="Track ID:" />
+
+<TextView
+	android:id="@+id/textViewInfo"
+	android:text=" "
+	android:lines="10"
+	android:textSize="12dp"
+	android:textColor="#000000"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:gravity="bottom"/>
+
+<TextView
+	android:id="@+id/txtTrackCount"
+	android:textSize="12dp"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:layout_marginRight="10dp"
+	android:textColor="#000000"
+	android:text="Track count:"/>
+
+<TextView
+	android:id="@+id/txtCountTrackInFolder"
+	android:textSize="12dp"
+	android:layout_width="wrap_content"
+	android:layout_height="wrap_content"
+	android:layout_marginRight="10dp"
+	android:textColor="#000000"
+	android:text="Tracks in folder:"/>
+
+<TextView
+	android:id="@+id/txtCountPlayTracks"
+	android:textSize="12dp"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:textColor="#000000"
+	android:text="Count play tracks:"/>
+
+<TextView
+	android:id="@+id/txtMemoryUsed"
+	android:textSize="12dp"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:textColor="#000000"
+	android:text="Memory used:"/>
+</LinearLayout>
+

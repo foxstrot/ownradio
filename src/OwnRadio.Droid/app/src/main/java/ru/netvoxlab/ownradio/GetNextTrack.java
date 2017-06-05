@@ -24,14 +24,14 @@ public class GetNextTrack extends AsyncTask<String, Void, Map<String, String>> {
 			//выполняем запрос к серверу getnexttrackid
 			Response<Map<String, String>> response = ServiceGenerator.createService(APIService.class).getNextTrackID(data[0]).execute();
 			if (response.code() == 200) {
-				new Utilites().SendInformationTxt(mContext, "GetNextTrackID(): Connection is successful");
+				new Utilites().SendInformationTxt(mContext, "GetNextTrackID(" + data[0]+ "): Information about next track is received.");
 				return response.body();
 			}else {
-				new Utilites().SendInformationTxt(mContext, "GetNextTrackID(): Response code: " + response.code());
+				new Utilites().SendInformationTxt(mContext, "GetNextTrackID(" + data[0]+ "): Error with response code: " + response.code());
 				return null;
 			}
 		} catch (Exception ex) {
-			new Utilites().SendInformationTxt(mContext, "GetNextTrackID(): exception " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(mContext, "GetNextTrackID(" + data[0]+ "): exception " + ex.getLocalizedMessage());
 			return null;
 		}
 	}
