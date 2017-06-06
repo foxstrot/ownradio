@@ -106,6 +106,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
 		wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
 		remoteComponentName = new ComponentName(getPackageName(), new RemoteControlReceiver().ComponentName());
+		
+		
+//		audioManager.getDevices(AudioManager.GET_DEVICES_ALL);
+//		IntentFilter intentFilter = new IntentFilter(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+//		registerReceiver(MusicBroadcastReceiver.class, intentFilter);
 		pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
 		try {
 			mMediaNotificationManager = new MediaNotificationManager(this, getApplicationContext());

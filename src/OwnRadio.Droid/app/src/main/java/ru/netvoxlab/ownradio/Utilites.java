@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.util.Log;
 import android.view.WindowManager;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -14,8 +15,10 @@ import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoa
 import static ru.netvoxlab.ownradio.MainActivity.ActionSendInfoTxt;
 import static ru.netvoxlab.ownradio.MainActivity.TAG;
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_SENDLOGS;
 import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
 import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_LOGFILEPATH;
 
 /**
  * Created by a.polunina on 11.01.2017.
@@ -61,6 +64,32 @@ public class Utilites {
 			}
 			return false;
 		}else return true;
+	}
+	
+	public boolean SendLogs(Context mContext, String deviceId){
+		try {
+			File appDirectory = mContext.getFilesDir();
+			File logDirectory = new File( appDirectory + File.separator + "log" );
+			// create app folder
+			if ( !appDirectory.exists() ) {
+				appDirectory.mkdir();
+			}
+			// create log folder
+			if ( !logDirectory.exists() ) {
+				logDirectory.mkdir();
+			}
+			File logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
+			Runtime.getRuntime().exec("logcat -d -f " + logFile.getAbsolutePath());
+			Intent logSenderIntent = new Intent(mContext, RequestAPIService.class);
+			logSenderIntent.setAction(ACTION_SENDLOGS);
+			logSenderIntent.putExtra(EXTRA_DEVICEID, deviceId); //getApplicationContext()).execute(sp.getString("DeviceID", "")
+			logSenderIntent.putExtra(EXTRA_LOGFILEPATH, logFile.getAbsolutePath());
+			mContext.startService(logSenderIntent);
+			return true;
+		}catch (Exception ex){
+			new Utilites().SendInformationTxt(mContext, "Error in sendLogFile(): " + ex.getLocalizedMessage());
+			return false;
+		}
 	}
 
 }

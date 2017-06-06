@@ -3,8 +3,6 @@ package ru.netvoxlab.ownradio;
 import android.app.IntentService;
 import android.content.Intent;
 
-import java.io.File;
-
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
@@ -47,8 +45,8 @@ public class RequestAPIService extends IntentService {
 				final String deviceId = intent.getStringExtra(EXTRA_DEVICEID);
 				final String logFilePath = intent.getStringExtra(EXTRA_LOGFILEPATH);
 				try {
-					if (new File(logFilePath).length() <= 0)
-						Thread.sleep(100);
+//					if (new File(logFilePath).length() <= 0)
+						Thread.sleep(1000);
 					new APICalls(getApplicationContext()).SendLogs(deviceId, logFilePath);
 				}catch (Exception ex){
 					new Utilites().SendInformationTxt(getApplicationContext(), "Ошибка при отправке логов: " + ex.getLocalizedMessage());

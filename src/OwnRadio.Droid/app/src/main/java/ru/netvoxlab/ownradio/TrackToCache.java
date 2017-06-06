@@ -34,6 +34,9 @@ public class TrackToCache {
 	}
 
 	public String SaveTrackToCache(String deviceId, int trackCount) {
+		int numAttempts = 0;
+		boolean res = false;
+		
 		if (!new CheckConnection().CheckInetConnection(mContext))
 			return "Подключение к интернету отсутствует";
 
@@ -57,8 +60,14 @@ public class TrackToCache {
 							Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
 							break;
 						}
-						new Utilites().SendInformationTxt(mContext, "Download track \"" + trackId + "\" is started");
-						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
+						new Utilites().SendInformationTxt(mContext, "Download track " + trackId + " is started");
+//						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
+						do{
+							res = new DownloadTracks(mContext).execute(trackMap).get();
+							numAttempts ++;
+						}while (!res && numAttempts<3);
+						numAttempts = 0;
+						
 						if(new TrackDataAccess(mContext).GetExistTracksCount() >=1){
 							Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
 							progressIntent.putExtra("ProgressOn", false);

@@ -49,10 +49,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
-import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_SENDLOGS;
-import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
-import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_LOGFILEPATH;
-
 public class MainActivity extends AppCompatActivity
 		implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
 	
@@ -120,8 +116,9 @@ public class MainActivity extends AppCompatActivity
 		toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 		getSupportActionBar().setDisplayShowTitleEnabled(false);
+
 		
-		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
 				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
 		drawer.setDrawerListener(toggle);
@@ -129,8 +126,13 @@ public class MainActivity extends AppCompatActivity
 		
 		NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
 		navigationView.setNavigationItemSelectedListener(this);
+		navigationView.bringToFront();
+		navigationView.requestLayout();
 		
-		//
+		//получаем настройки приложения по умолчанию
+		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+		
+		//Z
 		
 		filePath = new File(this.getFilesDir() + File.separator + "music");
 		if(!filePath.exists())
@@ -199,12 +201,8 @@ public class MainActivity extends AppCompatActivity
 			@Override
 			public void onClick(View view) {
 				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
-//					btnPlayPause.setImageResource(R.drawable.btn_play);
-					btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 					binder.GetMediaPlayerService().Pause();
 				} else {
-//					btnPlayPause.setImageResource(R.drawable.btn_pause);
-					btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 					binder.GetMediaPlayerService().Play();
 					MediaPlayerService.playbackWithHSisInterrupted = false;
 				}
@@ -216,25 +214,14 @@ public class MainActivity extends AppCompatActivity
 		btnNext.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-//				if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() >=3){
 				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() != PlaybackStateCompat.STATE_SKIPPING_TO_NEXT && binder.GetMediaPlayerService().GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
 					binder.GetMediaPlayerService().Next();
 					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 					Log.e(TAG, "Next");
 				}
-//				}else {
-//					btnNext.setClickable(false);
-//				}
 			}
 		});
-//
-//		btnNext.setOnFocusChangeListener(new View.OnFocusChangeListener(){
-//			public void onFocusChange(View v, boolean hasFocus){
-//				if(hasFocus){
-//					btnNext.setImageTintList();
-//				}
-//			}
-//		});
+
 		
 		btnSkipTrack = (ImageButton) findViewById(R.id.btnSkipTrack);
 		btnSkipTrack.setOnClickListener(new View.OnClickListener() {
@@ -250,28 +237,7 @@ public class MainActivity extends AppCompatActivity
 		btnTest.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				try {
-					File appDirectory = getApplicationContext().getFilesDir();
-					File logDirectory = new File( appDirectory + File.separator + "log" );
-					// create app folder
-					if ( !appDirectory.exists() ) {
-						appDirectory.mkdir();
-					}
-					// create log folder
-					if ( !logDirectory.exists() ) {
-						logDirectory.mkdir();
-					}
-					File logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
-					Runtime.getRuntime().exec("logcat -d -f " + logFile.getAbsolutePath());
-					Runtime.getRuntime().exec("logcat -c");
-						Intent logSenderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
-						logSenderIntent.setAction(ACTION_SENDLOGS);
-						logSenderIntent.putExtra(EXTRA_DEVICEID, DeviceId); //getApplicationContext()).execute(sp.getString("DeviceID", "")
-						logSenderIntent.putExtra(EXTRA_LOGFILEPATH, logFile.getAbsolutePath());
-						startService(logSenderIntent);
-				}catch (Exception ex){
-					new Utilites().SendInformationTxt(getApplicationContext(), "Error in sendLogFile(): " + ex.getLocalizedMessage());
-				}
+				new Utilites().SendLogs(getApplicationContext(), DeviceId);
 			}
 		});
 	}
@@ -290,7 +256,6 @@ public class MainActivity extends AppCompatActivity
 		}
 	}
 	
-
 //
 //	@Override
 //	public boolean onCreateOptionsMenu(Menu menu) {
@@ -298,7 +263,7 @@ public class MainActivity extends AppCompatActivity
 //		getMenuInflater().inflate(R.menu.main, menu);
 //		return true;
 //	}
-//
+
 //	@Override
 //	public boolean onOptionsItemSelected(MenuItem item) {
 //		// Handle action bar item clicks here. The action bar will
@@ -307,19 +272,27 @@ public class MainActivity extends AppCompatActivity
 //		int id = item.getItemId();
 //
 //		//noinspection SimplifiableIfStatement
-//		if (id == R.id.action_settings) {
-//			return true;
-//		}
+////		if (id == R.id.action_settings) {
+////			Intent settingsActivity = new Intent(getBaseContext(),
+////					SettingsActivity.class);
+////			startActivity(settingsActivity);
+////			return true;
+////		}
 //
 //		return super.onOptionsItemSelected(item);
 //	}
-//
+
 	@SuppressWarnings("StatementWithEmptyBody")
 	@Override
 	public boolean onNavigationItemSelected(MenuItem item) {
 		// Handle navigation view item clicks here.
 		int id = item.getItemId();
 		
+		if(id == R.id.app_bar_settings){
+			Intent settingsActivity = new Intent(getBaseContext(),
+					SettingsActivity.class);
+			startActivity(settingsActivity);
+		}
 //		if (id == R.id.nav_camera) {
 //			// Handle the camera action
 //		} else if (id == R.id.nav_gallery) {
@@ -428,22 +401,18 @@ public class MainActivity extends AppCompatActivity
 						txtTrackTitle.setText("");
 						txtTrackArtist.setText("ownRadio");
 						btnPlayPause.setImageResource(R.drawable.btn_play);
-						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 						return;
 					}
 					
 					if (binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_STOPPED) {
 						btnPlayPause.setImageResource(R.drawable.btn_play);
-						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 						return;
 					}
 					
 					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
 						btnPlayPause.setImageResource(R.drawable.btn_pause);
-						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 					} else {
 						btnPlayPause.setImageResource(R.drawable.btn_play);
-						btnPlayPause.setBackgroundResource(R.drawable.circular_button_selector);
 					}
 					
 					title = binder.GetMediaPlayerService().track.getAsString("title");

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import java.net.HttpURLConnection;
+import java.util.Map;
 
 import retrofit2.Response;
 
@@ -21,9 +22,9 @@ public class RegisterDevice extends AsyncTask <String, Void, Boolean> {
 	
 	protected Boolean doInBackground(String... data) {
 		try{
-			Response<Void> response = ServiceGenerator.createService(APIService.class).registerDevice(data[0], data[1]).execute();
+			Response<Map<String, String>> response = ServiceGenerator.createService(APIService.class).registerDevice(data[0], data[1]).execute();
 			if (response.isSuccessful())
-				if (response.code() == HttpURLConnection.HTTP_OK) {
+				if (response.code() == HttpURLConnection.HTTP_OK && !response.body().isEmpty() && response.body().get("result").equals("true")) {
 					
 					new Utilites().SendInformationTxt(mContext, "Device is register");
 					

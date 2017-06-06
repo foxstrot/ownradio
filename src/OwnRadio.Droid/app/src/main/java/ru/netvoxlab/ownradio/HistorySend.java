@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.AsyncTask;
 
 import java.net.HttpURLConnection;
+import java.util.Map;
 
 import retrofit2.Response;
 
@@ -45,11 +46,15 @@ public class HistorySend extends AsyncTask <String, Void, Boolean>{
 				historyData.setLastListen(historyRec.getAsString("lastListen"));
 				historyData.setIsListen(historyRec.getAsInteger("isListen"));
 				
-				Response<Void> response = ServiceGenerator.createService(APIService.class).sendHistory(data[0], historyRec.getAsString("trackid"), historyData).execute();
+				Response<Map<String, String>> response = ServiceGenerator.createService(APIService.class).sendHistory(data[0], historyRec.getAsString("trackid"), historyData).execute();
 				if (response.isSuccessful()) {
 					if (response.code() == HttpURLConnection.HTTP_OK || response.code() == 208) {
-						historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
-						new Utilites().SendInformationTxt(mContext, "History by trackId " + historyRec.getAsString("trackid")+ " is sending with response code=" + response.code());
+						if(!response.body().isEmpty() && response.body().get("result").equals("true")) {
+							historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
+							new Utilites().SendInformationTxt(mContext, "History by trackId " + historyRec.getAsString("trackid") + " is sending with response code=" + response.code());
+						}else {
+							new Utilites().SendInformationTxt(mContext, "Error: History by trackId " + historyRec.getAsString("trackid")+ " not send with response code=" + response.code() + " and result: " + response.body().get("result"));
+						}
 					} else {
 						new Utilites().SendInformationTxt(mContext, "Error: History by trackId " + historyRec.getAsString("trackid")+ " not send with response code=" + response.code());
 					}
@@ -58,6 +63,8 @@ public class HistorySend extends AsyncTask <String, Void, Boolean>{
 					if(response.code() == HttpURLConnection.HTTP_NOT_FOUND){
 						historyDataAccess.DeleteHistoryRec(historyRec.getAsString("id"));
 						new Utilites().SendInformationTxt(mContext, "Error: History by trackId " + historyRec.getAsString("trackid")+ " not send with response code=" + response.code() +". TrackId or DeviceId not found on server.");
+					}else{
+						new Utilites().SendInformationTxt(mContext, "Error: History by trackId " + historyRec.getAsString("trackid")+ " not send with response code=" + response.code());
 					}
 				}
 		} catch (Exception ex) {
