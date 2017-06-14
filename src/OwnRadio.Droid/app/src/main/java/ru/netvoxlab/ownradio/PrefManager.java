@@ -1,0 +1,59 @@
+package ru.netvoxlab.ownradio;
+
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+
+/**
+ * Created by a.polunina on 13.06.2017.
+ */
+
+public class PrefManager {
+	SharedPreferences pref;
+	SharedPreferences.Editor editor;
+	Context _context;
+	
+	// shared pref mode
+	int PRIVATE_MODE = 0;
+	
+	// Shared preferences file name
+	private static final String PREF_NAME = "android-ownradio-pref";
+	
+	private static final String IS_FIRST_TIME_LAUNCH = "IsFirstTimeLaunch";
+	private static final String DEVICE_ID = "DeviceID";
+	
+	public PrefManager(Context context) {
+		this._context = context;
+//		pref = _context.getSharedPreferences(PREF_NAME, PRIVATE_MODE);
+		pref = PreferenceManager.getDefaultSharedPreferences(context);
+		editor = pref.edit();
+	}
+	
+	public void setFirstTimeLaunch(boolean isFirstTime) {
+		editor.putBoolean(IS_FIRST_TIME_LAUNCH, isFirstTime);
+		editor.commit();
+	}
+	
+	public boolean isFirstTimeLaunch() {
+		return pref.getBoolean(IS_FIRST_TIME_LAUNCH, true);
+	}
+	
+	public void setDeviceId(String deviceId){
+		editor.putString(DEVICE_ID, deviceId);
+		editor.commit();
+	}
+	
+	public String getDeviceId(){
+		return pref.getString(DEVICE_ID,"");
+	}
+	
+	public void setPrefItem(String key, String item){
+		editor.putString(key, item);
+		editor.commit();
+	}
+	
+	public String getPrefItem(String key){
+		return pref.getString(key, "");
+	}
+	
+}

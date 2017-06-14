@@ -7,8 +7,6 @@ import android.os.Environment;
 
 import java.io.File;
 
-import static ru.netvoxlab.ownradio.MainActivity.filePath;
-
 /**
  * Created by a.polunina on 25.10.2016.
  */
@@ -48,7 +46,7 @@ public class TrackDB extends SQLiteOpenHelper {
 
 		//Чистим все треки
 		try {
-			File directory = filePath;//mContext.getFilesDir();
+			File directory = ((App)mContext).getMusicDirectory();//mContext.getFilesDir();
 //			File directory = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC);
 			if (directory.listFiles() != null) {
 				for (File file : directory.listFiles()) {

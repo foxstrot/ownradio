@@ -17,40 +17,44 @@ public class App extends Application {
 	private File appDirectory;
 	private File logDirectory;
 	private File logFile;
+	private File musicDirectory;
 	private Process process;
 	public void onCreate() {
 		super.onCreate();
+		//			if ( isExternalStorageWritable() ) {
+		appDirectory = this.getFilesDir();// new File (Environment.getExternalStorageDirectory().getAbsolutePath());//this.getFilesDir();
+		musicDirectory = new File(appDirectory + File.separator + "music");
+		if(!musicDirectory.exists())
+			musicDirectory.mkdirs();
 		
-//		if ( isExternalStorageWritable() ) {
-//			appDirectory = this.getFilesDir();// new File (Environment.getExternalStorageDirectory().getAbsolutePath());//this.getFilesDir();
-//			logDirectory = new File( appDirectory + File.separator + "log" );
-//			logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
-//
-//			// create app folder
-//			if ( !appDirectory.exists() ) {
-//				appDirectory.mkdir();
-//			}
-//
-//			// create log folder
-//			if ( !logDirectory.exists() ) {
-//				logDirectory.mkdir();
-//			}
-//
-//			// clear the previous logcat and then write the new one to the file
+			logDirectory = new File( appDirectory + File.separator + "log" );
+			logFile = new File( logDirectory, "logcat" + System.currentTimeMillis() + ".txt" );
+
+			// create app folder
+			if ( !appDirectory.exists() ) {
+				appDirectory.mkdir();
+			}
+
+			// create log folder
+			if ( !logDirectory.exists() ) {
+				logDirectory.mkdir();
+			}
+
+			// clear the previous logcat and then write the new one to the file
 //			try {
 //				if (process != null) {
 //					process.destroy();
 //				}
 //				process = Runtime.getRuntime().exec("logcat -c");
-//				process = Runtime.getRuntime().exec("logcat -v time -f " + logFile);
+//				process = Runtime.getRuntime().exec("logcat -d time -f " + logFile);
 //			} catch ( IOException e ) {
 //				e.printStackTrace();
 //			}
-//
-////		} else if ( isExternalStorageReadable() ) {
-////			// only readable
-////		} else {
-////			// not accessible
+
+//		} else if ( isExternalStorageReadable() ) {
+//			// only readable
+//		} else {
+//			// not accessible
 //		}
 	}
 	
@@ -73,6 +77,8 @@ public class App extends Application {
 		return false;
 	}
 	
+
+	
 	public File getAppDirectory(){
 		return appDirectory;
 	}
@@ -84,4 +90,6 @@ public class App extends Application {
 	public File getLogFile(){
 		return logFile;
 	}
+	
+	public File getMusicDirectory() { return musicDirectory; }
 }

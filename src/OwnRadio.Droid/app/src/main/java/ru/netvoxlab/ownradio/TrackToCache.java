@@ -14,7 +14,6 @@ import java.util.Map;
 
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
-import static ru.netvoxlab.ownradio.MainActivity.filePath;
 
 /**
  * Created by a.polunina on 24.10.2016.
@@ -30,7 +29,7 @@ public class TrackToCache {
 
 	public TrackToCache(Context context) {
 		mContext = context;
-		pathToCache = filePath;
+		pathToCache = ((App)context.getApplicationContext()).getMusicDirectory();;
 	}
 
 	public String SaveTrackToCache(String deviceId, int trackCount) {

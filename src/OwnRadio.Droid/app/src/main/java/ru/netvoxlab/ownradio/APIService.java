@@ -13,6 +13,8 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Streaming;
+import ru.netvoxlab.ownradio.models.DeviceModel;
+import ru.netvoxlab.ownradio.models.HistoryModel;
 
 /**
  * Created by a.polunina on 15.11.2016.
@@ -28,13 +30,13 @@ public interface APIService {
 	@GET("v4/tracks/{trackid}/{deviceid}")
 	Call<ResponseBody> getTrackById(@Path("trackid") String trackId, @Path("deviceid") String deviceId);
 
-	@POST("v4/histories/{deviceid}/{trackid}")
+	@POST("v5/histories/{deviceid}/{trackid}")
 	@Headers("Content-Type: application/json")
-	Call<Map<String, String>> sendHistory(@Path("deviceid") String deviceId, @Path("trackid") String trackId, @Body HistoryModel data);
+	Call<Void> sendHistory(@Path("deviceid") String deviceId, @Path("trackid") String trackId, @Body HistoryModel data);
 	
-	@GET("v4/devices/{deviceid}/{devicename}/registerdevice")
+	@POST("v5/devices")
 	@Headers("Content-Type: application/json")
-	Call<Map<String, String>> registerDevice(@Path("deviceid") String deviceId, @Path("devicename") String deviceName);
+	Call<Void> registerDevice(@Body DeviceModel deviceModel);
 	
 	@Multipart
 	@POST("v4/logs/{deviceid}")

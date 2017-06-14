@@ -17,5 +17,9 @@
 	<style name="PreferenceScreen" parent="AppTheme">
 		<item name="android:textAllCaps">true</item>
 	</style>
-
+	
+	
+	<style name="PreferenceTheme" parent="PreferenceThemeOverlay">
+	
+	</style>
 </resources>

@@ -7,8 +7,8 @@ android {
 		applicationId "ru.netvoxlab.ownradio"
 		minSdkVersion 19
 		targetSdkVersion 25
-		versionCode 57
-		versionName "v2017.06.05"
+		versionCode 59
+		versionName "v2017.06.13"
 		testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
 
@@ -44,5 +44,6 @@ dependencies {
 	compile 'uk.co.chrisjenx:calligraphy:2.3.0'
 	compile 'com.android.support:support-v4:25.3.1'
 	compile 'com.android.support:support-vector-drawable:25.3.1'
+	compile 'com.android.support:preference-v7:25.3.1'
 	testCompile 'junit:junit:4.12'
 }

@@ -18,7 +18,6 @@ import retrofit2.Response;
 
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.TAG;
-import static ru.netvoxlab.ownradio.MainActivity.filePath;
 
 /**
  * Created by a.polunina on 13.12.2016.
@@ -40,7 +39,7 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 //			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id"), trackMap[0].get("deviceid")).execute();
 			if (response.isSuccessful()) {
 				Log.d(TAG, "server contacted and has file");
-				final String trackURL = filePath + File.separator + trackMap[0].get("id") + ".mp3";
+				final String trackURL = ((App)mContext).getMusicDirectory() + File.separator + trackMap[0].get("id") + ".mp3";
 //				final String trackURL = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + File.separator + trackMap[0].get("id") + ".mp3";
 				boolean writtenToDisk = WriteTrackToDisk2(trackURL, response.body());
 				

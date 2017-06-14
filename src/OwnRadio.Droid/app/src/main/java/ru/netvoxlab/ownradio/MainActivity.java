@@ -11,7 +11,6 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -85,9 +84,6 @@ public class MainActivity extends AppCompatActivity
 	TextView txtTrackArtist;
 	
 	VideoView videoView;
-	Uri uriVideoView;
-	MediaPlayer videoPlayer;
-	Boolean videoShow = false;
 	
 	Toolbar toolbar;
 	
@@ -130,13 +126,11 @@ public class MainActivity extends AppCompatActivity
 		navigationView.requestLayout();
 		
 		//получаем настройки приложения по умолчанию
-		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+//		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 		
 		//Z
 		
-		filePath = new File(this.getFilesDir() + File.separator + "music");
-		if(!filePath.exists())
-			filePath.mkdirs();
+		filePath = ((App)getApplicationContext()).getMusicDirectory();
 		textUserID = (TextView) findViewById(R.id.userID);
 		textVersionName = (TextView) findViewById(R.id.versionName);
 		textDeviceID = (TextView) findViewById(R.id.deviceID);
@@ -291,6 +285,10 @@ public class MainActivity extends AppCompatActivity
 		if(id == R.id.app_bar_settings){
 			Intent settingsActivity = new Intent(getBaseContext(),
 					SettingsActivity.class);
+			startActivity(settingsActivity);
+		} else if(id == R.id.app_bar_slider){
+			Intent settingsActivity = new Intent(getBaseContext(),
+					WelcomeActivity.class);
 			startActivity(settingsActivity);
 		}
 //		if (id == R.id.nav_camera) {
@@ -580,7 +578,7 @@ public class MainActivity extends AppCompatActivity
 				if (DeviceId.isEmpty()) {
 					DeviceId = UUID.randomUUID().toString();
 					String UserName = "NewUser";
-					String DeviceName = DeviceName = Build.BRAND + " " + Build.PRODUCT;
+					String DeviceName = Build.BRAND + " " + Build.PRODUCT;
 					new APICalls(getApplicationContext()).RegisterDevice(DeviceId, DeviceName + " " + getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName);
 					UserId = apiCalls.GetUserId(DeviceId);
 					sp.edit().putString("DeviceID", DeviceId).commit();

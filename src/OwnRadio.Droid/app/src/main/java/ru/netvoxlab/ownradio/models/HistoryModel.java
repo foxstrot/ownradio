@@ -1,4 +1,4 @@
-package ru.netvoxlab.ownradio;
+package ru.netvoxlab.ownradio.models;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
