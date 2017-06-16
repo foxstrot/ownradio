@@ -68,4 +68,8 @@
 		<item>@color/dot_dark_screen</item>
 		<item>@color/dot_dark_screen</item>
 	</array>
+	
+	<!--Settings-->
+	<color name="pref_header_color">#ececec</color>
+	<color name="pref_title_color">#7a7a7a</color>
 </resources>

@@ -52,8 +52,8 @@ public class WelcomeActivity extends AppCompatActivity {
 		// Checking for first time launch - before calling setContentView()
 		prefManager = new PrefManager(this);
 		if (!prefManager.isFirstTimeLaunch()) {
-//			launchHomeScreen();
-//			finish();
+			launchHomeScreen();
+			finish();
 		}
 		
 		//генерируем deviceId и регистрируем устройство

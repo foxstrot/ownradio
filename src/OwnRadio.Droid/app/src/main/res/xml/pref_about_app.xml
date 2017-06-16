@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-				  android:title="@string/pref_about_app">
-	<Preference android:title="@string/pref_header_about_app"
-				android:key="about_app"
-				android:fragment="ru.netvoxlab.ownradio.SettingsActivity$AboutAppFragment"
-		>
-	</Preference>
-</PreferenceScreen>

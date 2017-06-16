@@ -7,9 +7,11 @@ import android.os.Build;
 import android.os.StatFs;
 import android.util.Log;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
 
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
@@ -25,11 +27,13 @@ public class TrackToCache {
 	private final int EXTERNAL_STORAGE_NOT_AVAILABLE = -1;
 	private final int DOWNLOAD_FILE_TO_CACHE = 1;
 	private final int DELETE_FILE_FROM_CACHE = 2;
+	final static double bytesInGB = 1073741824.0d;
+	final static double bytesInMB = 1048576.0d;
 	final String TAG = "ownRadio";
 
 	public TrackToCache(Context context) {
 		mContext = context;
-		pathToCache = ((App)context.getApplicationContext()).getMusicDirectory();;
+		pathToCache = ((App)context.getApplicationContext()).getMusicDirectory();
 	}
 
 	public String SaveTrackToCache(String deviceId, int trackCount) {
@@ -162,11 +166,16 @@ public class TrackToCache {
 		}
 	}
 
+	//проверка загружать или удалять трек в зависимости от наличия свободного места
 	public int CheckCacheDoing(){
 		long cacheSize = FolderSize(pathToCache);
 		long availableSpace = FreeSpace();
-
-			if (cacheSize < (cacheSize + availableSpace) * 0.3)
+		String[] memorySizeArray = mContext.getResources().getStringArray(R.array.pref_max_memory_size_values);
+		PrefManager prefManager = new PrefManager(mContext);
+		//получаем максимальный размер кеша из настроек
+		long keyMaxMemorySize = (long)(bytesInGB * Double.valueOf(prefManager.getPrefItem("max_memory_size")));
+//		String maxMemorySize =
+		if(cacheSize < keyMaxMemorySize && cacheSize < (cacheSize + availableSpace) * 0.3)
 				return DOWNLOAD_FILE_TO_CACHE;
 			else
 				return DELETE_FILE_FROM_CACHE;
@@ -206,6 +215,51 @@ public class TrackToCache {
 
 		} catch (Exception ex) {
 			Log.d(TAG, "Error in SaveTrackToCache at file delete. Ex.mess:" + ex.getLocalizedMessage());
+			return false;
+		}
+	}
+	
+	//функция возвращает количество памяти, занимаемое прослушанными треками
+	public long ListeningTracksSize(){
+		long length = 0;
+		try {
+			List<File> fileList = new TrackDataAccess(mContext).GetUuidsListeningTracks();
+			if(fileList != null) {
+				for (File file : fileList) {
+					if (file.isFile() && file.exists())
+						length += file.length();
+				}
+			}
+		} catch (Exception ex) {
+			return 0;
+		}
+		return length;
+	}
+	
+	//удаляет все треки из директории
+	public boolean DeleteAllTracksFromCache(){
+		try {
+			FileUtils.cleanDirectory(pathToCache);
+			new TrackDataAccess(mContext).DeleteAllTracksFromCache();
+			return true;
+		}catch (Exception ex){
+			return false;
+		}
+	}
+	
+	//удаляет прослушанные треки из директории
+	public boolean DeleteListenedTracksFromCache(){
+		try {
+			List<File> fileList = new TrackDataAccess(mContext).GetUuidsListeningTracks();
+			if(fileList != null) {
+				for (File file : fileList) {
+					if (file.isFile() && file.exists())
+						file.delete();
+				}
+			}
+			new TrackDataAccess(mContext).DeleteListenedTracksFromCache();
+			return true;
+		}catch (Exception ex){
 			return false;
 		}
 	}

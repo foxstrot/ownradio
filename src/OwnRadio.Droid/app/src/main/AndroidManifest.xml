@@ -26,13 +26,15 @@
 			android:name=".MainActivity"
 			android:configChanges="keyboardHidden|orientation|screenSize"
 			android:label="@string/app_name"
-			android:launchMode="singleTask">
-			<!--<intent-filter>-->
-				<!--<action android:name="android.intent.action.MAIN"/>-->
-				<!--&lt;!&ndash; <action android:name="android.intent.action.MEDIA_MOUNTED" /> &ndash;&gt;-->
-				<!--<category android:name="android.intent.category.LAUNCHER"/>-->
-				<!--&lt;!&ndash; <data android:scheme="file" /> &ndash;&gt;-->
-			<!--</intent-filter>-->
+			android:launchMode="singleTask"
+			android:screenOrientation="portrait">
+			
+			<!-- <intent-filter> -->
+			<!-- <action android:name="android.intent.action.MAIN"/> -->
+			<!-- &lt;!&ndash; <action android:name="android.intent.action.MEDIA_MOUNTED" /> &ndash;&gt; -->
+			<!-- <category android:name="android.intent.category.LAUNCHER"/> -->
+			<!-- &lt;!&ndash; <data android:scheme="file" /> &ndash;&gt; -->
+			<!-- </intent-filter> -->
 		</activity>
 		
 		<service
@@ -86,21 +88,32 @@
 		
 		<service
 			android:name=".RequestAPIService"
-			android:exported="false"
-			android:theme="@style/PreferenceTheme">
+			android:exported="false">
 		</service>
 		
 		<activity
 			android:name=".SettingsActivity"
-			android:label="@string/title_activity_settings">
+			android:label="@string/title_activity_settings"
+			android:screenOrientation="portrait">
 		</activity>
-		<activity android:name=".WelcomeActivity" android:screenOrientation="portrait">
+		<activity
+			android:name=".WelcomeActivity"
+			android:screenOrientation="portrait">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN"/>
 				<!-- <action android:name="android.intent.action.MEDIA_MOUNTED" /> -->
 				<category android:name="android.intent.category.LAUNCHER"/>
 				<!-- <data android:scheme="file" /> -->
 			</intent-filter>
+		</activity>
+		<activity
+			android:name=".AppInfoActivity"
+			android:label="@string/pref_header_about_app"
+			android:screenOrientation="portrait">
+		</activity>
+		<activity android:name=".LastLogsActivity"
+			android:label="@string/pref_header_log"
+		  	android:screenOrientation="portrait">
 		</activity>
 	</application>
 

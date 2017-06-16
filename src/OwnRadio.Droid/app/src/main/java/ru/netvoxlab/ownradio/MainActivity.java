@@ -16,19 +16,16 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.PowerManager;
+import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.support.design.widget.NavigationView;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
@@ -48,8 +45,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity
-		implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener{
+//		implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
 	
 	private APICalls apiCalls;
 	
@@ -86,6 +83,7 @@ public class MainActivity extends AppCompatActivity
 	VideoView videoView;
 	
 	Toolbar toolbar;
+	ImageButton btnMenu;
 	
 	LinearLayout layoutDevelopersInfo;
 	public static File filePath;
@@ -98,11 +96,14 @@ public class MainActivity extends AppCompatActivity
 	public static final String ActionTrackInfoUpdate = "ru.netvoxlab.ownradio.action.TRACK_INFO_UPDATE";
 	public static final String ActionButtonImgUpdate = "ru.netvoxlab.ownradio.action.BTN_PLAYPAUSE_IMG_UPDATE";
 	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
+	public static final String ActionStopPlayback = "ru.netvoxlab.ownradio.action.STOP_PLAYBACK";
+	
+	public static final String numListenedTracks = "NUM_TRACKS_LISTENED_IN_VERSION";
+	public static final String version = "VERSION";
 	ProgressDialog dialog;
 	int numberOfTaps = 0;
 	long lastTapTimeMs = 0;
 	long touchDownMs = 0;
-	private PowerManager.WakeLock mWakeLock;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -115,19 +116,21 @@ public class MainActivity extends AppCompatActivity
 
 		
 		final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-		drawer.setDrawerListener(toggle);
-		toggle.syncState();
+//		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+//				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+//		drawer.setDrawerListener(toggle);
+//		toggle.syncState();
 		
-		NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-		navigationView.setNavigationItemSelectedListener(this);
-		navigationView.bringToFront();
-		navigationView.requestLayout();
-		
-		//получаем настройки приложения по умолчанию
-//		PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-		
+//		NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+//		navigationView.setNavigationItemSelectedListener(this);
+//		navigationView.bringToFront();
+//		navigationView.requestLayout();
+		try {
+			//получаем настройки приложения по умолчанию
+			PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+		}catch (Exception ex){
+			
+		}
 		//Z
 		
 		filePath = ((App)getApplicationContext()).getMusicDirectory();
@@ -165,6 +168,7 @@ public class MainActivity extends AppCompatActivity
 		filter.addAction(ActionButtonImgUpdate);
 		filter.addAction(ActionSendInfoTxt);
 		filter.addAction(ActionProgressBarFirstTracksLoad);
+		filter.addAction(ActionStopPlayback);
 		registerReceiver(myReceiver, filter);
 		
 		this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
@@ -226,6 +230,16 @@ public class MainActivity extends AppCompatActivity
 			}
 		});
 		
+		btnMenu = (ImageButton) findViewById(R.id.btnMenu);
+		btnMenu.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
+				settingsActivity.putExtra( PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName() );
+				settingsActivity.putExtra( PreferenceActivity.EXTRA_NO_HEADERS, true );
+				startActivity(settingsActivity);
+			}
+		});
 		
 		Button btnTest = (Button) findViewById(R.id.btnTest);
 		btnTest.setOnClickListener(new View.OnClickListener() {
@@ -276,40 +290,42 @@ public class MainActivity extends AppCompatActivity
 //		return super.onOptionsItemSelected(item);
 //	}
 
-	@SuppressWarnings("StatementWithEmptyBody")
-	@Override
-	public boolean onNavigationItemSelected(MenuItem item) {
-		// Handle navigation view item clicks here.
-		int id = item.getItemId();
-		
-		if(id == R.id.app_bar_settings){
-			Intent settingsActivity = new Intent(getBaseContext(),
-					SettingsActivity.class);
-			startActivity(settingsActivity);
-		} else if(id == R.id.app_bar_slider){
-			Intent settingsActivity = new Intent(getBaseContext(),
-					WelcomeActivity.class);
-			startActivity(settingsActivity);
-		}
-//		if (id == R.id.nav_camera) {
-//			// Handle the camera action
-//		} else if (id == R.id.nav_gallery) {
+//	@SuppressWarnings("StatementWithEmptyBody")
+//	@Override
+//	public boolean onNavigationItemSelected(MenuItem item) {
+//		// Handle navigation view item clicks here.
+//		int id = item.getItemId();
 //
-//		} else if (id == R.id.nav_slideshow) {
-//
-//		} else if (id == R.id.nav_manage) {
-//
-//		} else if (id == R.id.nav_share) {
-//
-//		} else if (id == R.id.nav_send) {
-//
+//		if(id == R.id.app_bar_settings){
+//			Intent settingsActivity = new Intent(getBaseContext(),
+//					SettingsActivity.class);
+//			settingsActivity.putExtra( PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName() );
+//			settingsActivity.putExtra( PreferenceActivity.EXTRA_NO_HEADERS, true );
+//			startActivity(settingsActivity);
+//		} else if(id == R.id.app_bar_slider){
+//			Intent settingsActivity = new Intent(getBaseContext(),
+//					WelcomeActivity.class);
+//			startActivity(settingsActivity);
 //		}
+////		if (id == R.id.nav_camera) {
+////			// Handle the camera action
+////		} else if (id == R.id.nav_gallery) {
+////
+////		} else if (id == R.id.nav_slideshow) {
+////
+////		} else if (id == R.id.nav_manage) {
+////
+////		} else if (id == R.id.nav_share) {
+////
+////		} else if (id == R.id.nav_send) {
+////
+////		}
+////
+//		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+//		drawer.closeDrawer(GravityCompat.START);
+//		return true;
+//	}
 //
-		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-		drawer.closeDrawer(GravityCompat.START);
-		return true;
-	}
-	
 	
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
@@ -387,6 +403,11 @@ public class MainActivity extends AppCompatActivity
 	private BroadcastReceiver myReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, final Intent intent) {
+			
+			if(intent.getAction() == ActionStopPlayback) {
+				binder.GetMediaPlayerService().Stop();
+				binder.GetMediaPlayerService().StopNotification();
+			}
 			
 			if (intent.getAction() == ActionTrackInfoUpdate)
 				SetTrackInfoText();
@@ -567,6 +588,10 @@ public class MainActivity extends AppCompatActivity
 			
 			try {
 				String info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName;
+				if(!info.equals(sp.getString("version", ""))){
+					sp.edit().putString(version, info).commit();
+					sp.edit().putString(numListenedTracks, "0").commit();
+				}
 				textVersionName.setText("Version name: " + info);
 			} catch (PackageManager.NameNotFoundException e) {
 				e.printStackTrace();
@@ -620,7 +645,7 @@ public class MainActivity extends AppCompatActivity
 		TrackToCache trackToCache = new TrackToCache(this);
 		txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
 		txtTrackCountInFolder.setText("Count files in folder: " + trackToCache.TrackCountInFolder(filePath));
-		txtCountPlayTracks.setText(trackDataAccess.GetCountPlayTracks());
+		txtCountPlayTracks.setText(trackDataAccess.GetCountPlayTracksTable());
 		txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(filePath) / 1048576 + " MB.");
 	}
 	

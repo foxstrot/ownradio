@@ -20,9 +20,7 @@
 	<string name="pref_header_general">General</string>
 	
 	<string name="pref_title_social_recommendations">Enable social recommendations</string>
-	<string name="pref_description_social_recommendations">Recommendations for people to contact
-		based on your message history
-	</string>
+	
 	
 	<string name="pref_title_display_name">Display name</string>
 	<string name="pref_default_display_name">John Smith</string>
@@ -87,46 +85,62 @@
 	<string name="pref_title_vibrate">Vibrate</string>
 	
 	<!-- Settings -->
-	<string name="pref_header_internet_connection">Подключение к серверу</string>
+	<string name="pref_header_internet_connection">Подключение к интернету</string>
 	
 	<string-array name="pref_internet_connection_titles">
 		<item>@string/pref_only_wifi</item>
 		<item>@string/pref_mobile_and_wifi</item>
 	</string-array>
 	<string-array name="pref_internet_connection_values">
-		<item>1</item>
 		<item>0</item>
+		<item>1</item>
 	</string-array>
 	<string name="pref_only_wifi">Только wifi</string>
 	<string name="pref_mobile_and_wifi">Moб. интернет и wifi</string>
 	
 	<string name="pref_header_only_own_tracks">Слушать только свои треки</string>
 	<string name="pref_read_about_microserver">Подробнее о том как установить микросервер. Только для пользователей ipv6</string>
-	<string name="pref_read_about_upload_own_tracks">Подробнее о том как загрузить свои треки на сервер</string>
+	<string name="pref_read_about_upload_own_tracks">Подробнее о том, как загрузить свои треки на сервер</string>
 	<string name="pref_header_app">Приложение</string>
 	<string name="pref_about_app">Подробнее о приложении</string>
 	<string name="pref_header_about_app">О приложении</string>
 	<string name="pref_write_to_the_developers">Написать разработчикам</string>
 	<string name="pref_rate_app">Оценить приложение</string>
 	<string name="pref_header_system_info">Системная информация для отладки</string>
+	<string name="pref_header_count_tracks">Количество прослушиваний и количество треков</string>
+	<string name="pref_last_log_recs">Последние строки лога</string>
+	<string name="pref_send_log">Отправить лог на сервер</string>
+	<string name="pref_header_log">Логи устройства</string>
+	<string name="tracks">треков</string>
 	<string name="pref_memory">Память</string>
 	<string name="pref_max_memory_size">Занимать не более</string>
 	<string-array name="pref_max_memory_size_titles">
 		<item>"1 GB"</item>
-		<item>"10 GB"</item>
-		<item>"100 GB"</item>
+		<item>"2 GB"</item>
+		<item>"4 GB"</item>
+		<item>"8 GB"</item>
+		<item>"16 GB"</item>
+		<item>"32 GB"</item>
+		<item>"64 GB"</item>
 	</string-array>
 	<string-array name="pref_max_memory_size_values">
 		<item>1</item>
-		<item>0</item>
-		<item>-1</item>
+		<item>2</item>
+		<item>4</item>
+		<item>8</item>
+		<item>16</item>
+		<item>32</item>
+		<item>64</item>
 	</string-array>
 	<string name="pref_percent_of_free_memory">А также не более 30%% от свободной памяти</string>
 	<string name="pref_free_memory_size">Свободно</string>
 	<string name="pref_all_tracks_size">Занято</string>
-	<string name="pref_listening_tracks_size_size">Из них уже прослушано</string>
+	<string name="pref_listening_tracks_size_size">Из них уже прослушанных</string>
 	<string name="pref_clear_cache">Освободить</string>
-	
+	<string name="delete_all_alert_title">Удалить кешированные треки</string>
+	<string name="delete_all_alert_message">Внимание. Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш</string>
+	<string name="alert_positive_button">ОК</string>
+	<string name="alert_negative_button">Отмена</string>
 	<!--About app-->
 	<string name="current_version">Текущая версия</string>
 	<string name="about_ownradio">
@@ -137,194 +151,6 @@
 	<string name="date_updated">Обновлено </string>
 	
 	
-	<!--test-->
-	<string name="title_activity_list">Top Stories</string>
-	<string name="title_activity_item">Comments</string>
-	<string name="filter_title_item">Materialistic</string>
-	<string name="loading_text">...</string>
-	<string name="title_activity_web">Story</string>
-	<string name="open_drawer">Open drawer</string>
-	<string name="close_drawer">Close drawer</string>
-	<string name="view_in_browser">View in external browser</string>
-	<string name="favorite_email_subject">Your Materialistic saved stories</string>
-	<string name="share">Share</string>
-	<string name="title_activity_about">About</string>
-	<string name="license_title">License</string>
-	<string name="third_party_licenses_title">3rd Party Licenses</string>
-	<string name="developer_info_title">Developer Info</string>
-	<string name="developer_info_text">
-        <![CDATA[
-            <p>Ha Duy Trung</p>
-            <p><a href="https://twitter.com/hadt">@hadt</a></p>
-            <p><a href="https://github.com/hidroh">Github</a></p>
-            <p><a href="https://hidroh.github.io">Blog</a></p>
-        ]]>
-    </string>
-	<string name="application_info_title">Application Info</string>
-	<string name="application_info_text" formatted="false">
-        <![CDATA[
-            <p>Version: %s</p>
-            <p>This application is open source at <a href="https://github.com/hidroh/materialistic">github.com/hidroh/materialistic</a></p>
-        ]]>
-    </string>
-	<string name="libraries_title">Libraries &amp; Resources</string>
-	<string name="title_activity_favorite">Saved Stories</string>
-	<string name="saved" formatted="false">Saved %s</string>
-	<string name="toast_saved">Story saved!</string>
-	<string name="clear_all">Clear all</string>
-	<string name="toast_removed">Story unsaved</string>
-	<string name="no_saved_stories">No saved stories so far</string>
-	<string name="no_comments">It\'s still quiet here</string>
-	<string name="confirm_clear">Clear all saved stories?</string>
-	<string name="email">Export via email</string>
-	<string name="preparing">Preparing...</string>
-	<string name="clear_selected">Clear selected</string>
-	<string name="confirm_clear_selected">Clear selected saved stories?</string>
-	<string name="search">Search</string>
-	<string name="hint_search_saved_stories">Search saved stories</string>
-	<string name="no_stories_search">Couldn\'t find what you\'re looking for</string>
-	
-	<!-- preferences -->
-	<string name="pref_category_reading">Reading</string>
-	<string name="pref_category_comments">Comments and replies</string>
-	<string name="pref_category_search">Search</string>
-	<string name="pref_external">pref_external</string>
-	<string name="pref_external_title">Use external browser</string>
-	<string name="pref_external_summary">Read articles in external browser</string>
-	<string name="pref_color_code">pref_color_code</string>
-	<string name="pref_color_code_title">Color code comments</string>
-	<string name="pref_color_code_summary">Apply visual indicator to comments</string>
-	<string name="pref_highlight_updated">pref_highlight_updated</string>
-	<string name="pref_highlight_updated_title">Highlight updated stories</string>
-	<string name="pref_highlight_updated_summary">Show changes from last refresh</string>
-	<string name="pref_custom_tab">pref_custom_tab</string>
-	<string name="pref_custom_tab_title">Use custom Chrome tab (beta)</string>
-	<string name="pref_custom_tab_summary">Open Chrome tab instead of browser</string>
-	<string name="pref_item_click">pref_item_click</string> <!-- deprecated -->
-	<string name="pref_story_display">pref_story_display</string>
-	<string name="pref_story_display_title">Default story display</string>
-	<string name="pref_dark_theme">pref_dark_theme</string> <!-- deprecated -->
-	<string name="pref_theme">pref_theme</string>
-	<string name="pref_theme_title">Theme</string>
-	<string name="pref_item_search_recent">pref_item_search_recent</string> <!-- deprecated -->
-	<string name="pref_search_sort">pref_search_sort</string>
-	<string name="pref_search_sort_title">Sort by</string>
-	<string name="pref_text_size">pref_text_size</string>
-	<string name="pref_text_size_title">Text size</string>
-	<string name="pref_readability_text_size">pref_readability_text_size</string>
-	<string name="pref_font">pref_font</string>
-	<string name="pref_readability_font">pref_readability_font</string>
-	<string name="pref_font_title">Font</string>
-	<string name="pref_comment_display">pref_comment_display</string>
-	<string name="pref_comment_display_title">Default comments display</string>
-	<string name="pref_max_lines">pref_max_lines</string>
-	<string name="pref_max_lines_title">Initial display</string>
-	<string name="pref_max_lines_summary">Expand/collapse long comments</string>
-	<string name="pref_popular_range">pref_popular_range</string>
-	<string name="pref_highlight_updated_help">pref_highlight_updated_help</string>
-	
-	<string name="connection_error">Unable to connect to Hacker News. Check your connection or try again.</string>
-	<string name="select_story">Select a story to view</string>
-	<string name="download_external">View in another app</string>
-	<string name="try_me">Long press one to save it for later!</string>
-	<string name="title_activity_jobs">Jobs</string>
-	<string name="title_activity_show">Show HN</string>
-	<string name="title_activity_ask">Ask HN</string>
-	<string name="title_activity_new">New Stories</string>
-	<string name="title_activity_search">Search HN</string>
-	<string name="clear_search_history">Clear search history</string>
-	<string name="clear_search_history_confirm">Clear search history?</string>
-	<string name="hide_comments" formatted="false">Hide comments (%s)</string>
-	<string name="show_comments" formatted="false">Show comments (%s)</string>
-	<string name="posted_reply" formatted="false">
-        <![CDATA[
-            %s <a href="#">in response to %s</a>
-        ]]>
-    </string>
-	<string name="undo">Undo</string>
-	<string name="score" formatted="false">%s pts</string>
-	<string name="comments">Comments</string>
-	<string name="comments_count" formatted="false">%s Comments</string>
-	<string name="article">Article</string>
-	<string name="fab_scrolling_view_behavior" translatable="false">io.github.hidroh.materialistic.ScrollAwareFABBehavior</string>
-	<string name="reset_settings">Reset all settings</string>
-	<string name="reset_settings_confirm">Reset all your preferences to app defaults?</string>
-	<string name="last_updated" formatted="false">Last updated %s</string>
-	<string name="feedback">Feedback</string>
-	<string name="send_feedback">Send Feedback</string>
-	<string name="title_hint">Title</string>
-	<string name="comment_hint">Comment</string>
-	<string name="feedback_note">Your feedback will be made public as a Materialistic Github issue.</string>
-	<string name="title_required">Title is required</string>
-	<string name="comment_required">Comment is required</string>
-	<string name="feedback_sent">Feedback sent. Thank you!</string>
-	<string name="feedback_failed">Failed to send, please try again</string>
-	<string name="chooser_title">Open with</string>
-	<string name="title_activity_popular">What\'s Hot</string>
-	<string name="range">Range</string>
-	<string name="popular_range_last_24h">Last 24h</string>
-	<string name="popular_range_past_week">Past week</string>
-	<string name="popular_range_past_month">Past month</string>
-	<string name="popular_range_past_year">Past year</string>
-	<string name="new_stories_count" formatted="false">%s new stories</string>
-	<string name="show_me">Show me</string>
-	<string name="showing_new_stories">Showing %s new stories</string>
-	<string name="show_all">Show all</string>
-	<string name="whats_this">What\'s this?</string>
-	<string name="got_it">Got it</string>
-	<string name="help_new_story">New story since last refresh</string>
-	<string name="help_promoted_story">Promoted story since last refresh</string>
-	<string name="help_new_comments">Story with new comments since last refresh</string>
-	<string name="readability">Readability</string>
-	<string name="text_size_extra_small">Extra small</string>
-	<string name="text_size_small">Small</string>
-	<string name="text_size_medium">Medium</string>
-	<string name="text_size_large">Large</string>
-	<string name="text_size_extra_large">Extra large</string>
-	<string name="readability_failed">Unable to parse article</string>
-	<string name="theme_light">Light</string>
-	<string name="theme_dark">Dark</string>
-	<string name="theme_sepia">Sepia</string>
-	<string name="theme_green">Green</string>
-	<string name="theme_solarized_dark">Solarized Dark</string>
-	<string name="theme_solarized">Solarized</string>
-	<string name="comment_display_multiple">Multiple pages</string>
-	<string name="comment_display_single">Single page - auto expand</string>
-	<string name="comment_display_collapsed">Single page - collapsed</string>
-	<string name="story_display_article">Article</string>
-	<string name="story_display_comments">Comments</string>
-	<string name="search_sort_recent">More recent</string>
-	<string name="search_sort_popularity">Popularity</string>
-	<string name="story_display_readability">Readability</string>
-	<string name="font_options">Font options</string>
-	<string name="read_more">Read all %s lines</string>
-	<string name="comment_max_lines_3">Max 3 lines</string>
-	<string name="comment_max_lines_4">Max 4 lines</string>
-	<string name="comment_max_lines_5">Max 5 lines</string>
-	<string name="comment_max_lines_all">All</string>
-	<string name="readability_html" formatted="false">
-        <![CDATA[
-        <html>
-            <head>
-                <style type="text/css">
-                    @font-face {
-                        font-family: materialistic;
-                        src: url("file:///android_asset/%s")}
-                    body {
-                        font-family: materialistic;
-                        font-size: %fpx;
-                        color: #%s;
-                    }
-                    a {color: #%s;}
-                    img {display: inline; height: auto; max-width: 100%%;}
-                </style>
-            </head>
-            <body>%s</body>
-            </html>"
-        ]]>
-    </string>
-	<string name="file_not_supported">Content type not supported</string>
-	<string name="title_activity_slider">SliderActivity</string>
 	<string name="section_format">Hello World from section: %1$d</string>
 	
 	<!--Welcome Activity-->
@@ -349,4 +175,10 @@
 	
 	<string name="play_again_desc">To see the welcome slider again, goto Settings -> apps -> welcome slider -> clear data</string>
 	<string name="play_again">Play Again</string>
+	<string name="count_tracks_listened_table">Информации о треках не найдено</string>
+	<!-- TODO: Remove or change this placeholder text -->
+	<string name="hello_blank_fragment">Hello blank fragment</string>
+	
+	
+	
 </resources>

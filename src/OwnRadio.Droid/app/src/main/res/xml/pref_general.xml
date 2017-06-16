@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-	
+	<Preference>
+	</Preference>
 	<PreferenceCategory
 		android:title="@string/pref_header_internet_connection"
 		android:key="pref_key_storage_settings"
 		android:layout="@layout/pref_header_title">
 		<ListPreference
-			android:defaultValue="1"
+			android:defaultValue="0"
 			android:entries="@array/pref_internet_connection_titles"
 			android:entryValues="@array/pref_internet_connection_values"
 			android:key="internet_connections_list"
@@ -18,20 +18,21 @@
 		android:title="@string/pref_header_only_own_tracks"
 		android:key="pref_key_storage_settings"
 		android:layout="@layout/pref_header_title">
-		<SwitchPreference
-			android:defaultValue="false"
-			android:key="own_tracks_switch"
-			android:title="@string/pref_header_only_own_tracks"/>
-		<Preference android:title="@string/pref_read_about_microserver"
-			android:layout="@layout/pref_title">
-			<intent android:action="android.intent.action.VIEW"
-					android:data="http://www.ownradio.ru" />
-		</Preference>
-		<Preference android:title="@string/pref_read_about_upload_own_tracks"
-					android:layout="@layout/pref_title">
-			<intent android:action="android.intent.action.VIEW"
-					android:data="http://www.ownradio.ru" />
-		</Preference>
+	<SwitchPreference
+		android:defaultValue="false"
+		android:key="own_tracks_switch"
+		android:title="@string/pref_header_only_own_tracks"
+		/>
+	<Preference android:title="@string/pref_read_about_microserver"
+				android:layout="@layout/pref_title">
+		<intent android:action="android.intent.action.VIEW"
+				android:data="http://www.ownradio.ru" />
+	</Preference>
+	<Preference android:title="@string/pref_read_about_upload_own_tracks"
+				android:layout="@layout/pref_title">
+		<intent android:action="android.intent.action.VIEW"
+				android:data="http://www.ownradio.ru" />
+	</Preference>
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/pref_memory"
@@ -45,20 +46,39 @@
 						android:key="max_memory_size"
 						android:negativeButtonText="@null"
 						android:positiveButtonText="@null"
-						/>
+			/>
+		<Preference
+			android:title="@string/pref_free_memory_size"
+			android:key="free_memory_size">
+		</Preference>
+		<Preference
+			android:title="@string/pref_all_tracks_size"
+			android:key="all_tracks_size">
+			<intent android:action="android.intent.action.MANAGE_PACKAGE_STORAGE"/>
+		</Preference>
+		<Preference
+			android:title="@string/pref_clear_cache"
+			android:summary="Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш"
+			android:key="delete_all_tracks">
+		</Preference>
+		<Preference
+			android:title="@string/pref_listening_tracks_size_size"
+			android:key="listening_tracks_size">
+		</Preference>
+		<Preference
+			android:title="@string/pref_clear_cache"
+			android:key="delete_listening_tracks">
 		
+		</Preference>
+
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/pref_header_app"
 		android:key="pref_key_storage_settings"
 		android:layout="@layout/pref_header_title">
-		<PreferenceScreen android:title="@string/pref_about_app">
-			<Preference android:title="@string/pref_header_about_app"
-						android:key="about_app"
-						android:layout="@layout/about_app">
-			</Preference>
-		</PreferenceScreen>
-
+		<Preference android:title="@string/pref_about_app"
+					android:key="about_app">
+		</Preference>
 		<Preference android:title="@string/pref_write_to_the_developers">
 			<intent android:action="android.intent.action.VIEW"
 					android:data="https://vk.com/ownradio" />
@@ -73,8 +93,21 @@
 		android:key="pref_key_storage_settings"
 		android:layout="@layout/pref_header_title">
 		<Preference
-			android:title="@string/pref_header_system_info"
 			android:key="sys_info"
-			/>
+			android:layout="@layout/pref_multiline_title"/>
+	</PreferenceCategory>
+	<PreferenceCategory
+		android:title="@string/pref_header_count_tracks"
+		android:key="pref_key_storage_settings"
+		android:layout="@layout/pref_header_title">
+		<Preference
+			android:key="pref_count_tracks_table"
+			android:layout="@layout/pref_multiline_title" />
+		<Preference
+			android:title="@string/pref_last_log_recs"
+			android:key="pref_last_log_recs" />
+		<Preference
+			android:title="@string/pref_send_log"
+			android:key="pref_send_logs" />
 	</PreferenceCategory>
 </PreferenceScreen>
