@@ -25,7 +25,7 @@ public class CheckConnection {
 		NetworkInfo wifiInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 		//Считывем используемый тип подключения из настроек
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mCcontext);
-		String connectionType = prefs.getString("internet_connections_list", ONLY_WIFI);
+		String connectionType = prefs.getString("internet_connections_list", ALL_CONNECTION_TYPES);
 		switch (connectionType){
 			case ONLY_WIFI:
 				if (!wifiInfo.isConnected()) {

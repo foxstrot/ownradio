@@ -51,9 +51,12 @@ public class PrefManager {
 		editor.putString(key, item);
 		editor.commit();
 	}
-	
+
 	public String getPrefItem(String key){
 		return pref.getString(key, "");
 	}
 	
+	public String getPrefItem(String key, String defaultItem){
+		return pref.getString(key, defaultItem);
+	}
 }

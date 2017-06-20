@@ -173,8 +173,9 @@ public class TrackToCache {
 		String[] memorySizeArray = mContext.getResources().getStringArray(R.array.pref_max_memory_size_values);
 		PrefManager prefManager = new PrefManager(mContext);
 		//получаем максимальный размер кеша из настроек
-		long keyMaxMemorySize = (long)(bytesInGB * Double.valueOf(prefManager.getPrefItem("max_memory_size")));
-//		String maxMemorySize =
+		long keyMaxMemorySize = (long)(bytesInGB * Double.valueOf(prefManager.getPrefItem("max_memory_size", "0.0d")));
+		if(keyMaxMemorySize == 0)
+			keyMaxMemorySize = Long.MAX_VALUE;
 		if(cacheSize < keyMaxMemorySize && cacheSize < (cacheSize + availableSpace) * 0.3)
 				return DOWNLOAD_FILE_TO_CACHE;
 			else
