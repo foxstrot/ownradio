@@ -146,12 +146,12 @@ public class WelcomeActivity extends AppCompatActivity {
 				// if last page home screen will be launched
 				int current = getItem(+1);
 				if (current < layouts.length) {
-					//если хотя бы один трек успел загрузиться - закрываем слайдер и переходим к основному экрану
-					if(current == layouts.length - 1 && new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 1){
-						launchHomeScreen();
-						return;
-					}
-					//иначе показываем последний слайд
+//					//если хотя бы один трек успел загрузиться - закрываем слайдер и переходим к основному экрану
+//					if(current == layouts.length - 1 && new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 1){
+//						launchHomeScreen();
+//						return;
+//					}
+//					//иначе показываем последний слайд
 						// move to next screen
 						try {
 							viewPager.setCurrentItem(current);
@@ -168,7 +168,7 @@ public class WelcomeActivity extends AppCompatActivity {
 		final Runnable Update = new Runnable(){
 			public void run(){
 				int current = viewPager.getCurrentItem();
-				if(current == layouts.length - 2 && new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 1){
+				if(current == layouts.length - 1 && new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 1){
 					btnNext.setText(getString(R.string.start));
 					btnSkip.setVisibility(View.GONE);
 					timer.cancel();
@@ -236,6 +236,8 @@ public class WelcomeActivity extends AppCompatActivity {
 				final Runnable LoadTrack = new Runnable(){
 					public void run(){
 						if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 1){
+							btnNext.setText(getString(R.string.start));
+							btnNext.setVisibility(View.VISIBLE);
 							launchHomeScreen();
 							loadTimer.cancel();
 							return;
@@ -251,6 +253,7 @@ public class WelcomeActivity extends AppCompatActivity {
 			} else {
 				// still pages are left
 				btnNext.setText(getString(R.string.next));
+				btnNext.setVisibility(View.VISIBLE);
 				btnSkip.setVisibility(View.VISIBLE);
 			}
 		}

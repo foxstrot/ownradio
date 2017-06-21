@@ -13,6 +13,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
 import android.provider.Settings;
 import android.support.v7.app.ActionBar;
@@ -231,9 +232,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			double freeSpace = memoryUtil.FreeSpace();
 			double tracksSpace = memoryUtil.FolderSize(((App) getActivity().getApplicationContext()).getMusicDirectory());
 			double listeningTracksSpace = memoryUtil.ListeningTracksSize();
-			
+			//TODO удаляем раздел настроек "Слушать только свои треки". Вернуть, когда будет готова эта фича и ее описание: preferenceScreen.addPreference(somePreference);
+			Preference listenOwnTracks = findPreference("pref_key_listen_own_tracks");
+			PreferenceScreen preferenceScreen = getPreferenceScreen();
+			preferenceScreen.removePreference(listenOwnTracks);
+			//делаем недоступным для пользователей без подписки
 			Preference ownTracksSwitch = findPreference("own_tracks_switch");
-			ownTracksSwitch.setEnabled(false);
+			if(ownTracksSwitch!=null)
+				ownTracksSwitch.setEnabled(false);
+			
 			Preference freeMemorySize = findPreference("free_memory_size");
 			if (freeSpace / bytesInGB > 0.1d)
 				freeMemorySize.setTitle(getResources().getString(R.string.pref_free_memory_size) + " " + BigDecimal.valueOf(freeSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
