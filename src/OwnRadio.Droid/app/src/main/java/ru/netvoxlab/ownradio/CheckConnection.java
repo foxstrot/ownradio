@@ -1,18 +1,18 @@
 package ru.netvoxlab.ownradio;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.preference.PreferenceManager;
+
+import static ru.netvoxlab.ownradio.Constants.ALL_CONNECTION_TYPES;
+import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
+import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
 
 /**
  * Created by a.polunina on 31.10.2016.
  */
 
 public class CheckConnection {
-	public static final String ONLY_WIFI = "0";
-	public static final String ALL_CONNECTION_TYPES = "1";
 	
 	public boolean CheckInetConnection(Context mCcontext) {
 		ConnectivityManager connectivityManager = (ConnectivityManager) mCcontext.getSystemService(mCcontext.CONNECTIVITY_SERVICE);
@@ -24,8 +24,8 @@ public class CheckConnection {
 		}
 		NetworkInfo wifiInfo = connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 		//Считывем используемый тип подключения из настроек
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mCcontext);
-		String connectionType = prefs.getString("internet_connections_list", ALL_CONNECTION_TYPES);
+		PrefManager prefManager = new PrefManager(mCcontext);
+		String connectionType = prefManager.getPrefItem(INTERNET_CONNECTION_TYPE, ALL_CONNECTION_TYPES);
 		switch (connectionType){
 			case ONLY_WIFI:
 				if (!wifiInfo.isConnected()) {

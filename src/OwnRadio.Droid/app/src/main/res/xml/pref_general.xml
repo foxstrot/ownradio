@@ -16,7 +16,7 @@
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/pref_header_only_own_tracks"
-		android:key="pref_key_storage_settings"
+		android:key="pref_key_listen_own_tracks"
 		android:layout="@layout/pref_header_title">
 	<SwitchPreference
 		android:defaultValue="false"
@@ -84,7 +84,7 @@
 		</Preference>
 		<Preference android:title="@string/pref_write_to_the_developers">
 			<intent android:action="android.intent.action.VIEW"
-					android:data="https://vk.com/ownradio" />
+					android:data="https://vk.me/ownradio" />
 		</Preference>
 		<Preference android:title="@string/pref_rate_app" >
 			<intent android:action="android.intent.action.VIEW"

@@ -84,6 +84,10 @@
 	
 	<string name="pref_title_vibrate">Vibrate</string>
 	
+	<!--NavigationView-->
+	<string name="sleeping_mode">Режим сна</string>
+	<string name="alarm_clock">Будильник </string>
+	
 	<!-- Settings -->
 	<string name="pref_header_internet_connection">Подключение к интернету</string>
 	

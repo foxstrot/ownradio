@@ -10,7 +10,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -18,24 +18,30 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.support.design.widget.NavigationView;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.VideoView;
 
 import org.apache.commons.io.FileUtils;
 
@@ -45,8 +51,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener{
-//		implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
+import static ru.netvoxlab.ownradio.Constants.ALL_CONNECTION_TYPES;
+import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
+import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
+
+public class MainActivity extends AppCompatActivity	implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
 	
 	private APICalls apiCalls;
 	
@@ -80,10 +89,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 	TextView txtTrackTitle;
 	TextView txtTrackArtist;
 	
-	VideoView videoView;
+	SwitchCompat switchOnlyWIFI;
 	
 	Toolbar toolbar;
-	ImageButton btnMenu;
 	
 	LinearLayout layoutDevelopersInfo;
 	public static File filePath;
@@ -104,6 +112,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 	int numberOfTaps = 0;
 	long lastTapTimeMs = 0;
 	long touchDownMs = 0;
+	PrefManager prefManager;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -113,26 +122,57 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		toolbar = (Toolbar) findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 		getSupportActionBar().setDisplayShowTitleEnabled(false);
-
+		prefManager = new PrefManager(getApplicationContext());
+		
+		if (prefManager.isFirstTimeLaunch()) {
+			prefManager.setFirstTimeLaunch(false);
+			startActivity(new Intent(MainActivity.this, WelcomeActivity.class));
+			finish();
+		}
 		
 		final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-//		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-//				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-//		drawer.setDrawerListener(toggle);
-//		toggle.syncState();
-		
-//		NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-//		navigationView.setNavigationItemSelectedListener(this);
-//		navigationView.bringToFront();
-//		navigationView.requestLayout();
+		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close){
+			@Override
+			public void onDrawerStateChanged(int newState) {
+				if (newState == DrawerLayout.STATE_SETTLING) {
+					if (!drawer.isDrawerOpen(GravityCompat.START)) {
+						String connectionType = prefManager.getPrefItem(INTERNET_CONNECTION_TYPE, ALL_CONNECTION_TYPES); //получаем настройки подключения
+						if(connectionType.equals(ONLY_WIFI))
+							switchOnlyWIFI.setChecked(true);
+						else
+							switchOnlyWIFI.setChecked(false);
+					}
+					invalidateOptionsMenu();
+				}
+			}
+		};
+		drawer.addDrawerListener(toggle);
+		toggle.syncState();
+		NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+		navigationView.setNavigationItemSelectedListener(this);
+		navigationView.bringToFront();
+		navigationView.requestLayout();
 		try {
 			//получаем настройки приложения по умолчанию
 			PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
 		}catch (Exception ex){
 			
 		}
-		//Z
+		Menu menu = navigationView.getMenu();
+
 		
+		switchOnlyWIFI= (SwitchCompat) MenuItemCompat.getActionView(menu.findItem(R.id.app_bar_switch_only_wifi)).findViewById(R.id.switchWidget);
+		switchOnlyWIFI.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+			@Override
+			public void onCheckedChanged(CompoundButton compoundButton, boolean state) {
+				if (state)
+					prefManager.setPrefItem(INTERNET_CONNECTION_TYPE, ONLY_WIFI);
+				else
+					prefManager.setPrefItem(INTERNET_CONNECTION_TYPE, ALL_CONNECTION_TYPES);
+			}
+		});
+		//Z
 		filePath = ((App)getApplicationContext()).getMusicDirectory();
 		textUserID = (TextView) findViewById(R.id.userID);
 		textVersionName = (TextView) findViewById(R.id.versionName);
@@ -151,16 +191,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 		
 		txtTrackTitle = (TextView) findViewById(R.id.trackTitle);
 		txtTrackArtist = (TextView) findViewById(R.id.trackArtist);
-		
-		videoView = (VideoView)findViewById(R.id.videoView);
-		
-		videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-			@Override
-			public void onPrepared(MediaPlayer mp) {
-				mp.setLooping(true);
-				videoView.start();
-			}
-		});
 		
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ActionProgressBarUpdate);
@@ -219,7 +249,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				}
 			}
 		});
-
 		
 		btnSkipTrack = (ImageButton) findViewById(R.id.btnSkipTrack);
 		btnSkipTrack.setOnClickListener(new View.OnClickListener() {
@@ -227,17 +256,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 			public void onClick(View view) {
 				if(binder.GetMediaPlayerService().player != null)
 					binder.GetMediaPlayerService().onCompletion(binder.GetMediaPlayerService().player);
-			}
-		});
-		
-		btnMenu = (ImageButton) findViewById(R.id.btnMenu);
-		btnMenu.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View view) {
-				Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
-				settingsActivity.putExtra( PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName() );
-				settingsActivity.putExtra( PreferenceActivity.EXTRA_NO_HEADERS, true );
-				startActivity(settingsActivity);
 			}
 		});
 		
@@ -272,7 +290,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 //		return true;
 //	}
 
-//	@Override
+	//	@Override
 //	public boolean onOptionsItemSelected(MenuItem item) {
 //		// Handle action bar item clicks here. The action bar will
 //		// automatically handle clicks on the Home/Up button, so long
@@ -290,42 +308,44 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 //		return super.onOptionsItemSelected(item);
 //	}
 
-//	@SuppressWarnings("StatementWithEmptyBody")
-//	@Override
-//	public boolean onNavigationItemSelected(MenuItem item) {
-//		// Handle navigation view item clicks here.
-//		int id = item.getItemId();
-//
-//		if(id == R.id.app_bar_settings){
-//			Intent settingsActivity = new Intent(getBaseContext(),
-//					SettingsActivity.class);
-//			settingsActivity.putExtra( PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName() );
-//			settingsActivity.putExtra( PreferenceActivity.EXTRA_NO_HEADERS, true );
-//			startActivity(settingsActivity);
-//		} else if(id == R.id.app_bar_slider){
-//			Intent settingsActivity = new Intent(getBaseContext(),
-//					WelcomeActivity.class);
-//			startActivity(settingsActivity);
-//		}
-////		if (id == R.id.nav_camera) {
-////			// Handle the camera action
-////		} else if (id == R.id.nav_gallery) {
-////
-////		} else if (id == R.id.nav_slideshow) {
-////
-////		} else if (id == R.id.nav_manage) {
-////
-////		} else if (id == R.id.nav_share) {
-////
-////		} else if (id == R.id.nav_send) {
-////
-////		}
-////
-//		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-//		drawer.closeDrawer(GravityCompat.START);
-//		return true;
-//	}
-//
+	@SuppressWarnings("StatementWithEmptyBody")
+	@Override
+	public boolean onNavigationItemSelected(MenuItem item) {
+		// Handle navigation view item clicks here.
+		int id = item.getItemId();
+//		PrefManager prefManager = new PrefManager(getApplicationContext());
+		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+
+		switch(id){
+			case R.id.app_bar_switch_only_wifi:
+				if(switchOnlyWIFI.isChecked())
+					switchOnlyWIFI.setChecked(false);
+				else
+					switchOnlyWIFI.setChecked(true);
+				break;
+			case R.id.app_bar_write_to_developers:
+				startActivity( new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.me/ownradio")));
+				break;
+			case R.id.app_bar_rate_app:
+				final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
+				try {
+					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+				} catch (android.content.ActivityNotFoundException anfe) {
+					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+				}
+				break;
+			case R.id.app_bar_settings:
+				Intent settingsActivity = new Intent(getBaseContext(),
+						SettingsActivity.class);
+				settingsActivity.putExtra( PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName() );
+				settingsActivity.putExtra( PreferenceActivity.EXTRA_NO_HEADERS, true );
+				startActivity(settingsActivity);
+				drawer.closeDrawer(GravityCompat.START);
+				break;
+		}
+		return true;
+	}
+
 	
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
@@ -334,34 +354,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 				touchDownMs = System.currentTimeMillis();
 				break;
 			case MotionEvent.ACTION_MOVE: // движение
-//			{
-//				if(videoShow) {
-//					videoView.stopPlayback();
-//					videoView.setVisibility(View.GONE);
-//				}else {
-////					DisplayMetrics metrics = new DisplayMetrics();
-////					getWindowManager().getDefaultDisplay().getMetrics(metrics);
-////					android.widget.LinearLayout.LayoutParams params = (android.widget.LinearLayout.LayoutParams) videoView.getLayoutParams();
-////					params.width = metrics.widthPixels;
-////					params.height = metrics.heightPixels;
-////					params.leftMargin = 0;
-////					videoView.setLayoutParams(params);
-//					if(this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
-//						uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_portrait);
-//
-//					} else if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//						uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_landscape);
-//					} else if (this.getResources().getConfiguration().orientation == Configuration.ORIENTATION_UNDEFINED) {
-//						//// TODO: 24.05.2017
-//						uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_portrait);
-//					}
-//					videoView.setVisibility(View.VISIBLE);
-////					videoView.setRotation(90);
-//					videoView.setVideoURI(uriVideoView);
-//
-//				}
-//				videoShow = !videoShow;
-//			}
 				break;
 			case MotionEvent.ACTION_UP: // отпускание
 				handlerEvent.removeCallbacksAndMessages(null);
@@ -653,32 +645,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 	public void onSaveInstanceState(Bundle savedInstanceState){
 		super.onSaveInstanceState(savedInstanceState);
 	}
-	
-//	@Override
-//	public void onConfigurationChanged(Configuration _newConfig) {
-//
-//		if (_newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//			if(videoView.isPlaying()) {
-//				videoView.stopPlayback();
-//				uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_landscape);
-//				videoView.setVideoURI(uriVideoView);
-////				videoView.setRotation(90);
-//
-//			}
-//		}
-//
-//		if (_newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-//			if(videoView.isPlaying()) {
-//				videoView.stopPlayback();
-//				uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_portrait);
-//				videoView.setVideoURI(uriVideoView);
-////				videoView.setRotation(90);
-//			}
-//		}
-//
-//		super.onConfigurationChanged(_newConfig);
-//	}
-	
 	
 	@Override
 	public void onDestroy(){

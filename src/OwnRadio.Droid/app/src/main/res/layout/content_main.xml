@@ -16,17 +16,6 @@
 	tools:context="ru.netvoxlab.ownradio.MainActivity"
 	tools:showIn="@layout/app_bar_main">
 	
-	<VideoView
-		android:id="@+id/videoView"
-		android:layout_alignParentRight="true"
-		android:layout_alignParentLeft="true"
-		android:layout_alignParentTop="true"
-		android:layout_alignParentBottom="true"
-		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"
-		android:elevation="20dp"
-		android:visibility="gone"
-		/>
 	<LinearLayout
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content">

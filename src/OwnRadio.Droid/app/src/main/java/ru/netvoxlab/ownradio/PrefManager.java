@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import static ru.netvoxlab.ownradio.Constants.DEVICE_ID;
+import static ru.netvoxlab.ownradio.Constants.IS_FIRST_TIME_LAUNCH;
+
 /**
  * Created by a.polunina on 13.06.2017.
  */
@@ -17,10 +20,7 @@ public class PrefManager {
 	int PRIVATE_MODE = 0;
 	
 	// Shared preferences file name
-	private static final String PREF_NAME = "android-ownradio-pref";
-	
-	private static final String IS_FIRST_TIME_LAUNCH = "IsFirstTimeLaunch";
-	private static final String DEVICE_ID = "DeviceID";
+//	private static final String PREF_NAME = "android-ownradio-pref";
 	
 	public PrefManager(Context context) {
 		this._context = context;
