@@ -353,6 +353,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			int focusResult = audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
 			if (focusResult != AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
 				audioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);
+//				new Utilites().SendInformationTxt(getApplicationContext(), "Не удалось получить аудиофокус");
+//				return;
 			}
 
 			UpdatePlaybackState(PlaybackStateCompat.STATE_BUFFERING);

@@ -124,11 +124,10 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		getSupportActionBar().setDisplayShowTitleEnabled(false);
 		prefManager = new PrefManager(getApplicationContext());
 		
-		if (prefManager.isFirstTimeLaunch()) {
-			prefManager.setFirstTimeLaunch(false);
-			startActivity(new Intent(MainActivity.this, WelcomeActivity.class));
-			finish();
-		}
+//		if (prefManager.isFirstTimeLaunch()) {
+//			startActivity(new Intent(MainActivity.this, WelcomeActivity.class));
+//			finish();
+//		}
 		
 		final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
