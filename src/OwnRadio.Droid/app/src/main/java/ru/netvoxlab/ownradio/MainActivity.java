@@ -105,6 +105,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	public static final String ActionButtonImgUpdate = "ru.netvoxlab.ownradio.action.BTN_PLAYPAUSE_IMG_UPDATE";
 	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
 	public static final String ActionStopPlayback = "ru.netvoxlab.ownradio.action.STOP_PLAYBACK";
+	public static final String ActionCheckCountTracksAndDownloadIfNotEnought = "ru.netvoxlab.ownradio.action.CHECK_TRACKS_AND_DOWNLOAD";
 	
 	public static final String numListenedTracks = "NUM_TRACKS_LISTENED_IN_VERSION";
 	public static final String version = "VERSION";
@@ -198,6 +199,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		filter.addAction(ActionSendInfoTxt);
 		filter.addAction(ActionProgressBarFirstTracksLoad);
 		filter.addAction(ActionStopPlayback);
+		filter.addAction(ActionCheckCountTracksAndDownloadIfNotEnought);
 		registerReceiver(myReceiver, filter);
 		
 		this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
@@ -394,6 +396,21 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	private BroadcastReceiver myReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, final Intent intent) {
+			if(intent.getAction() == ActionCheckCountTracksAndDownloadIfNotEnought) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+				builder.setTitle("Ошибка")
+						.setMessage("Невозможно кешировать треки. Проверьте интернет подключение.")
+						.setCancelable(false)
+						.setNegativeButton("OK",
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialogInterface, int i) {
+										dialogInterface.cancel();
+									}
+								});
+				AlertDialog alert = builder.create();
+				alert.show();
+			}
 			
 			if(intent.getAction() == ActionStopPlayback) {
 				binder.GetMediaPlayerService().Stop();

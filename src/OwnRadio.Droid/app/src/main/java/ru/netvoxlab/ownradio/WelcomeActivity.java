@@ -43,7 +43,7 @@ public class WelcomeActivity extends AppCompatActivity {
 	private VideoView videoView;
 	private Uri uriVideoView;
 	private String deviceId;
-	final Handler loadHandler = new Handler();;
+	final Handler loadHandler = new Handler();
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -75,11 +75,13 @@ public class WelcomeActivity extends AppCompatActivity {
 		}
 		
 		//Запускаем загрузку трех треков
-		Intent downloaderIntent = new Intent(this, RequestAPIService.class);
-		downloaderIntent.setAction(ACTION_GETNEXTTRACK);
-		downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
-		downloaderIntent.putExtra(EXTRA_COUNT, 3);
-		startService(downloaderIntent);
+		if (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
+			Intent downloaderIntent = new Intent(this, RequestAPIService.class);
+			downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+			downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
+			downloaderIntent.putExtra(EXTRA_COUNT, 3);
+			startService(downloaderIntent);
+		}
 		
 		// Making notification bar transparent
 		if (Build.VERSION.SDK_INT >= 21) {

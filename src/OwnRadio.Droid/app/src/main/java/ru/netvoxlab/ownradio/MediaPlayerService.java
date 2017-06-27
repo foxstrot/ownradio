@@ -61,6 +61,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	private WifiManager.WifiLock wifiLock;
 	private static final int REQUEST_CODE = 111;
 	private static final int NOTIFICATION_ID = 502;
+	private static final int minTrackDuration = 60;
 	
 	private MediaNotificationManager mMediaNotificationManager;
 	
@@ -291,14 +292,20 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		//Событие возникает при дослушивании трека до конца, плеер останавливается, отправляется статистика прослушивания
 		//затем вызвается функция Play(), запускающая проигрывание следующего трека
 		//Сохраняем информацию о прослушивании в локальную БД.
-		int listedTillTheEnd = 1;
-		SaveHistory(listedTillTheEnd, track);
-		PlayNext();
-		utilites.SendInformationTxt(getApplicationContext(), "Completion playback");
-		Intent historySenderIntent = new Intent(this, RequestAPIService.class);
-		historySenderIntent.setAction(ACTION_SENDHISTORY);
-		historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
-		startService(historySenderIntent);
+		if(GetDuration() < minTrackDuration){
+			new Utilites().SendInformationTxt(getApplicationContext(), "track id: " + track.get("id") + ", \n track duration (server): " + track.get("length") + ", \n track duration (player): " + GetDuration());
+			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+			PlayNext();
+		} else {
+			int listedTillTheEnd = 1;
+			SaveHistory(listedTillTheEnd, track);
+			PlayNext();
+			utilites.SendInformationTxt(getApplicationContext(), "Completion playback");
+			Intent historySenderIntent = new Intent(this, RequestAPIService.class);
+			historySenderIntent.setAction(ACTION_SENDHISTORY);
+			historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
+			startService(historySenderIntent);
+		}
 	}
 
 	public void Play() {
@@ -360,9 +367,20 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			UpdatePlaybackState(PlaybackStateCompat.STATE_BUFFERING);
 			Log.d(TAG, "Play(): UpdatePlaybackState");
 
-			player.prepareAsync();
+			player.prepare();
 			Log.d(TAG, "Play(): prepareAsync");
-
+			
+//			if(GetDuration()<minTrackDuration) {
+//				new Utilites().SendInformationTxt(getApplicationContext(), "track id: " + track.get("id") + ", \n track duration (server): " + track.get("length") + ", \n track duration (player): " + player.getDuration());
+//				new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+//				Play();
+//				return;
+//			}
+			
+			utilites.SendInformationTxt(getApplicationContext(), "Start playback " + track.getAsString("id"));
+//			if(GetDuration()> minTrackDuration && player != null)
+			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
+			
 			//записываем время начала проигрывания трека
 			new TrackDataAccess(getApplicationContext()).SetTimeAndCountStartPlayback(track);
 			new Utilites().SendInformationTxt(getApplicationContext(), "SetTimeAndCountStartPlayback for track " + track.getAsString("id"));
@@ -384,6 +402,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		} catch (Exception ex) {
 			utilites.SendInformationTxt(getApplicationContext(), "Error in Play(): " + ex.getLocalizedMessage());
 			//player.reset();
+//			new Utilites().SendInformationTxt(getApplicationContext(), "track id: " + track.get("id") + ", \n track duration (server): " + track.get("length") + ", \n track duration (player): " + player.getDuration());
+//			if(player.getDuration() < minTrackDuration){
+//				new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+//				Play();
+//			}
 			player.release();
 			player = null;
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
@@ -538,8 +561,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			startPosition = 0;
 //		}
 		mp.start();
-		utilites.SendInformationTxt(getApplicationContext(), "Start playback " + track.getAsString("id"));
-		UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
+		if(GetDuration() < minTrackDuration) {
+			player.release();
+			player = null;
+//			new Utilites().SendInformationTxt(getApplicationContext(), "track id: " + track.get("id") + ", \n track duration (server): " + track.get("length") + ", \n track duration (player): " + GetDuration());
+////			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+//			Play();
+		} else {
+			utilites.SendInformationTxt(getApplicationContext(), "Start playback " + track.getAsString("id"));
+//			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
+		}
 	}
 
 	public int GetPosition() {
