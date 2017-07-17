@@ -40,7 +40,7 @@ public class LastLogsActivity extends AppCompatActivity {
 	public void onStart(){
 		super.onStart();
 		try {
-			Process process = Runtime.getRuntime().exec("logcat -t 20");
+			Process process = Runtime.getRuntime().exec("logcat -t 200");
 			BufferedReader bufferedReader = new BufferedReader(
 					new InputStreamReader(process.getInputStream()));
 			

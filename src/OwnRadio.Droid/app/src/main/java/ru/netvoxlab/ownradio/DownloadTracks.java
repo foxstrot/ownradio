@@ -102,7 +102,7 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 				new Utilites().SendInformationTxt(mContext, "server contact failed");
 			}
 		} catch (Exception ex) {
-			Log.d(TAG, " " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
 		}
 		return false;
 	}

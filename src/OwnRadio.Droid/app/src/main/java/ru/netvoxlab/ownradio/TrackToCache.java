@@ -75,6 +75,9 @@ public class TrackToCache {
 							Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
 							progressIntent.putExtra("ProgressOn", false);
 							mContext.sendBroadcast(progressIntent);
+						} else {
+							//если ни один трек не кеширован - запуск загрузки трека
+							SaveTrackToCache(deviceId, 1);
 						}
 					} catch (Exception ex) {
 						Log.d(TAG, "Error in SaveTrackToCache at file download. Ex.mess:" + ex.getLocalizedMessage());

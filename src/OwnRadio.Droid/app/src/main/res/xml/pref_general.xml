@@ -60,7 +60,7 @@
 		</Preference>
 		<Preference
 			android:title="@string/pref_clear_cache"
-			android:summary="Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш"
+			android:summary="@string/summary_clear_all_cache"
 			android:key="delete_all_tracks">
 		</Preference>
 		<Preference
@@ -70,6 +70,7 @@
 		</Preference>
 		<Preference
 			android:title="@string/pref_clear_cache"
+			android:summary="@string/summary_clear_listening_cache"
 			android:key="delete_listening_tracks">
 		
 		</Preference>

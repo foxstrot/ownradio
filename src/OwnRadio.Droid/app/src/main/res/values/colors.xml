@@ -24,6 +24,7 @@
 	<color name="ColorPrimaryBtn80">#ff03A9F4</color>
 	<color name="ColorPrimaryBtn70">#ff03A9F4</color>
 	<color name="ColorPrimaryBtn50">#ff03A9F4</color>
+	<color name="ColorPrimaryBtnDisable">#838687</color>
 	
 	<!--button's circle colors-->
 	<color name="btnCircleColorPrimary">#ffffff</color>

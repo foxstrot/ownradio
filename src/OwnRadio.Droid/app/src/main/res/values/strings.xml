@@ -141,6 +141,8 @@
 	<string name="pref_all_tracks_size">Занято</string>
 	<string name="pref_listening_tracks_size_size">Из них уже прослушанных</string>
 	<string name="pref_clear_cache">Освободить</string>
+	<string name="summary_clear_all_cache">Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш</string>
+	<string name="summary_clear_listening_cache">Очистить только прослушанные треки</string>
 	<string name="delete_all_alert_title">Удалить кешированные треки</string>
 	<string name="delete_all_alert_message">Внимание. Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш</string>
 	<string name="alert_positive_button">ОК</string>
@@ -175,6 +177,7 @@
 	<string name="slide_4_desc"></string>
 	
 	<string name="slide_5_title">Идет предзагрузка. Подождите.</string>
+	<string name="slide_5_title_2">Для предзагрузки необходим интернет. Включите интернет и попробуйте снова.</string>
 	<string name="slide_5_desc"></string>
 	
 	<string name="play_again_desc">To see the welcome slider again, goto Settings -> apps -> welcome slider -> clear data</string>
@@ -183,6 +186,7 @@
 	<!-- TODO: Remove or change this placeholder text -->
 	<string name="hello_blank_fragment">Hello blank fragment</string>
 	
-	
+	<string name="is_caching">Кеширование...</string>
+	<string name="wait_caching">Отсутствуют кешированные треки. Подождите пока треки кешируются</string>
 	
 </resources>

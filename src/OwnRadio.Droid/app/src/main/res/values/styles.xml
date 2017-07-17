@@ -19,7 +19,7 @@
 	</style>
 	
 	
-	<style name="PreferenceTheme" parent="PreferenceThemeOverlay">
-	
+	<style name="PreferenceTheme" parent="PreferenceThemeOverlay.v14.Material">
+		<item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
 	</style>
 </resources>

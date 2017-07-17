@@ -29,9 +29,13 @@ public class RequestAPIService extends IntentService {
 	@Override
 	protected void onHandleIntent(Intent intent) {
 		if (intent != null) {
+			
+			if(!new CheckConnection().CheckInetConnection(getApplicationContext()))
+				return;
+			
 			final String action = intent.getAction();
 			if (ACTION_GETNEXTTRACK.equals(action)) {
-				//Получение информации о следующем треке
+				//Получение информации о следующем треке и его загрузка
 				final String deviceId = intent.getStringExtra(EXTRA_DEVICEID);
 				final Integer countTracks = intent.getIntExtra(EXTRA_COUNT, 3);
 				new TrackToCache(getApplicationContext()).SaveTrackToCache(deviceId, countTracks);

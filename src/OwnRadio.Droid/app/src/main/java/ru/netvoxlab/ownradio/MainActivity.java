@@ -16,9 +16,11 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
 import android.support.design.widget.NavigationView;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
@@ -51,11 +53,16 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.UUID;
 
+import ru.netvoxlab.ownradio.receivers.NetworkStateReceiver;
+
 import static ru.netvoxlab.ownradio.Constants.ALL_CONNECTION_TYPES;
 import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
 import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
 
-public class MainActivity extends AppCompatActivity	implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener {
+public class MainActivity extends AppCompatActivity	implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener, NetworkStateReceiver.NetworkStateReceiverListener {
 	
 	private APICalls apiCalls;
 	
@@ -114,6 +121,9 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	long lastTapTimeMs = 0;
 	long touchDownMs = 0;
 	PrefManager prefManager;
+	private long lastClickTime = 0;
+	
+	private NetworkStateReceiver networkStateReceiver;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -205,6 +215,10 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
 		this.registerReceiver(remoteControlReceiver, new IntentFilter(Intent.ACTION_MEDIA_BUTTON));
 		
+		networkStateReceiver = new NetworkStateReceiver();
+		networkStateReceiver.addListener(this);
+		this.registerReceiver(networkStateReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
+		
 		if (mediaPlayerServiceConnection == null)
 			InitilizeMedia();
 		
@@ -243,6 +257,12 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		btnNext.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
+				if (SystemClock.elapsedRealtime() - lastClickTime < 1000){
+					Log.e(TAG, "Next return");
+					return;
+				}
+				
+				lastClickTime = SystemClock.elapsedRealtime();
 				if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() != PlaybackStateCompat.STATE_SKIPPING_TO_NEXT && binder.GetMediaPlayerService().GetMediaPlayerState() != PlaybackStateCompat.STATE_BUFFERING) {
 					binder.GetMediaPlayerService().Next();
 					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
@@ -426,7 +446,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				try {
 					if (binder == null || binder.GetMediaPlayerService().player == null) {
 						txtTrackTitle.setText("");
-						txtTrackArtist.setText("ownRadio");
+						txtTrackArtist.setText("");
 						btnPlayPause.setImageResource(R.drawable.btn_play);
 						return;
 					}
@@ -442,16 +462,19 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 						btnPlayPause.setImageResource(R.drawable.btn_play);
 					}
 					
-					title = binder.GetMediaPlayerService().track.getAsString("title");
-					artist = binder.GetMediaPlayerService().track.getAsString("artist");
-					if (title == null || title.isEmpty() || title.equals("null"))
-						title = "Track";
-					if (artist == null || artist.isEmpty() || artist.equals("null"))
-						artist = "Artist";
-					txtTrackTitle.setText(title);
-					txtTrackArtist.setText(artist);
-					textTrackID = (TextView) findViewById(R.id.trackID);
-					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
+					if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().flagIsCorrect) {
+						Log.d(TAG, "flagIsCorrect="+binder.GetMediaPlayerService().flagIsCorrect);
+						title = binder.GetMediaPlayerService().track.getAsString("title");
+						artist = binder.GetMediaPlayerService().track.getAsString("artist");
+						if (title == null || title.isEmpty() || title.equals("null"))
+							title = "Track";
+						if (artist == null || artist.isEmpty() || artist.equals("null"))
+							artist = "Artist";
+						txtTrackTitle.setText(title);
+						txtTrackArtist.setText(artist);
+						textTrackID = (TextView) findViewById(R.id.trackID);
+						textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
+					}
 				} catch (Exception ex) {
 					new Utilites().SendInformationTxt(MainActivity.this, "ActionButtonImgUpdate error:" + ex.getLocalizedMessage());
 					title = "Track";
@@ -481,27 +504,31 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 							progressBar.setProgress(0);
 							return;
 						}
-						int duration;
+						int duration = 0;
 						try {
-							duration = binder.GetMediaPlayerService().track.getAsInteger("length");
+							duration = binder.GetMediaPlayerService().GetDuration();
+//							duration = binder.GetMediaPlayerService().track.getAsInteger("length");
 						} catch (Exception ex) {
-							duration = binder.GetMediaPlayerService().GetDuration() / 1000;
+							duration = binder.GetMediaPlayerService().track.getAsInteger("length") * 1000;
+
+//							duration = binder.GetMediaPlayerService().GetDuration() / 1000;
 						}
 						int currentPosition = 0;
-						if (duration <= 0)
-							duration = 1000000;
-						
-						progressBar.setMax(duration);
+						if (duration > 0)
+							progressBar.setMax(duration);
 						progressBar.setSecondaryProgress(0);
 						
 						while (currentPosition < duration) {
 							try {
 								Thread.sleep(1000);
-								currentPosition = binder.GetMediaPlayerService().GetPosition() / 1000;
+								currentPosition = binder.GetMediaPlayerService().GetPosition();
+//								currentPosition = binder.GetMediaPlayerService().GetPosition() / 1000;
 								try {
-									duration = binder.GetMediaPlayerService().track.getAsInteger("length");
+									duration = binder.GetMediaPlayerService().GetDuration();
+//									duration = binder.GetMediaPlayerService().track.getAsInteger("length");
 								} catch (Exception ex) {
-									duration = binder.GetMediaPlayerService().GetDuration() / 1000;
+									duration = binder.GetMediaPlayerService().track.getAsInteger("length") * 1000;
+//									duration = binder.GetMediaPlayerService().GetDuration() / 1000;
 								}
 							} catch (InterruptedException e) {
 								e.printStackTrace();
@@ -515,12 +542,15 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 								public void run() {
 									int duration;
 									try {
-										duration = binder.GetMediaPlayerService().track.getAsInteger("length");
+										duration = binder.GetMediaPlayerService().GetDuration();
+//										duration = binder.GetMediaPlayerService().track.getAsInteger("length");
 									} catch (Exception ex) {
-										duration = binder.GetMediaPlayerService().GetDuration() / 1000;
+										duration = binder.GetMediaPlayerService().track.getAsInteger("length") * 1000;
+//										duration = binder.GetMediaPlayerService().GetDuration() / 1000;
 									}
 									progressBar.setMax(duration);
-									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition() / 1000);
+									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
+//									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition() / 1000);
 								}
 							});
 						}
@@ -532,10 +562,11 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				if(intent.getBooleanExtra("ProgressOn", false)) {
 					btnPlayPause.setClickable(false);
 					btnNext.setClickable(false);
+					btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
 					if(dialog == null)
 						dialog = new ProgressDialog(MainActivity.this);
-					dialog.setTitle("Caching...");
-					dialog.setMessage("There are no tracks to play. Wait until the tracks are cached.");
+					dialog.setTitle(getResources().getString(R.string.is_caching));
+					dialog.setMessage(getResources().getString(R.string.wait_caching));
 					dialog.setIndeterminate(true);
 					dialog.setCancelable(false);
 					dialog.show();
@@ -544,10 +575,13 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 						dialog.dismiss();
 					btnPlayPause.setClickable(true);
 					
-					if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<3)
+					if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
 						btnNext.setClickable(false);
-					else
+						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
+					}else {
 						btnNext.setClickable(true);
+						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnPlay));
+					}
 				}
 			}
 		}
@@ -590,6 +624,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				
 				btnPlayPause.setClickable(false);
 				btnNext.setClickable(false);
+				btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
 			}
 			
 			SetDevelopersInfo();
@@ -646,6 +681,21 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		}
 		
 		
+	}
+	
+	
+	@Override
+	public void onResume(){
+		super.onResume();
+		networkStateReceiver.addListener(this);
+		this.registerReceiver(networkStateReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
+	}
+	
+	@Override
+	public void onPause() {
+		networkStateReceiver.removeListener(this);
+		this.unregisterReceiver(networkStateReceiver);
+		super.onPause();
 	}
 	
 	public void SetTrackInfoText(){
@@ -707,6 +757,27 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			textInfo.setText(log.toString());
 		} catch (IOException e) {
 		}
+	}
+	
+	@Override
+	public void networkAvailable() {
+		new Utilites().SendInformationTxt(getApplicationContext(), "Интернет подключен");
+		//Если треков в кеше мало - при подключении  интернета запускаем запуск треков
+		if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 3) {
+			//		Запускаем кеширование треков - 3 шт
+			Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
+			downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+			downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceId);
+			downloaderIntent.putExtra(EXTRA_COUNT, 1);
+			startService(downloaderIntent);
+		}
+    /* TODO: Your connection-oriented stuff here */
+	}
+	
+	@Override
+	public void networkUnavailable() {
+		new Utilites().SendInformationTxt(getApplicationContext(), "Интернет отключен");
+    /* TODO: Your disconnection-oriented stuff here */
 	}
 	
 	class MediaPlayerServiceConnection extends java.lang.Object implements ServiceConnection {

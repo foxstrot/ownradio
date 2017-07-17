@@ -6,7 +6,10 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static ru.netvoxlab.ownradio.TrackDB.DB_VER;
@@ -191,5 +194,39 @@ public class TrackDataAccess {
 		db = trackDB.getWritableDatabase();
 		return db.delete(TrackTableName, "countplay > ?", new String[]{String.valueOf(0)});
 		//db.close();
+	}
+	
+	//функция возвращает время начала последнего воспроизведения трека
+	public Boolean CheckEnoughTimeFromStartPlaying(String trackId){
+		db = trackDB.getReadableDatabase();
+		String currentDatetime = "2000-01-01T12:00:00";
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		
+		//Получаем текущее время
+		Cursor userCursorTime = db.rawQuery("SELECT strftime('%Y-%m-%dT%H:%M:%S', 'now', '-1 minute')", null);
+		
+		try {
+			if(userCursorTime.moveToFirst()) {
+				currentDatetime = userCursorTime.getString(0);
+				userCursorTime.close();
+				Date currentDate = format.parse(currentDatetime);
+				Cursor userCursor = db.rawQuery("SELECT datetimelastlisten FROM track WHERE id = ?", new String[]{String.valueOf(trackId)});
+				if (userCursor.moveToFirst()) {
+					String dtStart = userCursor.getString(0);
+					Date date = format.parse(dtStart);
+					if (currentDate.after(date))
+						return true;
+					else
+						return false;
+				}
+			}
+		else
+			return false;
+			
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return false;
+		}
+		return true;
 	}
 }
