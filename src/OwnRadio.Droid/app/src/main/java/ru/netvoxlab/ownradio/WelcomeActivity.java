@@ -18,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.VideoView;
@@ -38,7 +37,6 @@ public class WelcomeActivity extends AppCompatActivity {
 	private LinearLayout dotsLayout;
 	private TextView[] dots;
 	private int[] layouts;
-	private Button btnSkip, btnNext;
 	private PrefManager prefManager;
 	private VideoView videoView;
 	private Uri uriVideoView;
@@ -92,8 +90,6 @@ public class WelcomeActivity extends AppCompatActivity {
 		
 		viewPager = (ViewPager) findViewById(R.id.view_pager);
 		dotsLayout = (LinearLayout) findViewById(R.id.layoutDots);
-		btnSkip = (Button) findViewById(R.id.btn_skip);
-		btnNext = (Button) findViewById(R.id.btn_next);
 		
 		videoView = (VideoView)findViewById(R.id.videoView);
 		videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
@@ -130,54 +126,14 @@ public class WelcomeActivity extends AppCompatActivity {
 		myViewPagerAdapter = new MyViewPagerAdapter();
 		viewPager.setAdapter(myViewPagerAdapter);
 		viewPager.addOnPageChangeListener(viewPagerPageChangeListener);
-		
-		btnSkip.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 1)
-					launchHomeScreen();
-				else
-					viewPager.setCurrentItem(layouts.length-1);
-			}
-		});
-		
-		btnNext.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				// checking for last page
-				// if last page home screen will be launched
-				int current = getItem(+1);
-				if (current < layouts.length) {
-//					//если хотя бы один трек успел загрузиться - закрываем слайдер и переходим к основному экрану
-//					if(current == layouts.length - 1 && new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 1){
-//						launchHomeScreen();
-//						return;
-//					}
-//					//иначе показываем последний слайд
-						// move to next screen
-						try {
-							viewPager.setCurrentItem(current);
-						} catch (Exception ex) {
-							ex.getLocalizedMessage();
-						}
-				} else {
-					launchHomeScreen();
-				}
-			}
-		});
+
 		final Timer timer = new Timer();
 		final Handler handler = new Handler();
 		final Runnable Update = new Runnable(){
 			public void run(){
 				int current = viewPager.getCurrentItem();
-				if(current == layouts.length - 1 && new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 1){
-					btnNext.setText(getString(R.string.start));
-					btnSkip.setVisibility(View.GONE);
-					timer.cancel();
-					return;
-				}
 				if(current >= layouts.length-1){
-					timer.cancel();
+//					timer.cancel();
 					return;
 				}
 				current++;
@@ -228,22 +184,23 @@ public class WelcomeActivity extends AppCompatActivity {
 		public void onPageSelected(int position) {
 			addBottomDots(position);
 			
-			// changing the next button text 'NEXT' / 'GOT IT'
 			if (position == layouts.length - 1) {
-				// last page. make button text to GOT IT
-//				btnNext.setText(getString(R.string.start));
-				btnNext.setVisibility(View.GONE);
-				btnSkip.setVisibility(View.GONE);
 				final Timer loadTimer = new Timer();
 				final Runnable LoadTrack = new Runnable(){
 					public void run(){
-						if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() > 1){
-							btnNext.setText(getString(R.string.start));
-							btnNext.setVisibility(View.VISIBLE);
+						if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() >= 1){
 							launchHomeScreen();
 							loadTimer.cancel();
 							return;
-						}
+						} else if(new CheckConnection().CheckInetConnection(getApplicationContext()))
+							//Если треков нет - запускаем загрузку трех треков
+							if (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
+								Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
+								downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+								downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
+								downloaderIntent.putExtra(EXTRA_COUNT, 1);
+								startService(downloaderIntent);
+							}
 					}
 				};
 				loadTimer .schedule(new TimerTask() { // task to be scheduled
@@ -254,9 +211,6 @@ public class WelcomeActivity extends AppCompatActivity {
 				}, 500, 3000);
 			} else {
 				// still pages are left
-				btnNext.setText(getString(R.string.next));
-				btnNext.setVisibility(View.VISIBLE);
-				btnSkip.setVisibility(View.VISIBLE);
 			}
 		}
 		
