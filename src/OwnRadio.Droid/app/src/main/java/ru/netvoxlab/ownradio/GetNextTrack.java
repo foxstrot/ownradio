@@ -23,7 +23,7 @@ public class GetNextTrack extends AsyncTask<String, Void, Map<String, String>> {
 		try {
 			//выполняем запрос к серверу getnexttrackid
 			Response<Map<String, String>> response = ServiceGenerator.createService(APIService.class).getNextTrackID(data[0]).execute();
-			if (response.code() == 200) {
+			if (response.code() == 200 && !response.body().isEmpty() && response.body().get("result").equals("true")) {
 				new Utilites().SendInformationTxt(mContext, "GetNextTrackID(" + data[0]+ "): Information about next track is received.");
 				return response.body();
 			}else {

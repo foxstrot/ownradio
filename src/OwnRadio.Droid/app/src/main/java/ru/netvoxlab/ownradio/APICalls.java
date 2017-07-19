@@ -83,4 +83,16 @@ public class APICalls {
 		}
 
 	}
+	
+	public void SetIsCorrect(String deviceId, String trackId){
+		CheckConnection checkConnection = new CheckConnection();
+		if (!checkConnection.CheckInetConnection(mContext)){
+			return;
+		}
+		try{
+			Boolean result = new SetIsCorrect(mContext).execute(deviceId, trackId).get();
+		}catch (Exception ex){
+			new Utilites().SendInformationTxt(mContext, "Error by setIsCorrect " + ex.getLocalizedMessage());
+		}
+	}
 }

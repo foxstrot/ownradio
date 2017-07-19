@@ -7,5 +7,6 @@
 	<dimen name="button_play_size">130dp</dimen>
 	<dimen name="button_next_size">65dp</dimen>
 	<dimen name="progress_size">250dp</dimen>
+	<dimen name="notification_button_margin">50dp</dimen>
 
 </resources>

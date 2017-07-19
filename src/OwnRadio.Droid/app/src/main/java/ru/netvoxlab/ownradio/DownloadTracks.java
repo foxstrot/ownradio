@@ -16,10 +16,8 @@ import java.util.Map;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
-import static ru.netvoxlab.ownradio.MainActivity.ActionButtonImgUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.TAG;
-import static ru.netvoxlab.ownradio.MainActivity.filePath;
 
 /**
  * Created by a.polunina on 13.12.2016.
@@ -38,9 +36,10 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 		Long fileLength;
 		try {
 			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id"), trackMap[0].get("deviceid")).execute();
+//			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id"), trackMap[0].get("deviceid")).execute();
 			if (response.isSuccessful()) {
 				Log.d(TAG, "server contacted and has file");
-				final String trackURL = filePath + File.separator + trackMap[0].get("id") + ".mp3";
+				final String trackURL = ((App)mContext).getMusicDirectory() + File.separator + trackMap[0].get("id") + ".mp3";
 //				final String trackURL = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + File.separator + trackMap[0].get("id") + ".mp3";
 				boolean writtenToDisk = WriteTrackToDisk2(trackURL, response.body());
 				
@@ -87,19 +86,23 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 						return true;
 					} else {
 						new Utilites().SendInformationTxt(mContext, "<font color='red'>При загрузке трека " + trackMap[0].get("id") +
-								" не совпала длина файла: <br/>" + response.headers().get("Content-Length").toString() + " байт отдано с сервера (Content-length), <br/>" +
+								" не совпала длина файла: <br/>" + response.headers().get("Content-Length").toString() + " байт отдано с сервера (response Content-length), <br/>" +
+								response.body().contentLength() + " байт отдано с сервера (body Content-length), <br/>" +
 								fileLength.toString() + " байт скачано</font>");
+						new Utilites().SendLogs(mContext, trackMap[0].get("deviceid"));
+						
 						new TrackToCache(mContext).DeleteTrackFromCache(track);
-						MediaPlayerService.player.pause();
-						Intent intent = new Intent(ActionButtonImgUpdate);
-						mContext.sendBroadcast(intent);
+//						MediaPlayerService.player.pause();
+//						Intent intent = new Intent(ActionButtonImgUpdate);
+//						mContext.sendBroadcast(intent);
+
 					}
 				}
 			} else {
 				new Utilites().SendInformationTxt(mContext, "server contact failed");
 			}
 		} catch (Exception ex) {
-			Log.d(TAG, " " + ex.getLocalizedMessage());
+			new Utilites().SendInformationTxt(mContext, " " + ex.getLocalizedMessage());
 		}
 		return false;
 	}

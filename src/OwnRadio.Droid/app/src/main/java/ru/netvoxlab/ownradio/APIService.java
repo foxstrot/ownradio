@@ -13,6 +13,9 @@ import retrofit2.http.POST;
 import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Streaming;
+import ru.netvoxlab.ownradio.models.DeviceModel;
+import ru.netvoxlab.ownradio.models.HistoryModel;
+import ru.netvoxlab.ownradio.models.TrackModel;
 
 /**
  * Created by a.polunina on 15.11.2016.
@@ -25,18 +28,22 @@ public interface APIService {
 	Call<Map<String, String>> getNextTrackID(@Path("deviceid") String deviceId);
 
 	@Streaming
-	@GET("v4/tracks/{trackid}/{deviceid}")
+	@GET("v5/tracks/{trackid}/{deviceid}")
 	Call<ResponseBody> getTrackById(@Path("trackid") String trackId, @Path("deviceid") String deviceId);
 
-	@POST("v4/histories/{deviceid}/{trackid}")
+	@POST("v5/histories/{deviceid}/{trackid}")
 	@Headers("Content-Type: application/json")
 	Call<Void> sendHistory(@Path("deviceid") String deviceId, @Path("trackid") String trackId, @Body HistoryModel data);
 	
-	@GET("v4/devices/{deviceid}/{devicename}/registerdevice")
+	@POST("v5/devices")
 	@Headers("Content-Type: application/json")
-	Call<Void> registerDevice(@Path("deviceid") String deviceId, @Path("devicename") String deviceName);
+	Call<Void> registerDevice(@Body DeviceModel deviceModel);
 	
+	@POST("v5/tracks/{trackid}/{deviceid}")
+	@Headers("Content-Type: application/json")
+	Call<Void> setIsCorrect(@Path("trackid") String trackId, @Path("deviceid") String deviceId, @Body TrackModel data);
+		
 	@Multipart
 	@POST("v4/logs/{deviceid}")
-	Call<ResponseBody> sendLogFile(@Path("deviceid") String deviceId, @Part MultipartBody.Part file);
+	Call<Map<String, String>> sendLogFile(@Path("deviceid") String deviceId, @Part MultipartBody.Part file);
 }

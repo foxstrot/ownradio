@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.DrawerLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/drawer_layout"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:fitsSystemWindows="true"
+	
+	>
+	<ImageView
+		android:layout_height="match_parent"
+		android:layout_width="match_parent"
+		android:src="@drawable/background"
+		android:scaleType="centerCrop"/>
+	<include
+		layout="@layout/app_bar_main"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"/>
+	
+	<android.support.design.widget.NavigationView
+		android:id="@+id/nav_view"
+		android:layout_width="wrap_content"
+		android:layout_height="match_parent"
+		android:layout_gravity="start"
+		android:fitsSystemWindows="true"
+		app:itemTextColor="@color/menu_text_color"
+		app:headerLayout="@layout/nav_header_main"
+		app:menu="@menu/activity_main_drawer"
+		/>
+	
+	<RelativeLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		>
+		
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="97dp"
+			android:background="#ffffff"
+			android:layout_alignParentBottom="true"
+			>
+		
+		</LinearLayout>
+		<ProgressBar
+			android:id="@+id/progressBar"
+			style="?android:attr/progressBarStyleHorizontal"
+			android:layout_width="fill_parent"
+			android:layout_height="3dp"
+			android:layout_marginTop="5dp"
+			android:layout_marginBottom="5dp"
+			android:progressDrawable="@drawable/progress_bar"
+			android:indeterminate="false"
+			android:layout_above="@+id/rlBtnAndText"
+			/>
+		<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+						android:layout_width="wrap_content"
+						android:layout_height="wrap_content"
+						android:layout_alignParentBottom="true"
+						android:paddingTop="@dimen/playback_controls_padding_top"
+						android:paddingBottom="@dimen/playback_controls_padding_bottom"
+						android:paddingLeft="@dimen/playback_controls_padding_left"
+						android:paddingRight="@dimen/playback_controls_padding_right"
+						android:id="@+id/rlBtnAndText"
+						android:background="#ffffff"
+			>
+			
+			
+			<ImageButton
+				android:id="@+id/btnPlayPause"
+				android:layout_width="@dimen/playback_controls_buttons"
+				android:layout_height="@dimen/playback_controls_buttons"
+				android:background="?selectableItemBackgroundBorderless"
+				android:src="@drawable/btn_play"
+				android:tint="@color/colorPrimary"
+				android:elevation="10dp"
+				android:layout_marginTop="5dp"
+				android:layout_marginBottom="5dp"
+				android:tintMode="src_in"
+				android:layout_centerVertical="true"
+				android:layout_alignParentStart="true"/>
+			<ImageButton
+				android:id="@+id/btnNext"
+				android:layout_width="@dimen/playback_controls_buttons"
+				android:layout_height="@dimen/playback_controls_buttons"
+				android:background="?selectableItemBackgroundBorderless"
+				android:src="@drawable/btn_next"
+				android:tintMode="src_in"
+				android:tint="@color/colorPrimary"
+				android:elevation="10dp"
+				android:layout_marginTop="5dp"
+				android:layout_marginBottom="5dp"
+				android:layout_centerVertical="true"
+				android:layout_alignParentEnd="true"
+				/>
+			<RelativeLayout android:layout_width="wrap_content"
+							android:layout_height="wrap_content"
+							android:layout_marginRight="10dp"
+							android:layout_marginLeft="10dp"
+							android:layout_toRightOf="@+id/btnPlayPause"
+							android:layout_toLeftOf="@+id/btnNext"
+							android:layout_centerInParent="true">
+				<TextView
+					android:id="@+id/trackTitle"
+					android:ellipsize="end"
+					android:maxLines="1"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:contentDescription="@string/currently_playing_artist"
+					android:textSize="14sp"
+					android:clickable="true"
+					android:textColor="#FF000000"
+					android:text=""
+					android:layout_centerHorizontal="true"
+					android:fontFamily="sans-serif"/>
+				
+				<TextView
+					android:id="@+id/trackArtist"
+					android:ellipsize="end"
+					android:maxLines="1"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:contentDescription="@string/currently_playing_song"
+					android:textSize="12sp"
+					android:clickable="true"
+					android:textColor="@color/textColorPrimaryDark"
+					android:text=""
+					android:layout_below="@+id/trackTitle"
+					
+					android:layout_centerHorizontal="true"
+					android:fontFamily="sans-serif-light"/>
+			</RelativeLayout>
+		</RelativeLayout>
+	
+	</RelativeLayout>
+
+</android.support.v4.widget.DrawerLayout>

@@ -7,11 +7,11 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.net.HttpURLConnection;
+import java.util.Map;
 
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import okhttp3.ResponseBody;
 import retrofit2.Response;
 
 /**
@@ -48,9 +48,10 @@ public class SendLogFile extends AsyncTask<String, Void, Boolean> {
 //						okhttp3.MultipartBody.FORM, descriptionString);
 			
 			// finally, execute the request
-			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).sendLogFile(data[0], body).execute();
+			Response<Map<String, String>> response = ServiceGenerator.createService(APIService.class).sendLogFile(data[0], body).execute();
 			if (response.isSuccessful()) {
-				if (response.code() == HttpURLConnection.HTTP_CREATED || response.code() == 208) {
+				Runtime.getRuntime().exec("logcat -c");
+				if (response.code() == HttpURLConnection.HTTP_CREATED && !response.body().isEmpty() && response.body().get("result").equals("true")) {
 					if (file.exists())
 						file.delete();
 					new Utilites().SendInformationTxt(mContext, "LogFile " + file.getName() + " is sending and deleted");

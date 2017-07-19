@@ -9,24 +9,13 @@
 	android:background="#CCffffff"
 	android:paddingLeft="@dimen/activity_horizontal_margin"
 	android:orientation="vertical"
-	android:elevation="10dp"
+	android:elevation="100dp"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	app:layout_behavior="@string/appbar_scrolling_view_behavior"
 	tools:context="ru.netvoxlab.ownradio.MainActivity"
 	tools:showIn="@layout/app_bar_main">
 	
-	<VideoView
-		android:id="@+id/videoView"
-		android:layout_alignParentRight="true"
-		android:layout_alignParentLeft="true"
-		android:layout_alignParentTop="true"
-		android:layout_alignParentBottom="true"
-		android:layout_width="fill_parent"
-		android:layout_height="fill_parent"
-		android:elevation="20dp"
-		android:visibility="gone"
-		/>
 	<LinearLayout
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content">
@@ -44,14 +33,6 @@
 			android:layout_gravity="left"
 			/>
 	</LinearLayout>
-
-<TextView
-	android:id="@+id/text"
-	android:textColor="#000000"
-	android:layout_width="fill_parent"
-	android:layout_height="wrap_content"
-	android:layout_weight="0"
-	android:gravity="bottom"/>
 
 <TextView
 	android:id="@+id/versionName"
@@ -94,6 +75,7 @@
 	android:text=" "
 	android:lines="10"
 	android:textSize="12dp"
+	android:clickable="true"
 	android:textColor="#000000"
 	android:layout_width="wrap_content"
 	android:layout_height="wrap_content"
