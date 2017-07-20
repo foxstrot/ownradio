@@ -2,6 +2,7 @@ package ru.netvoxlab.ownradio;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.MediaPlayer;
@@ -18,7 +19,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.VideoView;
 
@@ -26,14 +29,19 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
+import ru.netvoxlab.ownradio.receivers.NetworkStateReceiver;
+
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
 import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
 import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
 
-public class WelcomeActivity extends AppCompatActivity {
+public class WelcomeActivity extends AppCompatActivity implements NetworkStateReceiver.NetworkStateReceiverListener{
 	
 	private ViewPager viewPager;
 	private MyViewPagerAdapter myViewPagerAdapter;
+	private Button btnTryAgainCaching;
+	private ProgressBar progressBar;
+	private TextView textCountTryCaching;
 	private LinearLayout dotsLayout;
 	private TextView[] dots;
 	private int[] layouts;
@@ -42,17 +50,24 @@ public class WelcomeActivity extends AppCompatActivity {
 	private Uri uriVideoView;
 	private String deviceId;
 	final Handler loadHandler = new Handler();
+	private NetworkStateReceiver networkStateReceiver;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		//Меняем тему, используемую при запуске приложения, на основную
+		setTheme(R.style.AppTheme);
 		super.onCreate(savedInstanceState);
 		
 		// Checking for first time launch - before calling setContentView()
 		prefManager = new PrefManager(this);
 		if (!prefManager.isFirstTimeLaunch()) {
 			launchHomeScreen();
+			((App)getApplicationContext()).setAutoPlay(true);
 			finish();
 		}
+		networkStateReceiver = new NetworkStateReceiver();
+		networkStateReceiver.addListener(this);
+		this.registerReceiver(networkStateReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
 		
 		//генерируем deviceId и регистрируем устройство
 		try {
@@ -72,7 +87,7 @@ public class WelcomeActivity extends AppCompatActivity {
 			ex.printStackTrace();
 		}
 		
-		//Запускаем загрузку трех треков
+		//Запускаем загрузку треков
 		if (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
 			Intent downloaderIntent = new Intent(this, RequestAPIService.class);
 			downloaderIntent.setAction(ACTION_GETNEXTTRACK);
@@ -108,6 +123,30 @@ public class WelcomeActivity extends AppCompatActivity {
 		}catch (Exception ex){
 			new Utilites().SendInformationTxt(getApplicationContext(), "Ошибка при подключении фонового видео " + ex.getLocalizedMessage());
 		}
+		
+		btnTryAgainCaching = (Button)findViewById(R.id.tryCachingAgain);
+		btnTryAgainCaching.setVisibility(View.GONE);
+		btnTryAgainCaching.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				if(!new CheckConnection().CheckInetConnection(getApplicationContext())) {
+					if (textCountTryCaching != null)
+						textCountTryCaching.setText("Проверьте подключение к интернету");
+					return;
+				}
+				((App)getApplicationContext()).setCountDownloadTrying(0);
+				if(progressBar != null)
+					progressBar.setVisibility(View.VISIBLE);
+				//Запускаем загрузку треков
+				Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
+				downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+				downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
+				downloaderIntent.putExtra(EXTRA_COUNT, 3);
+				startService(downloaderIntent);
+				btnTryAgainCaching.setVisibility(View.GONE);
+			}
+		});
+				
 		// layouts of all welcome sliders
 		// add few more layouts if you want
 		layouts = new int[]{
@@ -149,6 +188,34 @@ public class WelcomeActivity extends AppCompatActivity {
 		}, 5000, 5000);
 		}
 	
+	@Override
+	public void onResume(){
+		super.onResume();
+		networkStateReceiver.addListener(this);
+		this.registerReceiver(networkStateReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
+	}
+	
+	@Override
+	public void onPause() {
+		networkStateReceiver.removeListener(this);
+		this.unregisterReceiver(networkStateReceiver);
+		super.onPause();
+	}
+	
+	@Override
+	public void networkAvailable() {
+	}
+	
+	@Override
+	public void networkUnavailable() {
+		//Если интернет соединение разорвалось и показывается слайд с прогрессбаром предзагрузки
+		// - показываем сообщение об отсутсвии интернета и кнопку "попробовать еще раз"
+		if(btnTryAgainCaching != null) {
+			btnTryAgainCaching.setVisibility(View.VISIBLE);
+			if(textCountTryCaching != null)
+				textCountTryCaching.setText(getResources().getString(R.string.slide_5_check_connection));
+		}
+	}
 	private void addBottomDots(int currentPage) {
 		dots = new TextView[layouts.length];
 		
@@ -188,20 +255,37 @@ public class WelcomeActivity extends AppCompatActivity {
 				final Timer loadTimer = new Timer();
 				final Runnable LoadTrack = new Runnable(){
 					public void run(){
+						//Если поле для вывода доступно - выводим номер попытки кеширования и количество загруженных треков
+						if(textCountTryCaching != null)
+							textCountTryCaching.setText(((App)getApplicationContext()).getCountDownloadTrying() + " попытка кеширования \n (загружено " + new TrackDataAccess(getApplicationContext()).GetExistTracksCount() + ")");
+						//Если хотя бы один трек загрузился - запускаем основную активность
+						//Иначе - после 10 неудачных попыток загрузки показываем кнопку "попробовать еще раз",
+						//При отсутсвии интернета также выводим сообщение об этом
 						if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() >= 1){
 							launchHomeScreen();
 							loadTimer.cancel();
 							return;
-						} else if(new CheckConnection().CheckInetConnection(getApplicationContext()))
+						} else if (((App)getApplicationContext()).getCountDownloadTrying() >= 10 || !new CheckConnection().CheckInetConnection(getApplicationContext())){
+							if(!new CheckConnection().CheckInetConnection(getApplicationContext()))
+								if(textCountTryCaching != null)
+									textCountTryCaching.setText(getResources().getString(R.string.slide_5_check_connection));
+							btnTryAgainCaching.setVisibility(View.VISIBLE);
+							if(progressBar != null)
+								progressBar.setVisibility(View.GONE);
+						} //else
+//						if(new CheckConnection().CheckInetConnection(getApplicationContext())
 							//Если треков нет - запускаем загрузку трех треков
-							if (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
-								Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
-								downloaderIntent.setAction(ACTION_GETNEXTTRACK);
-								downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
-								downloaderIntent.putExtra(EXTRA_COUNT, 1);
-								startService(downloaderIntent);
-							}
-					}
+//							if (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
+//								btnTryAgainCaching.setVisibility(View.GONE);
+////								((App)getApplicationContext()).setCountDownloadTrying((((App)getApplicationContext()).getCountDownloadTrying()+1));
+////								Log.e("OWNRADIO", "Загрузка номер " + ((App)getApplicationContext()).getCountDownloadTrying() );
+//								Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
+//								downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+//								downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
+//								downloaderIntent.putExtra(EXTRA_COUNT, 1);
+//								startService(downloaderIntent);
+//							}
+						}
 				};
 				loadTimer .schedule(new TimerTask() { // task to be scheduled
 					@Override
@@ -211,6 +295,7 @@ public class WelcomeActivity extends AppCompatActivity {
 				}, 500, 3000);
 			} else {
 				// still pages are left
+				btnTryAgainCaching.setVisibility(View.GONE);
 			}
 		}
 		
@@ -252,6 +337,12 @@ public class WelcomeActivity extends AppCompatActivity {
 			View view = layoutInflater.inflate(layouts[position], container, false);
 			container.addView(view);
 			
+			if(position == layouts.length - 1) {
+				progressBar = (ProgressBar) findViewById(R.id.progressBar);
+				if(progressBar != null)
+					progressBar.setVisibility(View.VISIBLE);
+				textCountTryCaching = (TextView) findViewById(R.id.countTryCaching);
+			}
 			return view;
 		}
 		

@@ -58,9 +58,7 @@ import ru.netvoxlab.ownradio.receivers.NetworkStateReceiver;
 import static ru.netvoxlab.ownradio.Constants.ALL_CONNECTION_TYPES;
 import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
 import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
-import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
-import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
-import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
+import static ru.netvoxlab.ownradio.Constants.TAG;
 
 public class MainActivity extends AppCompatActivity	implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener, NetworkStateReceiver.NetworkStateReceiverListener {
 	
@@ -104,7 +102,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	public static File filePath;
 	boolean flagDevInfo = false;
 	
-	public final static String TAG = "ownRadio";
+	
 	
 	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
 	public static final String ActionProgressBarFirstTracksLoad = "ru.netvoxlab.ownradio.action.PROGRESSBAR_FIRST_UPDATE";
@@ -127,6 +125,9 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		//Меняем тему, используемую при запуске приложения, на основную
+		setTheme(R.style.AppTheme);
+
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
@@ -607,24 +608,27 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		txtTrackArtist.setOnTouchListener(this);
 		toolbar.setOnTouchListener(this);
 		try {
-			if (trackToCache.FreeSpace() + trackToCache.FolderSize(filePath) < 104857600) {
-				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-				builder.setTitle("Not enough free space on your device")
-						.setMessage("This application requires at least 100MB of free space in the internal memory of the device.")
-						.setCancelable(false)
-						.setNegativeButton("OK",
-								new DialogInterface.OnClickListener() {
-									@Override
-									public void onClick(DialogInterface dialogInterface, int i) {
-										dialogInterface.cancel();
-									}
-								});
-				AlertDialog alert = builder.create();
-				alert.show();
-				
-				btnPlayPause.setClickable(false);
-				btnNext.setClickable(false);
-				btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
+			//запускаем загрузку треков, если кеш пуст
+			if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
+				if (trackToCache.FreeSpace() + trackToCache.FolderSize(filePath) < 104857600) {
+					AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+					builder.setTitle(getResources().getString(R.string.not_enough_free_space))
+							.setMessage(getResources().getString(R.string.requires_free_space))
+							.setCancelable(false)
+							.setNegativeButton(getResources().getString(R.string.button_ok),
+									new DialogInterface.OnClickListener() {
+										@Override
+										public void onClick(DialogInterface dialogInterface, int i) {
+											dialogInterface.cancel();
+										}
+									});
+					AlertDialog alert = builder.create();
+					alert.show();
+					
+					btnPlayPause.setClickable(false);
+					btnNext.setClickable(false);
+					btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
+				}
 			}
 			
 			SetDevelopersInfo();
@@ -763,14 +767,14 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	public void networkAvailable() {
 		new Utilites().SendInformationTxt(getApplicationContext(), "Интернет подключен");
 		//Если треков в кеше мало - при подключении  интернета запускаем запуск треков
-		if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 3) {
-			//		Запускаем кеширование треков - 3 шт
-			Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
-			downloaderIntent.setAction(ACTION_GETNEXTTRACK);
-			downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceId);
-			downloaderIntent.putExtra(EXTRA_COUNT, 1);
-			startService(downloaderIntent);
-		}
+//		if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 3) {
+//			//		Запускаем кеширование треков - 3 шт
+//			Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
+//			downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+//			downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceId);
+//			downloaderIntent.putExtra(EXTRA_COUNT, 1);
+//			startService(downloaderIntent);
+//		}
     /* TODO: Your connection-oriented stuff here */
 	}
 	

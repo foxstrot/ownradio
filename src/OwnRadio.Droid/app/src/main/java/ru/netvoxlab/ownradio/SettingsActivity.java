@@ -129,6 +129,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		//Меняем тему, используемую при запуске приложения, на основную
+		setTheme(R.style.AppTheme);
 		super.onCreate(savedInstanceState);
 		//подключаем тулбар
 		getLayoutInflater().inflate(R.layout.app_bar, (ViewGroup) findViewById(android.R.id.content));

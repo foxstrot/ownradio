@@ -56,6 +56,9 @@ public class TrackToCache {
 
 				case DOWNLOAD_FILE_TO_CACHE: {
 					try {
+						//TODO номер попытки загрузки
+						((App)mContext).setCountDownloadTrying((((App)mContext).getCountDownloadTrying()+1));
+						Log.e(TAG, "Загрузка номер " + ((App)mContext).getCountDownloadTrying() );
 						final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
 						trackId = trackMap.get("id");
 						trackMap.put("deviceid", deviceId);
@@ -63,6 +66,7 @@ public class TrackToCache {
 							Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
 							break;
 						}
+						Log.d(TAG,  "Download track " + trackId + " is started");
 						new Utilites().SendInformationTxt(mContext, "Download track " + trackId + " is started");
 //						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
 						do{
@@ -75,8 +79,8 @@ public class TrackToCache {
 							Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
 							progressIntent.putExtra("ProgressOn", false);
 							mContext.sendBroadcast(progressIntent);
-						} else {
-							//если ни один трек не кеширован - запуск загрузки трека
+						} else if(((App)mContext).getCountDownloadTrying()<10){
+							//если ни один трек не кеширован за 10 попыток - запуск загрузки трека
 							SaveTrackToCache(deviceId, 1);
 						}
 					} catch (Exception ex) {

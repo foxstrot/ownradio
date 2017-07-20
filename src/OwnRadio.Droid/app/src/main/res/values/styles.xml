@@ -22,4 +22,8 @@
 	<style name="PreferenceTheme" parent="PreferenceThemeOverlay.v14.Material">
 		<item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
 	</style>
+	
+	<style name="splashScreenTheme" parent="AppTheme">
+		<item name="android:windowBackground">@drawable/launch_screen</item>
+	</style>
 </resources>

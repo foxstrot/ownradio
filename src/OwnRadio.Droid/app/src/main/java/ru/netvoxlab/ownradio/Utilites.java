@@ -11,7 +11,7 @@ import java.util.Date;
 import static ru.netvoxlab.ownradio.MainActivity.ActionCheckCountTracksAndDownloadIfNotEnought;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionSendInfoTxt;
-import static ru.netvoxlab.ownradio.MainActivity.TAG;
+import static ru.netvoxlab.ownradio.Constants.TAG;
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_SENDLOGS;
 import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;

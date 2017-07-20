@@ -326,7 +326,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		if(!trackDataAccess.CheckEnoughTimeFromStartPlaying(track.getAsString("id"))){
 			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
 			if(GetDuration() < minTrackDuration)
-				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"));
+				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
+			else
+				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 2);
+			
 			try{
 				utilites.SendInformationTxt(getApplicationContext(), "track id: " + track.get("id") + ", \n track duration (server): " + track.get("length") + ", \n track duration (player): " + GetDuration());
 			}catch (Exception ex){

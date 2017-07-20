@@ -69,8 +69,7 @@
 			android:defaultValue="0">
 		</Preference>
 		<Preference
-			android:title="@string/pref_clear_cache"
-			android:summary="@string/summary_clear_listening_cache"
+			android:title="@string/summary_clear_listening_cache"
 			android:key="delete_listening_tracks">
 		
 		</Preference>

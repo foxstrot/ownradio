@@ -84,13 +84,13 @@ public class APICalls {
 
 	}
 	
-	public void SetIsCorrect(String deviceId, String trackId){
+	public void SetIsCorrect(String deviceId, String trackId, Integer isCorrect){
 		CheckConnection checkConnection = new CheckConnection();
 		if (!checkConnection.CheckInetConnection(mContext)){
 			return;
 		}
 		try{
-			Boolean result = new SetIsCorrect(mContext).execute(deviceId, trackId).get();
+			Boolean result = new SetIsCorrect(mContext).execute(deviceId, trackId, isCorrect.toString()).get();
 		}catch (Exception ex){
 			new Utilites().SendInformationTxt(mContext, "Error by setIsCorrect " + ex.getLocalizedMessage());
 		}

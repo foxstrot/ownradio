@@ -10,7 +10,7 @@ import android.widget.TextView;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-import static ru.netvoxlab.ownradio.MainActivity.TAG;
+import static ru.netvoxlab.ownradio.Constants.TAG;
 
 public class LastLogsActivity extends AppCompatActivity {
 	

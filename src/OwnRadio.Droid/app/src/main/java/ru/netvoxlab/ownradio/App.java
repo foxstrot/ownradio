@@ -19,8 +19,11 @@ public class App extends Application {
 	private File logFile;
 	private File musicDirectory;
 	private Process process;
+	private Integer countDownloadTrying;
+	private Boolean autoPlay;
 	public void onCreate() {
 		super.onCreate();
+		countDownloadTrying = 0;
 		//			if ( isExternalStorageWritable() ) {
 		appDirectory = this.getFilesDir();// new File (Environment.getExternalStorageDirectory().getAbsolutePath());//this.getFilesDir();
 		musicDirectory = new File(appDirectory + File.separator + "music");
@@ -92,4 +95,22 @@ public class App extends Application {
 	}
 	
 	public File getMusicDirectory() { return musicDirectory; }
+	
+	public Integer getCountDownloadTrying() {
+		return countDownloadTrying;
+	}
+	
+	public void setCountDownloadTrying(Integer countDownloadTrying) {
+		this.countDownloadTrying = countDownloadTrying;
+	}
+	
+	public Boolean getAutoPlay() {
+		if(autoPlay == null)
+			autoPlay = false;
+		return autoPlay;
+	}
+	
+	public void setAutoPlay(Boolean autoPlay){
+		this.autoPlay = autoPlay;
+	}
 }
