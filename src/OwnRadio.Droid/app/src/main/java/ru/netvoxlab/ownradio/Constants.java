@@ -19,4 +19,9 @@ public class Constants {
 	
 	public static final String ACTION_UPDATE_TRYING_COUNT = "ru.netvoxlab.ownradio.action.ACTION_UPDATE_TRYING_COUNT";
 	public static final String ACTION_START_PLAY = "ru.netvoxlab.ownradio.action.ACTION_START_PLAY";
+	
+	public static final String ACTION_GETNEXTTRACK = "ru.netvoxlab.ownradio.action.GETNEXTTRACK";
+	public static final String ACTION_FILLCACHE = "ru.netvoxlab.ownradio.action.FILLCACHE";
+	public static final String EXTRA_DEVICEID = "ru.netvoxlab.ownradio.extra.EXTRA_DEVICEID";
+	public static final String EXTRA_COUNT = "ru.netvoxlab.ownradio.extra.COUNT";
 }

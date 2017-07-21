@@ -2,6 +2,7 @@ package ru.netvoxlab.ownradio;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.media.Ringtone;
@@ -17,16 +18,19 @@ import android.preference.PreferenceScreen;
 import android.preference.RingtonePreference;
 import android.provider.Settings;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+import static ru.netvoxlab.ownradio.Constants.ACTION_FILLCACHE;
 import static ru.netvoxlab.ownradio.MainActivity.ActionStopPlayback;
 import static ru.netvoxlab.ownradio.MainActivity.version;
 
@@ -319,6 +323,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				}
 			});
 			
+			//Пункт меню "свободная память" открывает системную информацию
 			Preference freeMemory = findPreference("free_memory_size");
 			freeMemory.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 				@Override
@@ -328,46 +333,88 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				}
 			});
 			
+			//Пункт меню "удалить прослушанные треки"
 			Preference deleteListenedTracks = findPreference("delete_listening_tracks");
 			deleteListenedTracks.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 				@Override
 				public boolean onPreferenceClick(Preference preference) {
-					memoryUtil.DeleteListenedTracksFromCache();
-					getActivity().recreate();
+					try {
+						AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+						builder.setTitle(R.string.title_dialog_clear_listening_cache)
+								.setMessage(R.string.dialog_clear_listening_cache)
+								.setCancelable(true)
+								.setPositiveButton(R.string.button_ok,
+									new DialogInterface.OnClickListener() {
+										@Override
+										public void onClick(DialogInterface dialogInterface, int i) {
+											//Если нажата ОК - запускаем удаление треков, пересоздаем активность
+											memoryUtil.DeleteListenedTracksFromCache();
+											getActivity().recreate();
+											dialogInterface.cancel();
+										}
+									})
+								.setNegativeButton(R.string.button_cancel,
+									new DialogInterface.OnClickListener() {
+										@Override
+										public void onClick(DialogInterface dialogInterface, int i) {
+											dialogInterface.cancel();
+										}
+									});
+						AlertDialog alert = builder.create();
+						alert.show();
+					}catch (Exception ex){
+						
+					}
 					return true;
 				}
 			});
 			
-			
+			//Пункт меню "удалить все треки"
 			Preference deleteAllTracks = findPreference("delete_all_tracks");
 			deleteAllTracks.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 				@Override
 				public boolean onPreferenceClick(Preference preference) {
-					Intent intent = new Intent(ActionStopPlayback);
-					context.sendBroadcast(intent);
-					memoryUtil.DeleteAllTracksFromCache();
-//					AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-//					builder.setTitle(getResources().getString(R.string.delete_all_alert_title))
-//							.setMessage(getResources().getString(R.string.delete_all_alert_message))
-//							.setPositiveButton(getResources().getString(R.string.alert_positive_button),
-//									new DialogInterface.OnClickListener() {
-//										@Override
-//										public void onClick(DialogInterface dialogInterface, int i) {
-//											//TODO delete all tracks
-//											dialogInterface.cancel();
-//										}
-//									})
-//							.setNegativeButton(getResources().getString(R.string.alert_negative_button),
-//							new DialogInterface.OnClickListener() {
-//								@Override
-//								public void onClick(DialogInterface dialogInterface, int i) {
-//									dialogInterface.cancel();
-//								}
-//							});
-//					AlertDialog alert = builder.create();
-//					alert.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-//					alert.show();
-					getActivity().recreate();
+					AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+					builder.setTitle(R.string.title_dialog_clear_all_cache)
+							.setMessage(R.string.dialog_clear_all_cache)
+							.setCancelable(true)
+							.setPositiveButton(R.string.button_ok,
+									new DialogInterface.OnClickListener() {
+										@Override
+										public void onClick(DialogInterface dialogInterface, int i) {
+											Intent intent = new Intent(ActionStopPlayback);
+											context.sendBroadcast(intent);
+											memoryUtil.DeleteAllTracksFromCache();
+											getActivity().recreate();
+											dialogInterface.cancel();
+										}
+									})
+							.setNegativeButton(R.string.button_cancel,
+									new DialogInterface.OnClickListener() {
+										@Override
+										public void onClick(DialogInterface dialogInterface, int i) {
+											dialogInterface.cancel();
+										}
+									});
+					AlertDialog alert = builder.create();
+					alert.show();
+					return true;
+				}
+			});
+			
+			//Пункт меню "Заполнить кэш" - забивает доступный для приложения объем памяти треками (ограничения задаются настройками)
+			Preference fillCache = findPreference("fill_cache");
+			fillCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+				@Override
+				public boolean onPreferenceClick(Preference preference) {
+					if (!new CheckConnection().CheckInetConnection(context)) {
+						Toast.makeText(context.getApplicationContext(), "Подключение к интернету отсутствует", Toast.LENGTH_LONG).show();
+						return true;
+					}
+					Toast.makeText(context, "Заполнение кэша началось", Toast.LENGTH_LONG).show();
+					Intent fillCache = new Intent(context, LongRequestAPIService.class);
+					fillCache.setAction(ACTION_FILLCACHE);
+					context.startService(fillCache);
 					return true;
 				}
 			});
@@ -393,29 +440,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 		
 		@Override
 		public boolean onPreferenceClick(Preference preference) {
-//			if (preference.equals("delete_all_tracks")) {
-//				AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
-//				builder.setTitle(R.string.delete_all_alert_title)
-//						.setMessage(R.string.delete_all_alert_message)
-//						.setPositiveButton(R.string.alert_positive_button,
-//								new DialogInterface.OnClickListener() {
-//									@Override
-//									public void onClick(DialogInterface dialogInterface, int i) {
-//										//TODO delete all tracks
-//										dialogInterface.cancel();
-//									}
-//								})
-//						.setNegativeButton(R.string.alert_negative_button,
-//								new DialogInterface.OnClickListener() {
-//									@Override
-//									public void onClick(DialogInterface dialogInterface, int i) {
-//										dialogInterface.cancel();
-//									}
-//								});
-//				AlertDialog alert = builder.create();
-//				alert.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_ALERT);
-//				alert.show();
-//			}
 			return true;
 		}
 	}

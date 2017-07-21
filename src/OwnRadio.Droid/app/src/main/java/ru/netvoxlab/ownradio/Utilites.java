@@ -3,15 +3,16 @@ package ru.netvoxlab.ownradio;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static ru.netvoxlab.ownradio.Constants.TAG;
 import static ru.netvoxlab.ownradio.MainActivity.ActionCheckCountTracksAndDownloadIfNotEnought;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionSendInfoTxt;
-import static ru.netvoxlab.ownradio.Constants.TAG;
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
 import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_SENDLOGS;
 import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
@@ -44,7 +45,7 @@ public class Utilites {
 					i.putExtra("ProgressOn", true);
 					mContext.sendBroadcast(i);
 					//		Запускаем кеширование треков - 3 шт
-					Intent downloaderIntent = new Intent(mContext, RequestAPIService.class);
+					Intent downloaderIntent = new Intent(mContext, LongRequestAPIService.class);
 					downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 					downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceId);
 					downloaderIntent.putExtra(EXTRA_COUNT, 3);
@@ -79,6 +80,7 @@ public class Utilites {
 			logSenderIntent.putExtra(EXTRA_DEVICEID, deviceId); //getApplicationContext()).execute(sp.getString("DeviceID", "")
 			logSenderIntent.putExtra(EXTRA_LOGFILEPATH, logFile.getAbsolutePath());
 			mContext.startService(logSenderIntent);
+			Toast.makeText(mContext, mContext.getResources().getString(R.string.log_is_send), Toast.LENGTH_SHORT).show();
 			return true;
 		}catch (Exception ex){
 			new Utilites().SendInformationTxt(mContext, "Error in sendLogFile(): " + ex.getLocalizedMessage());

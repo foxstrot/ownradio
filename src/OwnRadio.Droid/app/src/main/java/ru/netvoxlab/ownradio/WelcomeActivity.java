@@ -89,7 +89,7 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 		
 		//Запускаем загрузку треков
 		if (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
-			Intent downloaderIntent = new Intent(this, RequestAPIService.class);
+			Intent downloaderIntent = new Intent(this, LongRequestAPIService.class);
 			downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 			downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
 			downloaderIntent.putExtra(EXTRA_COUNT, 3);
@@ -138,7 +138,7 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 				if(progressBar != null)
 					progressBar.setVisibility(View.VISIBLE);
 				//Запускаем загрузку треков
-				Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
+				Intent downloaderIntent = new Intent(getApplicationContext(), LongRequestAPIService.class);
 				downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 				downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
 				downloaderIntent.putExtra(EXTRA_COUNT, 3);
@@ -200,6 +200,19 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 		networkStateReceiver.removeListener(this);
 		this.unregisterReceiver(networkStateReceiver);
 		super.onPause();
+	}
+	
+	@Override
+	public void onDestroy(){
+		try{
+			//при разрушении активности отписываемся от событий переподключения интернета
+			networkStateReceiver.removeListener(this);
+			this.unregisterReceiver(networkStateReceiver);
+		}catch(Exception e)
+		{
+			
+		}
+		super.onDestroy();
 	}
 	
 	@Override
@@ -279,7 +292,7 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 //								btnTryAgainCaching.setVisibility(View.GONE);
 ////								((App)getApplicationContext()).setCountDownloadTrying((((App)getApplicationContext()).getCountDownloadTrying()+1));
 ////								Log.e("OWNRADIO", "Загрузка номер " + ((App)getApplicationContext()).getCountDownloadTrying() );
-//								Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
+//								Intent downloaderIntent = new Intent(getApplicationContext(), LongRequestAPIServiceRequestAPIService.class);
 //								downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 //								downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
 //								downloaderIntent.putExtra(EXTRA_COUNT, 1);

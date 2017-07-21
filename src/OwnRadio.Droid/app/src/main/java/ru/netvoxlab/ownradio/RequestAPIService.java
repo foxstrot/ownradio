@@ -34,12 +34,7 @@ public class RequestAPIService extends IntentService {
 				return;
 			
 			final String action = intent.getAction();
-			if (ACTION_GETNEXTTRACK.equals(action)) {
-				//Получение информации о следующем треке и его загрузка
-				final String deviceId = intent.getStringExtra(EXTRA_DEVICEID);
-				final Integer countTracks = intent.getIntExtra(EXTRA_COUNT, 3);
-				new TrackToCache(getApplicationContext()).SaveTrackToCache(deviceId, countTracks);
-			} else if (ACTION_SENDHISTORY.equals(action)) {
+			if (ACTION_SENDHISTORY.equals(action)) {
 				//Отправка на сервер накопленной истории прослушивания треков
 				final String deviceId = intent.getStringExtra(EXTRA_DEVICEID);
 				for (int i = 0; i < 3; i++) {

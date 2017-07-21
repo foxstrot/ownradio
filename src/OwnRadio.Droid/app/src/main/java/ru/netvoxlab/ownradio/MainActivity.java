@@ -769,7 +769,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		//Если треков в кеше мало - при подключении  интернета запускаем запуск треков
 //		if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 3) {
 //			//		Запускаем кеширование треков - 3 шт
-//			Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
+//			Intent downloaderIntent = new Intent(getApplicationContext(), LongRequestAPIService.class);
 //			downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 //			downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceId);
 //			downloaderIntent.putExtra(EXTRA_COUNT, 1);

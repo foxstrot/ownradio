@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Handler;
 import android.os.StatFs;
 import android.util.Log;
 
@@ -22,18 +23,21 @@ import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
  */
 
 public class TrackToCache {
-	Context mContext;
-	File pathToCache;
+	private Context mContext;
+	private File pathToCache;
+	private String deviceId;
 	private final int EXTERNAL_STORAGE_NOT_AVAILABLE = -1;
 	private final int DOWNLOAD_FILE_TO_CACHE = 1;
 	private final int DELETE_FILE_FROM_CACHE = 2;
 	final static double bytesInGB = 1073741824.0d;
 	final static double bytesInMB = 1048576.0d;
 	final String TAG = "ownRadio";
+	Handler handler = new Handler();
 
 	public TrackToCache(Context context) {
 		mContext = context;
 		pathToCache = ((App)context.getApplicationContext()).getMusicDirectory();
+		deviceId = new PrefManager(mContext).getDeviceId();
 	}
 
 	public String SaveTrackToCache(String deviceId, int trackCount) {
@@ -56,9 +60,7 @@ public class TrackToCache {
 
 				case DOWNLOAD_FILE_TO_CACHE: {
 					try {
-						//TODO номер попытки загрузки
 						((App)mContext).setCountDownloadTrying((((App)mContext).getCountDownloadTrying()+1));
-						Log.e(TAG, "Загрузка номер " + ((App)mContext).getCountDownloadTrying() );
 						final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
 						trackId = trackMap.get("id");
 						trackMap.put("deviceid", deviceId);
@@ -269,6 +271,35 @@ public class TrackToCache {
 			return true;
 		}catch (Exception ex){
 			return false;
+		}
+	}
+	
+	//Заполняет доступную приложению свободную память (определяется настройками) треками
+	public void FillCache(){
+		try{
+			final TrackDataAccess trackDataAccess = new TrackDataAccess(mContext);
+			APICalls apiCalls = new APICalls(mContext);
+			String trackId;
+			
+			
+			while (CheckCacheDoing() == DOWNLOAD_FILE_TO_CACHE){
+				final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
+				trackId = trackMap.get("id");
+				if (trackDataAccess.CheckTrackExistInDB(trackId)) {
+					Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
+					break;
+				}
+				trackMap.put("deviceid", deviceId);
+				new Utilites().SendInformationTxt(mContext, "Download track " + trackId + " is started");
+				new DownloadTracks(mContext).execute(trackMap).get();
+				if(new TrackDataAccess(mContext).GetExistTracksCount() >=1){
+					Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
+					progressIntent.putExtra("ProgressOn", false);
+					mContext.sendBroadcast(progressIntent);
+				}
+			}
+		}catch (Exception ex){
+			
 		}
 	}
 }

@@ -470,7 +470,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			return;
 		}
 		
-		Intent downloaderIntent = new Intent(this, RequestAPIService.class);
+		Intent downloaderIntent = new Intent(this, LongRequestAPIService.class);
 		downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 		downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
 		downloaderIntent.putExtra(EXTRA_COUNT, 3);

@@ -73,7 +73,11 @@
 			android:key="delete_listening_tracks">
 		
 		</Preference>
-
+		<Preference
+			android:title="@string/pref_fill_cache"
+			android:summary="@string/summary_fill_cache"
+			android:key="fill_cache">
+		</Preference>
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/pref_header_app"
