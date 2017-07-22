@@ -126,13 +126,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 	@Override
 	public void onAudioFocusChange(int focusChange) {
+		if (player == null)
+			InitializePlayer();
 		switch (focusChange) {
 			case AudioManager.AUDIOFOCUS_GAIN:
 				if(playbackWithHSisInterrupted && !isHSConnected)
 					return;
 
-				if (player == null)
-					InitializePlayer();
+//				if (player == null)
+//					InitializePlayer();
 
 				//проверить возобновление проигрывания при переключении фокуса
 				if (!player.isPlaying() && GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
@@ -300,6 +302,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			}
 		});
 		player.setOnPreparedListener(this);
+		
+		//Блокирует отключение 3G когда экран не активен
+		wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
+		if(!wl.isHeld())
+			wl.acquire();
 	}
 
 	public void onCompletion(MediaPlayer mediaPlayer) {
@@ -425,7 +432,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //				return;
 //			}
 			
-			utilites.SendInformationTxt(getApplicationContext(), "Start playback " + track.getAsString("id"));
 //			if(GetDuration()> minTrackDuration && player != null)
 			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 			
@@ -433,9 +439,9 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			new TrackDataAccess(getApplicationContext()).SetTimeAndCountStartPlayback(track);
 			utilites.SendInformationTxt(getApplicationContext(), "SetTimeAndCountStartPlayback for track " + track.getAsString("id"));
 
-			wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
-			if(!wl.isHeld())
-				wl.acquire();
+//			wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
+//			if(!wl.isHeld())
+//				wl.acquire();
 
 //			AcquireWifiLock();
 			UpdateMediaMetadataCompat();
@@ -532,6 +538,22 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			getApplicationContext().sendBroadcast(progressIntent);
 //			return;
 //		}
+		if(track.get("id").equals("zero_track")) {
+			if(trackDataAccess.GetExistTracksCount()>0)
+				PlayNext();
+			else {
+				if (player != null) {
+					if (player.isPlaying())
+						player.stop();
+					player.reset();
+					player.release();
+					player = null;
+				}
+				UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
+				StopNotification();
+			}
+			return;
+		}
 		
 		if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() <=0){
 			Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
@@ -548,8 +570,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		SaveHistory(listedTillTheEnd, track);
 		// Удаление пропущенного трека
 		new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+		utilites.SendInformationTxt(getApplicationContext(), "Skip track " + track.getAsString("id") + " to next");
 		PlayNext();
-		utilites.SendInformationTxt(getApplicationContext(), "Skip track to next");
 		
 		Intent historySenderIntent = new Intent(this, RequestAPIService.class);
 		historySenderIntent.setAction(ACTION_SENDHISTORY);

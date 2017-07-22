@@ -23,11 +23,11 @@ public class HistorySend extends AsyncTask <String, Void, Boolean>{
 	
 	protected Boolean doInBackground(String... data) {
 		final HistoryDataAccess historyDataAccess = new HistoryDataAccess(mContext);
-		final ContentValues historyRecs = historyDataAccess.GetHistoryRec();
-		
-		if (historyRecs == null)
-			return true;
-		
+//		final ContentValues historyRecs = historyDataAccess.GetHistoryRec();
+//
+//		if (historyRecs == null)
+//			return true;
+//
 		final ContentValues historyRec = historyDataAccess.GetHistoryRec();
 		
 		try {

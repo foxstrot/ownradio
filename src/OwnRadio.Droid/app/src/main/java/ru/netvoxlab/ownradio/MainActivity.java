@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	ImageButton btnPlayPause;
 	ImageButton btnNext;
 	ImageButton btnSkipTrack;
-	TrackDB trackDB;
+//	TrackDB trackDB;
 	private Handler handler = new Handler();
 	private Handler handlerEvent = new Handler();
 	ProgressBar progressBar;
@@ -223,7 +223,8 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		if (mediaPlayerServiceConnection == null)
 			InitilizeMedia();
 		
-		trackDB = new TrackDB(MainActivity.this, 1);
+//		trackDB = TrackDB.getInstance(getApplicationContext());
+//		trackDB = new TrackDB(MainActivity.this, 1);
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		try {
 			int currentVersion = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionCode;
