@@ -464,8 +464,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 						btnPlayPause.setImageResource(R.drawable.btn_play);
 					}
 					
-					if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().flagIsCorrect) {
-						Log.d(TAG, "flagIsCorrect="+binder.GetMediaPlayerService().flagIsCorrect);
+					if(binder.GetMediaPlayerService().player != null) {
 						title = binder.GetMediaPlayerService().track.getAsString("title");
 						artist = binder.GetMediaPlayerService().track.getAsString("artist");
 						if (title == null || title.isEmpty() || title.equals("null"))
@@ -525,13 +524,13 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 								Thread.sleep(1000);
 								currentPosition = binder.GetMediaPlayerService().GetPosition();
 //								currentPosition = binder.GetMediaPlayerService().GetPosition() / 1000;
-								try {
-									duration = binder.GetMediaPlayerService().GetDuration();
-//									duration = binder.GetMediaPlayerService().track.getAsInteger("length");
-								} catch (Exception ex) {
-									duration = binder.GetMediaPlayerService().track.getAsInteger("length") * 1000;
-//									duration = binder.GetMediaPlayerService().GetDuration() / 1000;
-								}
+//								try {
+//									duration = binder.GetMediaPlayerService().GetDuration();
+////									duration = binder.GetMediaPlayerService().track.getAsInteger("length");
+//								} catch (Exception ex) {
+//									duration = binder.GetMediaPlayerService().track.getAsInteger("length") * 1000;
+////									duration = binder.GetMediaPlayerService().GetDuration() / 1000;
+//								}
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							} catch (Exception e) {
@@ -570,13 +569,28 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 					dialog.setTitle(getResources().getString(R.string.is_caching));
 					dialog.setMessage(getResources().getString(R.string.wait_caching));
 					dialog.setIndeterminate(true);
-					dialog.setCancelable(false);
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							while (new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
+								// Обновляем счетчик количества попыток
+								handler.post(new Runnable() {
+									@Override
+									public void run() {
+										dialog.setMessage(getResources().getString(R.string.wait_caching) + " \n" + ((App)getApplicationContext()).getCountDownloadTrying() + " попытка загрузки");
+									}
+								});
+							}
+						}
+					}).start();
+					dialog.setCancelable(true);
 					dialog.show();
 				}else {
 					if (dialog != null)
 						dialog.dismiss();
 					btnPlayPause.setClickable(true);
-					
+//					if(binder.GetMediaPlayerService().isAutoplay)
+//						binder.GetMediaPlayerService().Play();
 					if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
 						btnNext.setClickable(false);
 						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));

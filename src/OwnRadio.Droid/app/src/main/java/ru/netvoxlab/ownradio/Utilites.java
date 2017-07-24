@@ -41,6 +41,7 @@ public class Utilites {
 			if (new TrackDataAccess(mContext).GetExistTracksCount() < 1) {
 				if (new CheckConnection().CheckInetConnection(mContext)) {
 					new Utilites().SendInformationTxt(mContext, "Подождите пока наполнится кеш");
+					((App)mContext.getApplicationContext()).setCountDownloadTrying(0);
 					Intent i = new Intent(ActionProgressBarFirstTracksLoad);
 					i.putExtra("ProgressOn", true);
 					mContext.sendBroadcast(i);

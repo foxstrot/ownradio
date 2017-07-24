@@ -194,7 +194,7 @@
 	<string name="count_tracks_listened_table">Информации о треках не найдено</string>
 	
 	<string name="is_caching">Кеширование...</string>
-	<string name="wait_caching">Отсутствуют кешированные треки. Подождите пока треки кешируются</string>
+	<string name="wait_caching">Отсутствуют кешированные треки. Подождите пока треки кешируются.</string>
 	
 	<string name="not_enough_free_space">Недостаточно свободной памяти на устройстве</string>
 	<string name="requires_free_space">Приложению требуется минимум 100MB свободного места во внутренней памяти устройства.</string>
