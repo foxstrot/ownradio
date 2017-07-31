@@ -25,7 +25,7 @@ public class SetIsCorrect extends AsyncTask <String, Void, Boolean>  {
 	protected Boolean doInBackground(String... data) {
 		try {
 			TrackModel trackModel = new TrackModel();
-			trackModel.setIscorrect(0);
+			trackModel.setIscorrect(Integer.parseInt(data[2]));
 			Response<Void> response = ServiceGenerator.createService(APIService.class).setIsCorrect(data[1], data[0], trackModel).execute();
 			if(response.isSuccessful()){
 				if (response.code() == HttpURLConnection.HTTP_CREATED)

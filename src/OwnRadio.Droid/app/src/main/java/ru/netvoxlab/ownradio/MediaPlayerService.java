@@ -77,7 +77,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public MediaControllerCompat mediaControllerCompat;
 
 	private Handler handler = new Handler();
-	public static boolean playbackWithHSisInterrupted = false;
+	public static boolean playbackWithHSisInterrupted = false; //флаг было ли прервано проигрывание при подключенной гарнитуре
+	public static boolean isAutoplay = false; //флаг начинать ли проигрывание автоматически
 	public static boolean isHSConnected = false;
 	String trackURL;
 	TrackDataAccess trackDataAccess;
@@ -91,7 +92,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	ContentValues track;
 	int startPosition = 0;
 	String startTrackID = "";
-	public boolean flagIsCorrect = true;
+	public boolean isPreparing = false;
 	
 	private NotificationManagerCompat mNotificationManager ;
 	
@@ -126,13 +127,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 
 	@Override
 	public void onAudioFocusChange(int focusChange) {
+		if (player == null)
+			InitializePlayer();
 		switch (focusChange) {
 			case AudioManager.AUDIOFOCUS_GAIN:
 				if(playbackWithHSisInterrupted && !isHSConnected)
 					return;
 
-				if (player == null)
-					InitializePlayer();
+//				if (player == null)
+//					InitializePlayer();
 
 				//проверить возобновление проигрывания при переключении фокуса
 				if (!player.isPlaying() && GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
@@ -281,10 +284,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 						if (player != null) {
 							if(player.isPlaying())
 								player.stop();
+							isPreparing = false;
 							player.reset();
 							player.release();
 							player = null;
 						}
+						new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
+						new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+						utilites.SendInformationTxt(getApplicationContext(), "Битый трек удален и помечен");
 						PlayNext();
 						sendBroadcast(new Intent(ActionButtonImgUpdate));
 						Toast.makeText(getApplicationContext(), "MediaPlayer error "+what+" ("+extra+")", Toast.LENGTH_SHORT).show();
@@ -300,6 +307,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			}
 		});
 		player.setOnPreparedListener(this);
+		
+		//Блокирует отключение 3G когда экран не активен
+		wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
+		if(!wl.isHeld())
+			wl.acquire();
 	}
 
 	public void onCompletion(MediaPlayer mediaPlayer) {
@@ -307,13 +319,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		//затем вызвается функция Play(), запускающая проигрывание следующего трека
 		//Сохраняем информацию о прослушивании в локальную БД.
 //		if(GetDuration() < minTrackDuration){
-		if(track.get("id").equals("zero_track")) {
+		if(track != null && track.get("id").equals("zero_track")) {
 			if(trackDataAccess.GetExistTracksCount()>0)
 				PlayNext();
 			else {
 				if (player != null) {
 					if (player.isPlaying())
 						player.stop();
+					isPreparing = false;
 					player.reset();
 					player.release();
 					player = null;
@@ -326,7 +339,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		if(!trackDataAccess.CheckEnoughTimeFromStartPlaying(track.getAsString("id"))){
 			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
 			if(GetDuration() < minTrackDuration)
-				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"));
+				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 0);
+			else
+				new APICalls(getApplicationContext()).SetIsCorrect(DeviceID, track.getAsString("id"), 2);
+			
 			try{
 				utilites.SendInformationTxt(getApplicationContext(), "track id: " + track.get("id") + ", \n track duration (server): " + track.get("length") + ", \n track duration (player): " + GetDuration());
 			}catch (Exception ex){
@@ -422,7 +438,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //				return;
 //			}
 			
-			utilites.SendInformationTxt(getApplicationContext(), "Start playback " + track.getAsString("id"));
 //			if(GetDuration()> minTrackDuration && player != null)
 			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
 			
@@ -455,6 +470,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			if(player != null) {
 				if (player.isPlaying())
 					player.stop();
+				isPreparing = false;
 				player.reset();
 				player.release();
 				player = null;
@@ -467,7 +483,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			return;
 		}
 		
-		Intent downloaderIntent = new Intent(this, RequestAPIService.class);
+		Intent downloaderIntent = new Intent(this, LongRequestAPIService.class);
 		downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 		downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
 		downloaderIntent.putExtra(EXTRA_COUNT, 3);
@@ -510,6 +526,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
 //			UpdateButtonPlayPauseImg();
 //			player.reset();
+			isPreparing = false;
 			player.release();
 			player = null;
 //			StartNotification();
@@ -529,6 +546,24 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			getApplicationContext().sendBroadcast(progressIntent);
 //			return;
 //		}
+		if(track != null && track.get("id").equals("zero_track")) {
+			if(trackDataAccess.GetExistTracksCount()>0)
+				PlayNext();
+			else {
+				isAutoplay = true;
+				if (player != null) {
+					if (player.isPlaying())
+						player.stop();
+					isPreparing = false;
+					player.reset();
+					player.release();
+					player = null;
+				}
+				UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
+				StopNotification();
+			}
+			return;
+		}
 		
 		if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() <=0){
 			Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
@@ -545,8 +580,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		SaveHistory(listedTillTheEnd, track);
 		// Удаление пропущенного трека
 		new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+		utilites.SendInformationTxt(getApplicationContext(), "Skip track " + track.getAsString("id") + " to next");
 		PlayNext();
-		utilites.SendInformationTxt(getApplicationContext(), "Skip track to next");
 		
 		Intent historySenderIntent = new Intent(this, RequestAPIService.class);
 		historySenderIntent.setAction(ACTION_SENDHISTORY);
@@ -622,29 +657,18 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //		}
 		mp.start();
 		duration = player.getDuration();
-
-//		duration = player.getDuration();
-//		if(GetDuration() < minTrackDuration) {
-//			flagIsCorrect=false;
-//			if(player != null) {
-//				if (player.isPlaying())
-//					player.stop();
-//				player.reset();
-//				player.release();
-//				player = null;
-//				UpdatePlaybackState(PlaybackStateCompat.STATE_STOPPED);
-//			}
-////			new Utilites().SendInformationTxt(getApplicationContext(), "track id: " + track.get("id") + ", \n track duration (server): " + track.get("length") + ", \n track duration (player): " + GetDuration());
-//////			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
-////			Play();
-//		} else {
-//			flagIsCorrect=true;
-			utilites.SendInformationTxt(getApplicationContext(), "Start playback " + track.getAsString("id"));
-			UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
-//		}
+		//Попытка вызыва некоторых функций (таких как getCurrentPosition(), getDuration() и др)
+		//до срабатывания onPrepared вызывает исключение и событие onError().
+		//Для избежания этого исплоьзуется флаг isPreparing
+		isPreparing = true;
+		utilites.SendInformationTxt(getApplicationContext(), "Start playback " + track.getAsString("id"));
+		UpdatePlaybackState(PlaybackStateCompat.STATE_PLAYING);
+		isAutoplay = false;
 	}
 
 	public int GetPosition() {
+		if(!isPreparing)
+			return -1;
 		if (player == null
 				|| (GetMediaPlayerState() != PlaybackStateCompat.STATE_PLAYING
 				&& GetMediaPlayerState() != PlaybackStateCompat.STATE_PAUSED))
@@ -916,6 +940,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		if (player != null) {
 			if(player.isPlaying())
 				player.stop();
+			isPreparing = false;
 			player.reset();
 			player.release();
 			player = null;
@@ -1009,6 +1034,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			SaveLastPosition();
 			if(player.isPlaying())
 				player.stop();
+			isPreparing = false;
 			player.reset();
 			player.release();
 			player = null;
@@ -1027,7 +1053,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public void SaveLastPosition() {
 		if (player != null) {
 			SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(this).edit();
-			editor.putInt("LastPosition", player.getCurrentPosition());
+			editor.putInt("LastPosition", GetPosition());
 			editor.putString("LastTrackID", TrackID);
 			editor.putBoolean("StatePlay", player.isPlaying());
 			editor.commit();

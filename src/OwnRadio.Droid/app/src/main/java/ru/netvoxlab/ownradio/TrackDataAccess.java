@@ -12,8 +12,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import static ru.netvoxlab.ownradio.TrackDB.DB_VER;
-
 /**
  * Created by a.polunina on 26.10.2016.
  */
@@ -26,22 +24,26 @@ public class TrackDataAccess {
 
 	public TrackDataAccess(Context context) {
 		mContext = context;
-		trackDB = new TrackDB(mContext, DB_VER);
+		trackDB = TrackDB.getInstance(mContext);
+//		trackDB = new TrackDB(mContext, DB_VER);
 	}
 
 	public void SaveTrack(ContentValues trackInstance) {
-		db = trackDB.getWritableDatabase();
+		trackDB.openDatabase();
+		db = trackDB.database();
 		//Получаем текущее время - 10 лет
 		Cursor userCursor  = db.rawQuery("SELECT strftime('%Y-%m-%dT%H:%M:%S', 'now','-10 year')", null);
 		if(userCursor.moveToFirst())
 			trackInstance.put("datetimelastlisten", userCursor.getString(0));
 		trackInstance.put("countplay", 0);
 		db.insert(TrackTableName, null, trackInstance);
+		trackDB.close();
 		//db.close();
 	}
 
 	public boolean CheckTrackExistInDB(String trackId) {
-		db = trackDB.getWritableDatabase();
+		trackDB.openDatabase();
+		db = trackDB.database();
 		Cursor userCursor = db.rawQuery("SELECT * FROM track WHERE id = ?", new String[]{String.valueOf(trackId)});
 		boolean result = true;
 		//db.close();
@@ -50,12 +52,14 @@ public class TrackDataAccess {
 		else
 			result = false;
 		userCursor.close();
+		trackDB.close();
 		return result;
 	}
 
 	public ContentValues GetMostOldTrack() {
 		ContentValues result = new ContentValues();
-		db = trackDB.getWritableDatabase();
+		trackDB.openDatabase();
+		db = trackDB.database();
 		Cursor userCursor = db.rawQuery("SELECT id, trackurl, title, artist, length FROM track WHERE isexist = ? ORDER BY datetimelastlisten", new String[]{String.valueOf(1)});
 		if (userCursor.moveToFirst()) {
 			result.put("id", userCursor.getString(0));
@@ -68,12 +72,14 @@ public class TrackDataAccess {
 		}
 		//db.close();
 		userCursor.close();
+		trackDB.close();
 		return result;
 	}
 
 	public ContentValues GetTrackWithMaxCountPlay() {
 		ContentValues result = new ContentValues();
-		db = trackDB.getWritableDatabase();
+		trackDB.openDatabase();
+		db = trackDB.database();
 		Cursor userCursor = db.rawQuery("SELECT id, trackurl FROM track WHERE countplay != ? AND isexist = ? ORDER BY countplay DESC LIMIT 1", new String[]{String.valueOf(0), String.valueOf(1)});
 		if (userCursor.moveToFirst()) {
 			result.put("id", userCursor.getString(0));
@@ -83,12 +89,14 @@ public class TrackDataAccess {
 		}
 		//db.close();
 		userCursor.close();
+		trackDB.close();
 		return result;
 	}
 
 	public int GetExistTracksCount() {
 		int result;
-		db = trackDB.getWritableDatabase();
+		trackDB.openDatabase();
+		db = trackDB.database();
 		Cursor userCursor = db.rawQuery("SELECT COUNT(*) FROM track WHERE isexist = ? ORDER BY datetimelastlisten", new String[]{String.valueOf(1)});
 		if (userCursor.moveToFirst()) {
 			result = userCursor.getInt(0);
@@ -97,6 +105,7 @@ public class TrackDataAccess {
 		}
 		//db.close();
 		userCursor.close();
+		trackDB.close();
 		return result;
 	}
 
@@ -104,8 +113,9 @@ public class TrackDataAccess {
 	public void SetTimeAndCountStartPlayback(ContentValues trackInstance){
 		int countPlay = 1;
 		String currentDatetime = "2000-01-01T12:00:00";
-
-		db = trackDB.getWritableDatabase();
+		
+		trackDB.openDatabase();
+		db = trackDB.database();
 
 		//Получаем из базы количетво попыток прослушивания трека
 		Cursor userCursorCount = db.rawQuery("SELECT countplay FROM track WHERE id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
@@ -122,11 +132,13 @@ public class TrackDataAccess {
 			trackInstance.put("datetimelastlisten", currentDatetime);
 //		db.rawQuery("UPDATE track SET datetimelastlisten=?, countplay=? WHERE id = ?", new String[]{String.valueOf(currentDatetime), String.valueOf(trackInstance.get("id")), String.valueOf(countPlay)});
 		int row = db.update(TrackTableName, trackInstance, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
-		//db.close();
+		trackDB.close();
+//db.close();
 	}
 
 	public String GetCountPlayTracksTable(){
-		db = trackDB.getWritableDatabase();
+		trackDB.openDatabase();
+		db = trackDB.database();
 		Cursor userCursor = db.rawQuery("SELECT countplay, COUNT(*) AS tracks FROM track GROUP BY countplay ORDER BY countplay DESC", null);
 
 		String tableString = "";
@@ -143,12 +155,14 @@ public class TrackDataAccess {
 			tableString = mContext.getResources().getString(R.string.count_tracks_listened_table);
 		userCursor.close();
 		//db.close();
+		trackDB.close();
 		return tableString;
 	}
 	
 	//возвращает количество прослушанных треков
 	public long GetCountPlayTracks(){
-		db = trackDB.getWritableDatabase();
+		trackDB.openDatabase();
+		db = trackDB.database();
 		Cursor userCursor = db.rawQuery("SELECT COUNT(*) FROM track WHERE countplay > ?", new String[]{String.valueOf(0)});
 		long listeningTracksCount = 0;
 		if (userCursor.moveToFirst() ){
@@ -157,12 +171,14 @@ public class TrackDataAccess {
 			listeningTracksCount = 0;
 		userCursor.close();
 		//db.close();
+		trackDB.close();
 		return listeningTracksCount;
 	}
 	
 	//возвращает список id прослушанных треков
 	public List<File> GetUuidsListeningTracks(){
-		db = trackDB.getReadableDatabase();
+		trackDB.openDatabase();
+		db = trackDB.database();
 		Cursor userCursor = db.rawQuery("SELECT id FROM track WHERE countplay > ?", new String[]{String.valueOf(0)});
 		List<File> listListeningTracks = new ArrayList<>();
 		if(userCursor.moveToFirst()){
@@ -170,40 +186,52 @@ public class TrackDataAccess {
 				listListeningTracks.add(new File (((App)mContext).getMusicDirectory() + "/" + userCursor.getString(0) + ".mp3"));
 			}while (userCursor.moveToNext());
 		}else {
+			trackDB.close();
 			return null;
 		}
+		trackDB.close();
 		return listListeningTracks;
 	}
 	
 	//Функция удаляет запись о треке из БД
 	public int DeleteTrackFromCache(ContentValues trackInstance) {
-		db = trackDB.getWritableDatabase();
-		return db.delete(TrackTableName, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
+		trackDB.openDatabase();
+		db = trackDB.database();
+		int rows = db.delete(TrackTableName, "id = ?", new String[]{String.valueOf(trackInstance.get("id"))});
+		trackDB.close();
+		return rows;
 		//db.close();
 	}
 	
 	//Функция удаляет записи обо всех треках
 	public int DeleteAllTracksFromCache() {
-		db = trackDB.getWritableDatabase();
-		return db.delete(TrackTableName, null, null);
+		trackDB.openDatabase();
+		db = trackDB.database();
+		int rows = db.delete(TrackTableName, null, null);
+		trackDB.close();
+		return rows;
 		//db.close();
 	}
 	
 	//Функция удаляет записи о прослушанных треках
 	public int DeleteListenedTracksFromCache() {
-		db = trackDB.getWritableDatabase();
-		return db.delete(TrackTableName, "countplay > ?", new String[]{String.valueOf(0)});
+		trackDB.openDatabase();
+		db = trackDB.database();
+		int rows = db.delete(TrackTableName, "countplay > ?", new String[]{String.valueOf(0)});
+		trackDB.close();
+		return rows;
 		//db.close();
 	}
 	
 	//функция возвращает время начала последнего воспроизведения трека
 	public Boolean CheckEnoughTimeFromStartPlaying(String trackId){
-		db = trackDB.getReadableDatabase();
+		trackDB.openDatabase();
+		db = trackDB.database();
 		String currentDatetime = "2000-01-01T12:00:00";
 		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 		
 		//Получаем текущее время
-		Cursor userCursorTime = db.rawQuery("SELECT strftime('%Y-%m-%dT%H:%M:%S', 'now', '-1 minute')", null);
+		Cursor userCursorTime = db.rawQuery("SELECT strftime('%Y-%m-%dT%H:%M:%S', 'now', '-3 second')", null);
 		
 		try {
 			if(userCursorTime.moveToFirst()) {
@@ -214,19 +242,27 @@ public class TrackDataAccess {
 				if (userCursor.moveToFirst()) {
 					String dtStart = userCursor.getString(0);
 					Date date = format.parse(dtStart);
-					if (currentDate.after(date))
+					if (currentDate.after(date)) {
+						trackDB.close();
 						return true;
-					else
+					}
+					else {
+						trackDB.close();
 						return false;
+					}
 				}
 			}
-		else
+		else {
+			trackDB.close();
 			return false;
+			}
 			
 		} catch (ParseException e) {
 			e.printStackTrace();
+			trackDB.close();
 			return false;
 		}
+		trackDB.close();
 		return true;
 	}
 }

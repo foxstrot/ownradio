@@ -140,13 +140,21 @@
 	<string name="pref_free_memory_size">Свободно</string>
 	<string name="pref_all_tracks_size">Занято</string>
 	<string name="pref_listening_tracks_size_size">Из них уже прослушанных</string>
-	<string name="pref_clear_cache">Освободить</string>
+	<string name="pref_clear_cache">Очистить кэш</string>
 	<string name="summary_clear_all_cache">Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш</string>
-	<string name="summary_clear_listening_cache">Очистить только прослушанные треки</string>
+	<string name="summary_clear_listening_cache">Удалить прослушанные треки</string>
 	<string name="delete_all_alert_title">Удалить кешированные треки</string>
 	<string name="delete_all_alert_message">Внимание. Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш</string>
 	<string name="alert_positive_button">ОК</string>
 	<string name="alert_negative_button">Отмена</string>
+	<string name="pref_fill_cache">Заполнить кэш</string>
+	<string name="summary_fill_cache">Заполнить треками определенный настройками объём памяти</string>
+	
+	<string name="title_dialog_clear_listening_cache">Удаление прослушанных треков</string>
+	<string name="dialog_clear_listening_cache">Вы хотите удалить прослушанные треки из кэша?</string>
+	<string name="title_dialog_clear_all_cache">Удаление всех треков</string>
+	<string name="dialog_clear_all_cache">Вы уверены что хотите удалить все треки из кэша? Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш.</string>
+	<string name="log_is_send">Логи отправлены</string>
 	<!--About app-->
 	<string name="current_version">Текущая версия</string>
 	<string name="about_ownradio">
@@ -177,16 +185,20 @@
 	<string name="slide_4_desc"></string>
 	
 	<string name="slide_5_title">Идет предзагрузка. Подождите.</string>
-	<string name="slide_5_title_2">Для предзагрузки необходим интернет. Включите интернет и попробуйте снова.</string>
+	<string name="slide_5_check_connection">Для предзагрузки необходим интернет. Включите интернет и попробуйте снова.</string>
 	<string name="slide_5_desc"></string>
 	
 	<string name="play_again_desc">To see the welcome slider again, goto Settings -> apps -> welcome slider -> clear data</string>
 	<string name="play_again">Play Again</string>
+	<string name="try_caching_again">Попробовать еще раз</string>
 	<string name="count_tracks_listened_table">Информации о треках не найдено</string>
-	<!-- TODO: Remove or change this placeholder text -->
-	<string name="hello_blank_fragment">Hello blank fragment</string>
 	
 	<string name="is_caching">Кеширование...</string>
-	<string name="wait_caching">Отсутствуют кешированные треки. Подождите пока треки кешируются</string>
+	<string name="wait_caching">Отсутствуют кешированные треки. Подождите пока треки кешируются.</string>
+	
+	<string name="not_enough_free_space">Недостаточно свободной памяти на устройстве</string>
+	<string name="requires_free_space">Приложению требуется минимум 100MB свободного места во внутренней памяти устройства.</string>
+	<string name="button_ok">OK</string>
+	<string name="button_cancel">Отмена</string>
 	
 </resources>

@@ -17,6 +17,8 @@ public class AppInfoActivity extends AppCompatActivity {
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		//Меняем тему, используемую при запуске приложения, на основную
+		setTheme(R.style.AppTheme);
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_app_info);

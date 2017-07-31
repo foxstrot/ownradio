@@ -7,8 +7,6 @@ import android.database.sqlite.SQLiteDatabase;
 
 import java.util.UUID;
 
-import static ru.netvoxlab.ownradio.TrackDB.DB_VER;
-
 /**
  * Created by a.polunina on 07.11.2016.
  */
@@ -22,18 +20,22 @@ public class HistoryDataAccess {
 
 	public HistoryDataAccess(Context context) {
 		mContext = context;
-		historyDB = new TrackDB(mContext, DB_VER);
+		historyDB = TrackDB.getInstance(mContext);
+//		historyDB = new TrackDB(mContext, DB_VER);
 	}
 
 	public void SaveHistoryRec(ContentValues historyInstance){
-		db = historyDB.getWritableDatabase();
+		historyDB.openDatabase();
+		db = historyDB.database();
 		historyInstance.put("id", UUID.randomUUID().toString());
 		db.insert(HistoryTableName, null, historyInstance);
-		//db.close();
+		historyDB.close();
+//db.close();
 	}
 
 	public ContentValues[] GetHistoryRec(int count){
-		db = historyDB.getWritableDatabase();
+		historyDB.openDatabase();
+		db = historyDB.database();
 		ContentValues[] contentValues = new ContentValues[count];
 		Cursor userCursor = db.rawQuery("SELECT * FROM " + HistoryTableName + " LIMIT " + count, null);
 		try {
@@ -51,18 +53,22 @@ public class HistoryDataAccess {
 				}
 				userCursor.close();
 				//db.close();
+				historyDB.close();
 				return contentValues;
 			} else {
+				historyDB.close();
 				return null;
 			}
 		}catch (Exception ex) {
+			historyDB.close();
 			return null;
 		}
 	}
 	
 	
 	public ContentValues GetHistoryRec(){
-		db = historyDB.getWritableDatabase();
+		historyDB.openDatabase();
+		db = historyDB.database();
 		ContentValues contentValues = new ContentValues();
 		Cursor userCursor = db.rawQuery("SELECT * FROM " + HistoryTableName + " LIMIT 1", null);
 		try {
@@ -77,24 +83,31 @@ public class HistoryDataAccess {
 
 				userCursor.close();
 				//db.close();
+				historyDB.close();
 				return contentValues;
 			} else {
+				historyDB.close();
 				return null;
 			}
 		}catch (Exception ex) {
+			historyDB.close();
 			return null;
 		}
 	}
 	
 	public void DeleteHistoryRec(String id){
-		db = historyDB.getWritableDatabase();
+		historyDB.openDatabase();
+		db = historyDB.database();
 		db.delete(HistoryTableName, "id = ?", new String[]{id});
-		//db.close();
+		historyDB.close();
+//db.close();
 	}
 
 	public void CleanHistoryTable(){
-		db = historyDB.getWritableDatabase();
+		historyDB.openDatabase();
+		db = historyDB.database();
 		db.execSQL("DELETE FROM " + HistoryTableName);
+		historyDB.close();
 //		db.close();
 	}
 }

@@ -17,7 +17,7 @@ import okhttp3.ResponseBody;
 import retrofit2.Response;
 
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
-import static ru.netvoxlab.ownradio.MainActivity.TAG;
+import static ru.netvoxlab.ownradio.Constants.TAG;
 
 /**
  * Created by a.polunina on 13.12.2016.
@@ -141,7 +141,7 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 
 					fileSizeDownloaded += read;
 
-//					Log.d("", "file download: " + fileSizeDownloaded + " of " + fileSize);
+//					Log.d(TAG, "file download: " + fileSizeDownloaded + " of " + fileSize);
 				}
 
 				outputStream.flush();

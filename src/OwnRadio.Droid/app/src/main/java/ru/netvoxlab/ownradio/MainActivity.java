@@ -58,9 +58,7 @@ import ru.netvoxlab.ownradio.receivers.NetworkStateReceiver;
 import static ru.netvoxlab.ownradio.Constants.ALL_CONNECTION_TYPES;
 import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
 import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
-import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
-import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
-import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
+import static ru.netvoxlab.ownradio.Constants.TAG;
 
 public class MainActivity extends AppCompatActivity	implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener, NetworkStateReceiver.NetworkStateReceiverListener {
 	
@@ -78,7 +76,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	ImageButton btnPlayPause;
 	ImageButton btnNext;
 	ImageButton btnSkipTrack;
-	TrackDB trackDB;
+//	TrackDB trackDB;
 	private Handler handler = new Handler();
 	private Handler handlerEvent = new Handler();
 	ProgressBar progressBar;
@@ -104,7 +102,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	public static File filePath;
 	boolean flagDevInfo = false;
 	
-	public final static String TAG = "ownRadio";
+	
 	
 	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
 	public static final String ActionProgressBarFirstTracksLoad = "ru.netvoxlab.ownradio.action.PROGRESSBAR_FIRST_UPDATE";
@@ -127,6 +125,9 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		//Меняем тему, используемую при запуске приложения, на основную
+		setTheme(R.style.AppTheme);
+
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main);
@@ -222,7 +223,8 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		if (mediaPlayerServiceConnection == null)
 			InitilizeMedia();
 		
-		trackDB = new TrackDB(MainActivity.this, 1);
+//		trackDB = TrackDB.getInstance(getApplicationContext());
+//		trackDB = new TrackDB(MainActivity.this, 1);
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		try {
 			int currentVersion = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionCode;
@@ -462,8 +464,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 						btnPlayPause.setImageResource(R.drawable.btn_play);
 					}
 					
-					if(binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().flagIsCorrect) {
-						Log.d(TAG, "flagIsCorrect="+binder.GetMediaPlayerService().flagIsCorrect);
+					if(binder.GetMediaPlayerService().player != null) {
 						title = binder.GetMediaPlayerService().track.getAsString("title");
 						artist = binder.GetMediaPlayerService().track.getAsString("artist");
 						if (title == null || title.isEmpty() || title.equals("null"))
@@ -523,13 +524,13 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 								Thread.sleep(1000);
 								currentPosition = binder.GetMediaPlayerService().GetPosition();
 //								currentPosition = binder.GetMediaPlayerService().GetPosition() / 1000;
-								try {
-									duration = binder.GetMediaPlayerService().GetDuration();
-//									duration = binder.GetMediaPlayerService().track.getAsInteger("length");
-								} catch (Exception ex) {
-									duration = binder.GetMediaPlayerService().track.getAsInteger("length") * 1000;
-//									duration = binder.GetMediaPlayerService().GetDuration() / 1000;
-								}
+//								try {
+//									duration = binder.GetMediaPlayerService().GetDuration();
+////									duration = binder.GetMediaPlayerService().track.getAsInteger("length");
+//								} catch (Exception ex) {
+//									duration = binder.GetMediaPlayerService().track.getAsInteger("length") * 1000;
+////									duration = binder.GetMediaPlayerService().GetDuration() / 1000;
+//								}
 							} catch (InterruptedException e) {
 								e.printStackTrace();
 							} catch (Exception e) {
@@ -568,13 +569,28 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 					dialog.setTitle(getResources().getString(R.string.is_caching));
 					dialog.setMessage(getResources().getString(R.string.wait_caching));
 					dialog.setIndeterminate(true);
-					dialog.setCancelable(false);
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							while (new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
+								// Обновляем счетчик количества попыток
+								handler.post(new Runnable() {
+									@Override
+									public void run() {
+										dialog.setMessage(getResources().getString(R.string.wait_caching) + " \n" + ((App)getApplicationContext()).getCountDownloadTrying() + " попытка загрузки");
+									}
+								});
+							}
+						}
+					}).start();
+					dialog.setCancelable(true);
 					dialog.show();
 				}else {
 					if (dialog != null)
 						dialog.dismiss();
 					btnPlayPause.setClickable(true);
-					
+//					if(binder.GetMediaPlayerService().isAutoplay)
+//						binder.GetMediaPlayerService().Play();
 					if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
 						btnNext.setClickable(false);
 						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
@@ -607,24 +623,27 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		txtTrackArtist.setOnTouchListener(this);
 		toolbar.setOnTouchListener(this);
 		try {
-			if (trackToCache.FreeSpace() + trackToCache.FolderSize(filePath) < 104857600) {
-				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-				builder.setTitle("Not enough free space on your device")
-						.setMessage("This application requires at least 100MB of free space in the internal memory of the device.")
-						.setCancelable(false)
-						.setNegativeButton("OK",
-								new DialogInterface.OnClickListener() {
-									@Override
-									public void onClick(DialogInterface dialogInterface, int i) {
-										dialogInterface.cancel();
-									}
-								});
-				AlertDialog alert = builder.create();
-				alert.show();
-				
-				btnPlayPause.setClickable(false);
-				btnNext.setClickable(false);
-				btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
+			//запускаем загрузку треков, если кеш пуст
+			if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
+				if (trackToCache.FreeSpace() + trackToCache.FolderSize(filePath) < 104857600) {
+					AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+					builder.setTitle(getResources().getString(R.string.not_enough_free_space))
+							.setMessage(getResources().getString(R.string.requires_free_space))
+							.setCancelable(false)
+							.setNegativeButton(getResources().getString(R.string.button_ok),
+									new DialogInterface.OnClickListener() {
+										@Override
+										public void onClick(DialogInterface dialogInterface, int i) {
+											dialogInterface.cancel();
+										}
+									});
+					AlertDialog alert = builder.create();
+					alert.show();
+					
+					btnPlayPause.setClickable(false);
+					btnNext.setClickable(false);
+					btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
+				}
 			}
 			
 			SetDevelopersInfo();
@@ -763,14 +782,14 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	public void networkAvailable() {
 		new Utilites().SendInformationTxt(getApplicationContext(), "Интернет подключен");
 		//Если треков в кеше мало - при подключении  интернета запускаем запуск треков
-		if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 3) {
-			//		Запускаем кеширование треков - 3 шт
-			Intent downloaderIntent = new Intent(getApplicationContext(), RequestAPIService.class);
-			downloaderIntent.setAction(ACTION_GETNEXTTRACK);
-			downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceId);
-			downloaderIntent.putExtra(EXTRA_COUNT, 1);
-			startService(downloaderIntent);
-		}
+//		if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 3) {
+//			//		Запускаем кеширование треков - 3 шт
+//			Intent downloaderIntent = new Intent(getApplicationContext(), LongRequestAPIService.class);
+//			downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+//			downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceId);
+//			downloaderIntent.putExtra(EXTRA_COUNT, 1);
+//			startService(downloaderIntent);
+//		}
     /* TODO: Your connection-oriented stuff here */
 	}
 	
