@@ -280,19 +280,20 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				}
 			});
 			
-			final ListPreference maxMemorySize = (ListPreference) findPreference("max_memory_size");
-			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getEntry());
+			final NumberPickerPreference maxMemorySize = (NumberPickerPreference) findPreference("key_number");
+			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() + " Gb");
 			maxMemorySize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 				@Override
 				public boolean onPreferenceChange(Preference preference, Object value) {
-					String stringValue = value.toString();
-					int index = maxMemorySize.findIndexOfValue(stringValue);
-
-					// Set the summary to reflect the new value.
-					preference.setTitle(
-							index >= 0
-									? getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getEntries()[index]
-									: getResources().getString(R.string.pref_max_memory_size));
+					maxMemorySize.setValue(Integer.valueOf((Integer) value));
+					maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() + " Gb");
+//					int index = maxMemorySize.findIndexOfValue(stringValue);
+//
+//					// Set the summary to reflect the new value.
+//					preference.setTitle(
+//							index >= 0
+//									? getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getEntries()[index]
+//									: getResources().getString(R.string.pref_max_memory_size));
 					return true;
 				}
 			});

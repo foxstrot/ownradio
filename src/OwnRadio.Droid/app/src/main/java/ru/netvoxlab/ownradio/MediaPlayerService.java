@@ -16,6 +16,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -30,6 +31,7 @@ import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -64,6 +66,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	private static final int REQUEST_CODE = 111;
 	private static final int NOTIFICATION_ID = 502;
 	private static final int minTrackDuration = 60;
+	private static final int DELAY_DOUBLE_CLICK = 2000;
 	
 	private MediaNotificationManager mMediaNotificationManager;
 	
@@ -233,8 +236,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				Stop();
 				break;
 			case ActionTogglePlayback:
-				if (player == null)
-					return Service.START_REDELIVER_INTENT;
+				if (player == null) {
+					Play();
+					break;
+				}
+				//	return Service.START_REDELIVER_INTENT;
 
 				if (player.isPlaying())
 					Pause();
@@ -972,11 +978,48 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	}
 
 	public class MediaSessionCallback extends MediaSessionCompat.Callback {
+		private long mHeadsetDownTime = 0;
+		private long mHeadsetUpTime = 0;
 
 		private MediaPlayerServiceBinder mediaPlayerService;
 
 		public MediaSessionCallback(MediaPlayerServiceBinder service) {
 			mediaPlayerService = service;
+		}
+		
+		@Override
+		public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
+			KeyEvent event = mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+			if (event != null){// && !isPlaying()) {
+				int keyCode = event.getKeyCode();
+				if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY || keyCode == KeyEvent.KEYCODE_MEDIA_PAUSE
+						|| keyCode == KeyEvent.KEYCODE_HEADSETHOOK || keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE) {
+					long time = SystemClock.uptimeMillis();
+					switch (event.getAction()) {
+						case KeyEvent.ACTION_DOWN:
+							if (event.getRepeatCount() <= 0)
+								mHeadsetDownTime = time;
+							break;
+						case KeyEvent.ACTION_UP:
+								 if (time - mHeadsetUpTime <= DELAY_DOUBLE_CLICK) { // double click
+									mHeadsetUpTime = time;
+									Next();
+									return true;
+								} else {
+									mHeadsetUpTime = time;
+									return false;
+								}
+					}
+					return false;
+				} else if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+					switch (keyCode) {
+						case KeyEvent.KEYCODE_MEDIA_NEXT:
+							mediaPlayerService.GetMediaPlayerService().Next();
+							return true;
+					}
+				}
+			}
+			return false;
 		}
 
 		@Override

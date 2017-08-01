@@ -1,4 +1,5 @@
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+				  xmlns:example="http://schemas.android.com/apk/res/ru.netvoxlab.ownradio">
 	<Preference>
 	</Preference>
 	<PreferenceCategory
@@ -38,15 +39,13 @@
 		android:title="@string/pref_memory"
 		android:key="pref_key_storage_settings"
 		android:layout="@layout/pref_header_title">
-		<ListPreference android:defaultValue="1"
-						android:entries="@array/pref_max_memory_size_titles"
-						android:entryValues="@array/pref_max_memory_size_values"
-						android:title="@string/pref_max_memory_size"
-						android:summary="@string/pref_percent_of_free_memory"
-						android:key="max_memory_size"
-						android:negativeButtonText="@null"
-						android:positiveButtonText="@null"
-			/>
+		<ru.netvoxlab.ownradio.NumberPickerPreference
+			android:defaultValue="1"
+			android:key="key_number"
+			android:title="@string/pref_max_memory_size"
+			android:summary="@string/pref_percent_of_free_memory"
+			android:persistent="true"/>
+
 		<Preference
 			android:title="@string/pref_free_memory_size"
 			android:key="free_memory_size"
