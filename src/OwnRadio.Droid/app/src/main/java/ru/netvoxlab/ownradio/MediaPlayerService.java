@@ -582,17 +582,18 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 //			getApplicationContext().sendBroadcast(progressIntent);
 //		}
 		//Сохраняем информацию о прослушивании в локальную БД.
-		int listedTillTheEnd = -1;
-		SaveHistory(listedTillTheEnd, track);
-		// Удаление пропущенного трека
-		new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
-		utilites.SendInformationTxt(getApplicationContext(), "Skip track " + track.getAsString("id") + " to next");
-		PlayNext();
-		
-		Intent historySenderIntent = new Intent(this, RequestAPIService.class);
-		historySenderIntent.setAction(ACTION_SENDHISTORY);
-		historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
-		startService(historySenderIntent);
+		if (track != null) {
+			int listedTillTheEnd = -1;
+			SaveHistory(listedTillTheEnd, track);
+			// Удаление пропущенного трека
+			new TrackToCache(getApplicationContext()).DeleteTrackFromCache(track);
+			utilites.SendInformationTxt(getApplicationContext(), "Skip track " + track.getAsString("id") + " to next");
+			PlayNext();
+		}
+			Intent historySenderIntent = new Intent(this, RequestAPIService.class);
+			historySenderIntent.setAction(ACTION_SENDHISTORY);
+			historySenderIntent.putExtra(EXTRA_DEVICEID, DeviceID);
+			startService(historySenderIntent);
 	}
 
 	private void SaveHistory(int listedTillTheEnd, ContentValues trackInstance){

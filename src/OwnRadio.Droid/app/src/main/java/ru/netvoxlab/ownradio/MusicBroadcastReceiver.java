@@ -31,7 +31,7 @@ public class MusicBroadcastReceiver extends BroadcastReceiver {
 						if (isHSConnected) {
 							isHSConnected = false;
 							action = MediaPlayerService.ActionPause;
-							if(player.isPlaying())
+							if(player != null && player.isPlaying())
 								playbackWithHSisInterrupted = true;
 						}
 						break;
