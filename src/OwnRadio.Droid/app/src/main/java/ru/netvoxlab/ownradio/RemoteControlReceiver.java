@@ -64,7 +64,8 @@ public class RemoteControlReceiver extends BroadcastReceiver {
 		}
 
 		playbackWithHSisInterrupted = false;
-		Intent remoteIntent = new Intent(action);
+		Intent remoteIntent = new Intent(context, MediaPlayerService.class);
+		remoteIntent.setAction(action);
 		context.startService(remoteIntent);
 	}
 }
