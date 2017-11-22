@@ -1,0 +1,43 @@
+$color:#fff;
+$bg:#4e747e;
+$color1:#4eade2;
+$colorLink:#888;
+$colorLinkHover:#888;
+$colorLinkActive:#888;
+$bgInvert:#fff;
+$colorInver:#000;
+$colorBorder:#ccc;
+$font:'Source Sans Pro', sans-serif;
+
+$full:1260px;
+$tablet:1024px;
+$album:768px;
+$phablet:560px;
+$mobile:480px;
+$small:360px;
+$verySmall:320px;
+
+
+@mixin media($media) {
+	@if $media == tablet {
+		@media only screen and (max-width: $tablet) { @content; }
+	}
+	@else if $media == mobile {
+		@media only screen and (max-width: $mobile) { @content; }
+	}
+	@else if $media == album {
+		@media only screen and (max-width: $album) { @content; }
+	}
+	@else if $media == phablet {
+		@media only screen and (max-width: $phablet) { @content; }
+	}
+	@else if $media == small {
+		@media only screen and (max-width: $small) { @content; }
+	}
+	@else if $media == vSmall {
+		@media only screen and (max-width: $verySmall) { @content; }
+	}
+	@else if $media == full {
+		@media only screen and (max-width: $full) { @content; }
+	}
+}

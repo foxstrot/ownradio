@@ -1,0 +1,80 @@
+.highlight{-webkit-tap-highlight-color:rgba(0,0,0,0)}
+*{box-sizing: border-box;}
+html{width:100%; height:100%; font:300 14px/1.375em $font;
+	@include media('tablet'){font-size:12px; line-height: 1.3em;}
+	@include media('mobile'){font-size: 10px; line-height: 1.3em;}}
+body{width:100%; height:100%; margin:0; padding:0; background:$bg; color:$color; text-align:left; -webkit-text-size-adjust:100%;}
+td,th{font-size:1rem}
+th{font-weight:bold}
+h1,h2,h3,h4,h5,h6{margin:10px 0 0.4348em 0; padding:0; color:$color; font:700 2.625rem/1.3571em $font;
+	&:first-child{margin-top: 0!important;}}
+
+p{margin:0 0 1em 0; padding:0;}
+span{@extend .highlight;}
+a,.link{@extend .highlight; outline:none; color:$colorLink; text-decoration:underline; cursor: pointer;
+	.no-touch &:hover,
+	.touch &:active{color:$colorLinkHover; border-color:$colorLinkHover!important;}
+	.no-touch &:active{color:$colorLinkActive; border-color:$colorLinkHover!important;}}
+a img{border:0}
+a[href^='tel:']{color:inherit!important; text-decoration: none}
+
+hr{max-width:100%; height:0; margin:50px auto 55px auto; padding:0; background:none; border:1px solid $bgInvert; border-width:1px 0 0 0}
+
+form{margin:0; padding:0}
+input,select,textarea,button{@extend .soft-hover; padding:0.125em .5em; margin: 0; box-sizing:border-box; border-radius: 5px; background: #fff; border:1px solid $colorBorder;color:#515151;/* color:$color;*/ font-size: 1.125rem; line-height:1.0556em; font-family: $font; font-weight: 300}
+input,select{margin:0; color:#000; font-size:16px; line-height: 19px; vertical-align:middle}
+select{padding:0 4px;}
+textarea{width:100%; line-height: 1.5em; resize: vertical}
+input::placeholder,
+textarea::placeholder{color:rgba($color,.25)}
+input[type=checkbox],
+input[type=radio]{border:none; background: none; padding: 0;}
+input[type=submit],input[type=button],input[type=reset],button,.button{display: inline-block; min-width: 184px; padding:11px 24px; box-sizing: border-box;
+	background:linear-gradient(to top, #e88e30, #fc9e3c); box-shadow: inset 0 1px 0 0 rgba(#fff,.3), 0 1px 0 0 rgba(#000,.2); border:none; border-radius: 5px;
+	color: #fff; font-size: 1.125rem; text-align: center; text-decoration: none!important; text-transform: uppercase; text-shadow: 0 1px 0 rgba(#000,.2); cursor: pointer; white-space: normal; -webkit-appearance:none;
+	&:active{background:linear-gradient(to top, #fc9e3c, #e88e30);}
+	&:disabled{opacity:.5; cursor: default}}
+
+big,.big{font-size:1.125rem}
+small,.small{font-size:0.875rem}
+label{cursor:pointer}
+img{max-width:100%; box-sizing: border-box; vertical-align:middle}
+
+:focus{outline:none}
+/*::selection{background:$bgSelected; color:#fffaaa}
+::-moz-selection{background:$bgSelected; color:#fffaaa}*/
+
+.soft-hover{transition:all .1s linear}
+a{@extend .soft-hover}
+
+ul,ol{padding:0; margin:1em 0 1em 35px}
+ul{margin-left: 0}
+ul ul,
+ul ol,
+ol ol,
+ol ul{margin-bottom:0}
+ul li{padding-left:1.188rem; margin: 0 0 0.625em 0; list-style: none}
+ol li{margin-bottom: .625em;}
+
+address{font-style:normal}
+
+
+
+.clearfix:after{content:"."; display: block; height:0; line-height:0; clear:both; visibility:hidden}
+.clear{clear: both}
+.hide-text{color:transparent!important; text-align:left; text-indent:-999px; vertical-align:middle; position:relative; overflow:hidden}
+
+
+.invert {
+	background-color: $bgInvert;
+	color: $colorInver;
+	h1, h2, h3, h4, h5, h6, a {
+		color: $colorInver
+	}
+}
+
+
+.hide{display: none}
+
+.changingBox{pointer-events: none}
+

@@ -1,0 +1,19 @@
+{
+  "name": "ownRadio",
+  "description": "Client.Web for ownRadio",
+  "version": "0.9.1",
+  "scripts": {},
+  "devDependencies": {
+    "gulp": "*",
+    "gulp-autoprefixer": "*",
+    "gulp-combine-mq": "*",
+    "gulp-inline-base64": "*",
+    "gulp-load-plugins": "*",
+    "gulp-minify-css": "*",
+    "gulp-rename": "*",
+    "gulp-sass": "*"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  }
+}
