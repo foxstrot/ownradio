@@ -1,0 +1,187 @@
+/*
+Theme Name: ownRadio-wp-theme
+Version: 2017.05.26
+*/
+body {
+    width: 100%;
+    margin: 0 auto;
+    padding: 0;
+    padding-top: 150px;
+    background-image: url(./images/fon.jpg);
+    background-repeat: no-repeat;
+    font-family: 'Roboto', sans-serif;
+}
+.container {
+    max-width: 1024px;
+    width: 100%;
+    margin: 0 auto;
+}
+.page-header {
+    width: 100%;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    background-color: #fff;
+    text-align: center;
+}
+.page-header .title-text {
+    text-align: center;
+    font-size: 50px;
+    line-height: 72px;
+    color: #03A9F4;
+    margin: 0;
+}
+.text-light {
+    font-weight: 300;
+}
+.text-medium {
+    font-weight: 500;
+}
+.page-content {
+    width: 100%;
+    min-height: 100px;
+    background-color: #03A9F4;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.page-footer {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    box-sizing: border-box;
+    border: 12px solid #03A9F4;
+    border-top: 0;
+    background-color: #eceded;
+}
+.page-footer__left-part {
+    width: 50%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+.page-footer__right-part {
+    width: 50%;
+    padding-top: 7px;
+    padding-bottom: 7px;
+    text-align: center;
+}
+.btn {
+    display: inline-block;
+    width: 170px;
+    height: 49px;
+    background-repeat: no-repeat;
+}
+.appstore {
+    background-image: url(./images/app.svg);
+    margin-bottom: 13px;
+}
+.playmarket {
+    background-image: url(./images/gp.svg);
+}
+.page-footer__left-part h2 {
+    font-size: 24px;
+    line-height: 42px;
+    font-weight: normal;
+    margin: 0;
+}
+.page-footer__left-part h2:after {
+    content: '';
+    display: block;
+    width: 52%;
+    margin: 0 auto;
+    margin-top: 5px;
+    height: 1px;
+    background: #989ba1;
+}
+.page-footer__left-part p {
+    font-size: 24px;
+    line-height: 72px;
+    font-weight: 300;
+    color: #03A9F4;
+    margin: 0;
+    margin-bottom: 20px;
+}
+.page-footer .btn {
+    display: block;
+}
+
+/*media*/
+
+@media screen and (max-width: 607px) {
+    body {
+        padding: 0;
+        background-image: none;
+    }
+    .container {
+        width: 100%;
+        padding: 0;
+    }
+    .page-header {
+        padding-top: 0px;
+        padding-bottom: 0px;
+    }
+    .page-header .title-text {
+        font-size: 60px;
+    }
+    .page-footer {
+        flex-direction: row;
+    }
+    .page-footer__left-part h2 {
+        font-size: 24px;
+        line-height: 32px;
+        font-weight: normal;
+        margin: 0;
+    }
+    .page-footer__left-part p {
+        font-size: 24px;
+        line-height: 58px;
+        font-weight: 300;
+        color: #03A9F4;
+        margin: 0;
+        margin-bottom: 11px;
+    }
+}
+@media screen and (max-width: 807px) {
+    body {
+        padding: 0;
+        background-image: none;
+    }
+    .container {
+        width: 100%;
+        padding: 0;
+    }
+    .page-header {
+        padding-top: 0px;
+        padding-bottom: 0px;
+    }
+    .page-header .title-text {
+        font-size: 60px;
+    }
+    .page-footer {
+        flex-direction: row;
+    }
+    .page-footer__right-part {
+        text-align: left;
+    }
+    .page-footer__left-part {
+        align-items: flex-end;
+        padding-right: 50px;
+    }
+    .page-footer__left-part h2 {
+        font-size: 24px;
+        line-height: 32px;
+        font-weight: normal;
+        margin: 0;
+    }
+    .page-footer__left-part p {
+        font-size: 24px;
+        line-height: 58px;
+        font-weight: 300;
+        color: #03A9F4;
+        margin: 0;
+        margin-bottom: 11px;
+    }
+}
