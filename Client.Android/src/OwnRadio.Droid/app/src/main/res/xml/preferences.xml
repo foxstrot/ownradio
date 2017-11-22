@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	
+	<PreferenceCategory
+		android:title="@string/pref_header_internet_connection"
+		android:key="pref_key_storage_settings"
+		android:layout="@layout/pref_header_title">
+		<ListPreference
+			android:defaultValue="1"
+			android:entries="@array/pref_internet_connection_titles"
+			android:entryValues="@array/pref_internet_connection_values"
+			android:key="internet_connections_list"
+			android:negativeButtonText="@null"
+			android:positiveButtonText="@null"
+			android:title="@string/pref_header_internet_connection"/>
+	</PreferenceCategory>
+	<PreferenceCategory
+		android:title="@string/pref_header_only_own_tracks"
+		android:key="pref_key_storage_settings"
+		android:layout="@layout/pref_header_title">
+		<SwitchPreference
+			android:defaultValue="false"
+			android:key="own_tracks_switch"
+			android:title="@string/pref_header_only_own_tracks"/>
+		<Preference android:title="@string/pref_read_about_microserver"
+			android:layout="@layout/pref_title">
+			<intent android:action="android.intent.action.VIEW"
+					android:data="http://www.ownradio.ru" />
+		</Preference>
+		<Preference android:title="@string/pref_read_about_upload_own_tracks"
+					android:layout="@layout/pref_title">
+			<intent android:action="android.intent.action.VIEW"
+					android:data="http://www.ownradio.ru" />
+		</Preference>
+	</PreferenceCategory>
+	<PreferenceCategory
+		android:title="@string/pref_memory"
+		android:key="pref_key_storage_settings"
+		android:layout="@layout/pref_header_title">
+		<ListPreference android:defaultValue="1"
+						android:entries="@array/pref_max_memory_size_titles"
+						android:entryValues="@array/pref_max_memory_size_values"
+						android:title="@string/pref_max_memory_size"
+						android:summary="@string/pref_percent_of_free_memory"
+						android:key="max_memory_size"
+						android:negativeButtonText="@null"
+						android:positiveButtonText="@null"
+						/>
+		
+	</PreferenceCategory>
+	<PreferenceCategory
+		android:title="@string/pref_header_app"
+		android:key="pref_key_storage_settings"
+		android:layout="@layout/pref_header_title">
+		<PreferenceScreen android:title="@string/pref_about_app">
+			<Preference android:title="@string/pref_header_about_app"
+						android:key="about_app"
+						android:layout="@layout/about_app">
+			</Preference>
+		</PreferenceScreen>
+
+		<Preference android:title="@string/pref_write_to_the_developers">
+			<intent android:action="android.intent.action.VIEW"
+					android:data="https://vk.com/ownradio" />
+		</Preference>
+		<Preference android:title="@string/pref_rate_app" >
+			<intent android:action="android.intent.action.VIEW"
+					android:data="https://play.google.com/store/apps/details?id=ru.netvoxlab.ownradio" />
+		</Preference>
+	</PreferenceCategory>
+	<PreferenceCategory
+		android:title="@string/pref_header_system_info"
+		android:key="pref_key_storage_settings"
+		android:layout="@layout/pref_header_title">
+		<Preference
+			android:title="@string/pref_header_system_info"
+			android:key="sys_info"
+			/>
+	</PreferenceCategory>
+</PreferenceScreen>
