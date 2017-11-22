@@ -1,0 +1,28 @@
+{
+    "prepare_queue": {
+        "installed": [],
+        "uninstalled": []
+    },
+    "config_munge": {
+        "files": {}
+    },
+    "installed_plugins": {
+        "cordova-plugin-music-controls": {
+            "PACKAGE_NAME": "{c9e31bb0-e17b-11e6-a157-75a5f3918ec3}"
+        },
+        "cordova-plugin-whitelist": {
+            "PACKAGE_NAME": "{c9e31bb0-e17b-11e6-a157-75a5f3918ec3}"
+        },
+        "cordova-plugin-file-transfer": {
+            "PACKAGE_NAME": "{c9e31bb0-e17b-11e6-a157-75a5f3918ec3}"
+        }
+    },
+    "dependent_plugins": {
+        "cordova-plugin-compat": {
+            "PACKAGE_NAME": "{c9e31bb0-e17b-11e6-a157-75a5f3918ec3}"
+        },
+        "cordova-plugin-file": {
+            "PACKAGE_NAME": "{c9e31bb0-e17b-11e6-a157-75a5f3918ec3}"
+        }
+    }
+}
