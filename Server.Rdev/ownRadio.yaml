@@ -1,0 +1,226 @@
+version: 2017.10.26 #это комментарий. он продолжается до конца строки
+settings:
+  mainMenu:
+    name: mainMenu
+  gridView:
+    editing: Popup
+  db:
+    provider: Postgres
+    connectionString: server=localhost;port=5432;user id=postgres;password=postgres;database=ownradio_rdev
+  project:
+    title: RDEV v2018.01.22 (ownRadio)
+menus:
+- name: mainMenu
+  title: "Главное меню"
+  hint: "Главное меню"
+  typeMenuItem: Submenu
+  submenuItems:
+   [ 
+     name: registers, 
+     title: "ownRadio",
+     typeMenuItem: Submenu,
+       submenuItems: 
+       [
+         [name: TracksItem, title: "Треки", typeMenuItem: Table], 
+         [name: DevicesItem, title: "Устройства", typeMenuItem: Table],
+         [name: TracksItem, title: "Треки", typeMenuItem: Table],
+         [name: DevicesItem, title: "Устройства", typeMenuItem: Table],
+         [name: UsersItem, title: "Пользователи", typeMenuItem: Table],
+         [name: RatingsItem, title: "Рейтинг треков", typeMenuItem: Table],
+         [name: HistoriesItem,title: "История прослушивания треков", typeMenuItem: Table],
+         [name: RatiosItem, title: "Коэффициенты схожести", typeMenuItem: Table],
+         [name: DownloadTracksItem, title: "Загруженные треки", typeMenuItem: Table],
+         [name: LogsItem, title: "Логи", typeMenuItem: Table]
+       ]
+   ]
+types:
+- name: UserID
+  type: SysRelation
+  displayName: ID пользователя
+  relation:
+    table: Users
+    field: RecID
+    displayField: RecID
+- name: DeviceID
+  type: SysRelation
+  displayName: ID устройства
+  relation:
+    table: Devices
+    field: RecID
+    displayField: RecID
+- name: TrackID
+  type: SysRelation
+  displayName: ID трека
+  relation:
+    table: Tracks
+    field: RecID
+    displayField: RecID
+- name: FileID
+  type: SysFile
+  displayName: Трек
+  fileMask: '*.mp3'
+- name: Experience
+  type: SysInt
+  displayName: Экспертная группа
+- name: LocalDevicePathUpload
+  type: SysString
+  displayName: Полный путь трека, с которого происходил Upload трека
+- name: Path
+  type: SysString
+  displayName: Полный путь хранения трека на сервере
+- name: Artist
+  type: SysString
+  displayName: Исполнитель
+- name: IsCensorial
+  type: SysBoolean
+  displayName: Трек цензурный
+- name: IsCorrect
+  type: SysBoolean
+  displayName: Трек корректный
+- name: IsFilledInfo
+  type: SysBoolean
+  displayName: Информация заполнена
+- name: IsExist
+  type: SysBoolean
+  displayName: Трек существует
+- name: Length
+  type: SysInt
+  displayName: Длина трека, с
+- name: Size
+  type: SysInt
+  displayName: Размер файла, Кб
+- name: RatingSum
+  type: SysNumber
+  displayName: Рейтинг трека
+- name: LastListen
+  type: SysTimeDate
+  displayName: Дата последнего прослушивания
+- name: IsListen
+  type: SysInt
+  displayName: Трек дослушан
+- name: CountSend
+  type: SysInt
+  displayName: Количество отправок строки истории
+- name: Ratio
+  type: SysNumber
+  displayName: Коэффициент схожести интересов
+- name: MethodID
+  type: SysInt
+  displayName: Метод выдачи трека
+- name: TxtRecommendInfo
+  type: SysString
+  displayName: Информация о выдаче трека
+- name: LogText
+  type: SysString
+  displayName: Запрос
+- name: Response
+  type: SysString
+  displayName: Ответ
+tables:
+  [
+    [
+      name: Devices,
+      displayName: Устройства,
+      description: Список устройств пользователей,
+      fields: [name: UserID, type: UserID]
+    ],
+    [
+      name: Users,
+      displayName: Пользователи,
+      description: Список пользователей,
+      fields: [name: Experience, type: Experience]
+    ],
+    [  
+      name: Tracks,
+      displayName: "Треки",
+      description: "Список треков",
+      fields:
+      [
+         [name: Artist, type: Artist],
+         [name: LocalDevicePathUpload, type: LocalDevicePathUpload],
+         [name: Path, type: Path],
+         [name: DeviceID, type: DeviceID],
+         [name: UploadUserid, type: UserID, displayName: "ID пользователя, загрузившего трек"],
+         [name: IsCensorial, type: IsCensorial],
+         [name: IsCorrect, type: IsCorrect],
+         [name: IsFilledInfo, type: IsFilledInfo],
+         [name: IsExist, type: IsExist],
+         [name: Length, type: Length],
+         [name: Size, type: Size],
+         [name: FileID, type: FileID]
+      ]
+    ],
+    [
+      name: Ratings,
+      displayName: Рейтинг треков,
+      description: Рейтинг прослушивания треков пользователями,
+      fields:
+      [
+          [name: TrackID, type: TrackID],
+          [name: UserID, type: UserID],
+          [name: RatingSum, type: RatingSum],
+          [name: LastListen, type: LastListen]
+      ]
+    ],
+    [
+      name: Histories,
+      displayName: История прослушивания,
+      description: История прослушивания треков пользователями,
+      fields:
+      - name: TrackID
+        type: TrackID
+      - name: DeviceID
+        type: DeviceID
+      - name: UserID
+        type: UserID
+      - name: IsListen
+        type: IsListen
+      - name: LastListen
+        type: LastListen
+      - name: CountSend
+        type: CountSend
+    ],
+    [
+      name: Ratios
+      displayName: Коэффициенты схожести
+      description: Коэффициенты схожести интересов пользователей
+      fields:
+      - name: UserID1
+        type: UserID
+        displayName: Пользователь 1
+      - name: UserID2
+        type: UserID
+        displayName: Пользователь 2
+      - name: Ratio
+        type: Ratio
+    ],
+    [
+      name: DownloadTracks
+      displayName: Выданые треки
+      description: Выданные устройствам треки
+      fields:
+      - name: TrackID
+        type: TrackID
+      - name: DeviceID
+        type: DeviceID
+      - name: MethodID
+        type: MethodID
+      - name: TxtRecommendInfo
+        type: TxtRecommendInfo
+      - name: UserRecommendID
+        type: UserID
+        displayName: Пользователь-рекомендатель
+    ],
+    [
+      name: Logs
+      displayName: Логи
+      description: Логи устройств
+      fields:
+      - name: DeviceID
+        type: DeviceID
+      - name: LogText
+        type: LogText
+      - name: Response
+        type: Response
+    ]
+  ]
