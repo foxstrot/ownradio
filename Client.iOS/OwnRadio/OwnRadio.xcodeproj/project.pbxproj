@@ -645,7 +645,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.netvoxlab.ownradio;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE = "94e173a1-66a5-4589-bb8b-2e5a1105db71";
+				PROVISIONING_PROFILE = "4e69795e-090c-452a-b172-af010dd52c74";
 				PROVISIONING_PROFILE_SPECIFIER = "imac:comnetvoxlab.ownradio";
 				SWIFT_VERSION = 3.0;
 			};
