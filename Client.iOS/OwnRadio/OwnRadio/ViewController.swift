@@ -242,7 +242,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		DispatchQueue.main.async {
 			let creatinDate = Date()
 			let dateFormatter = DateFormatter()
-			dateFormatter.dateFormat = "H:m:s"//dd.MM.yy 
+			dateFormatter.dateFormat = "HH:mm:ss"//dd.MM.yy 
 			dateFormatter.timeZone = TimeZone.current
 			let creationDateString = dateFormatter.string(from: creatinDate)
 			
