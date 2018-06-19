@@ -59,7 +59,7 @@ class ApiService {
 						if let json = anyJson as? [String:AnyObject] {
 							complition(json)
 						}
-						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Получена информация о следующем треке"])
+						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Получ. инфа о загруж. треке"])
 						print("Получена информация о следующем треке")
 					} catch (let error) {
 						print("Achtung! Eror! \(error)")
@@ -123,13 +123,13 @@ class ApiService {
                         if data != nil {
                             //если история передана успешна - удаляем из таблицы история запись об этом треке
                             CoreDataManager.instance.deleteHistoryFor(trackID: trackId)
-                            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"История передана на сервер, код: \(httpResponse.statusCode)"])
+                            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Ист. перед., код: \(httpResponse.statusCode)"])
                             print("История передана на сервер")
 						
                             //			let dataString = String(data: data!, encoding: String.Encoding.utf8)!
                         }
                 } else {
-                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"История не передана, код: \(httpResponse.statusCode)"])
+                    NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Ист. не перед. код:\(httpResponse.statusCode)"])
                 }
 			}
 			
