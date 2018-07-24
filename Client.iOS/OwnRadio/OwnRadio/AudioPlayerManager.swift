@@ -260,7 +260,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		songInfo[MPMediaItemPropertyAlbumTitle] = "ownRadio"
 		songInfo[MPMediaItemPropertyArtist] = song.artistName
 		songInfo[MPMediaItemPropertyArtwork] = albumArt
-        songInfo[MPMediaItemPropertyPlaybackDuration] = NSNumber.init(value: song.trackLength)
+		songInfo[MPMediaItemPropertyPlaybackDuration] = song.trackLength //NSNumber.init(value: song.trackLength)
 		
 		MPNowPlayingInfoCenter.default().nowPlayingInfo = songInfo
 	}
@@ -410,6 +410,18 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 //		}
 		//получаем из БД трек для проигрывания
 		self.playingSong = CoreDataManager.instance.getTrackToPlaing()
+		guard playingSong.trackID != nil else {
+			if let rootController = UIApplication.shared.keyWindow?.rootViewController {
+				let navigationController = rootController as! UINavigationController
+				
+				if let radioViewContr = navigationController.topViewController  as? RadioViewController {
+					DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
+						radioViewContr.updateUI()
+					})
+				}
+			}
+			return
+		}
 		CoreDataManager.instance.setCountOfPlayForTrackBy(trackId: self.playingSong.trackID)
 		CoreDataManager.instance.setDateForTrackBy(trackId: self.playingSong.trackID)
 		CoreDataManager.instance.saveContext()

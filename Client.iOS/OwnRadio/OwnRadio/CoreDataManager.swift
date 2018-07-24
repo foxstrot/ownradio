@@ -169,12 +169,25 @@ class CoreDataManager {
 	//выбираем из трек для проигрывания
 	func getTrackToPlaing() -> SongObject {
 		//задаем сортировку по возрастанию даты проигрывания
-		let sectionSortDescriptor = NSSortDescriptor(key: "playingDate", ascending: true)
+		//upd 23.07.2018: меняем алгоритм - сначала проигрываем последние скачанные из непроигранных, если таких нет - в порядке очередности проигрывания
+		let sectionSortDescriptor = NSSortDescriptor(key: "playingDate", ascending: false)
 //		let countSortDescriptor = NSSortDescriptor(key: "countPlay", ascending: true)
-		let sortDescriptors = [sectionSortDescriptor]
+
+		let song = getTrackFromBd(sortDescriptors: [sectionSortDescriptor], predicate: NSPredicate(format: "countPlay = %d", 0))
+		guard song.trackID != nil else {
+			let sectionSortDescriptor = NSSortDescriptor(key: "playingDate", ascending: true)
+			return getTrackFromBd(sortDescriptors:  [sectionSortDescriptor], predicate: NSPredicate(format: "countPlay > %d", 0))
+		}
+		return song
+	}
+	
+	// Возвращает трек из БД с учетом заданных сортировки и условий
+	func getTrackFromBd(sortDescriptors: [NSSortDescriptor], predicate: NSPredicate  ) -> SongObject {
 		// создание запроса
 		let fetchRequest: NSFetchRequest<TrackEntity> = TrackEntity.fetchRequest()
 		fetchRequest.sortDescriptors = sortDescriptors
+		// задаем предикат
+		fetchRequest.predicate = predicate
 		fetchRequest.fetchLimit = 1
 		let  song = SongObject()
 		do {
