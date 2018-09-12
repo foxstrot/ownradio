@@ -11,11 +11,7 @@ import UIKit
 import MediaPlayer
 import Alamofire
 
-protocol controlsAudio {
-	func remoteControlReceived(with event: UIEvent?)
-}
-
-class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, controlsAudio {
+class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 	
 	// MARK:  Outlets
 	@IBOutlet weak var backgroundImageView: UIImageView!
@@ -34,6 +30,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	@IBOutlet weak var infoLabel1: UILabel!
 	@IBOutlet weak var infoLabel2: UILabel!
 	@IBOutlet weak var infoLabel3: UILabel!
+	@IBOutlet weak var infoLabel4: UILabel!
+	@IBOutlet weak var infoLabel5: UILabel!
+	@IBOutlet weak var infoLabel6: UILabel!
+	@IBOutlet weak var infoLabel7: UILabel!
+	@IBOutlet weak var infoLabel8: UILabel!
+	@IBOutlet weak var infoLabel9: UILabel!
+	@IBOutlet weak var infoLabel10: UILabel!
 	@IBOutlet var versionLabel: UILabel!
 	@IBOutlet var numberOfFiles: UILabel!
 	@IBOutlet var numberOfFilesInDB: UILabel!
@@ -130,8 +133,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		//трек доигран до конца
 		NotificationCenter.default.addObserver(self, selector: #selector(songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
 		//обновление системной информации
-		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
-		NotificationCenter.default.addObserver(self, selector: #selector(AudioPlayerManager.sharedInstance.onAudioSessionEvent(_:)), name: Notification.Name.AVAudioSessionInterruption, object: AVAudioSession.sharedInstance())
+//		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
 
 	}
 	
@@ -162,6 +164,14 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		NotificationCenter.default.addObserver(self, selector:  #selector(RadioViewController.audioRouteChangeListener(notification:)), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
 	}
 	
+	override func viewDidAppear(_ animated: Bool) {
+		super.viewDidAppear(animated)
+		//Центр уведомлений не предоставляет API, позволяющее проверить был ли уже зарегистрирован наблюдатель, поэтому когда представление снова становится видимым удаляем наблюдателя и добавляем его заново
+		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
+		//обновление системной информации
+		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
+	}
+	
 	//когда приложение скрыто - отписываемся от уведомлений
 	override func viewDidDisappear(_ animated: Bool) {
 		super.viewDidDisappear(animated)
@@ -169,8 +179,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		NotificationCenter.default.removeObserver(self, name:  NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: nil)
 		NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.player.playerItem)
-//		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
-		print("viewDidDisappear")
+		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
 	}
 	
 	//управление проигрыванием со шторки / экрана блокировки
@@ -242,20 +251,37 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		DispatchQueue.main.async {
 			let creatinDate = Date()
 			let dateFormatter = DateFormatter()
-			dateFormatter.dateFormat = "H:m:s"//dd.MM.yy 
+			dateFormatter.dateFormat = "HH:mm:ss.SS"
 			dateFormatter.timeZone = TimeZone.current
 			let creationDateString = dateFormatter.string(from: creatinDate)
+
+		
 			
 			guard let userInfo = notification.userInfo,
 				let message = userInfo["message"] as? String else {
+					self.infoLabel10.text = self.infoLabel9.text
+					self.infoLabel9.text = self.infoLabel8.text
+					self.infoLabel8.text = self.infoLabel7.text
+					self.infoLabel7.text = self.infoLabel6.text
+					self.infoLabel6.text = self.infoLabel5.text
+					self.infoLabel5.text = self.infoLabel4.text
+					self.infoLabel4.text = self.infoLabel3.text
 					self.infoLabel3.text = self.infoLabel2.text
 					self.infoLabel2.text = self.infoLabel1.text
-					self.infoLabel1.text = creationDateString + " No userInfo found in notification"
+					self.infoLabel1.text = creationDateString + "No userInfo found in notification"
 					return
 			}
+			self.infoLabel10.text = self.infoLabel9.text
+			self.infoLabel9.text = self.infoLabel8.text
+			self.infoLabel8.text = self.infoLabel7.text
+			self.infoLabel7.text = self.infoLabel6.text
+			self.infoLabel6.text = self.infoLabel5.text
+			self.infoLabel5.text = self.infoLabel4.text
+			self.infoLabel4.text = self.infoLabel3.text
 			self.infoLabel3.text = self.infoLabel2.text
 			self.infoLabel2.text = self.infoLabel1.text
 			self.infoLabel1.text = creationDateString + " " + message
+			print("\(self.infoLabel1.text)")
 		}
 	}
 	
@@ -263,6 +289,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		self.playPauseBtn.setImage(UIImage(named: "playImg"), for: UIControlState.normal)
 		self.leftPlayBtnConstraint.constant = pauseBtnConstraintConstant
 		self.trackIDLbl.text = ""
+		self.infoLabel10.text = self.infoLabel9.text
+		self.infoLabel9.text = self.infoLabel8.text
+		self.infoLabel8.text = self.infoLabel7.text
+		self.infoLabel7.text = self.infoLabel6.text
+		self.infoLabel6.text = self.infoLabel5.text
+		self.infoLabel5.text = self.infoLabel4.text
+		self.infoLabel4.text = self.infoLabel3.text
 		self.infoLabel3.text = self.infoLabel2.text
 		self.infoLabel2.text = self.infoLabel1.text
 		self.infoLabel1.text = notification.description
@@ -407,8 +440,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		self.freeSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.freeDiskSpaceInBytes)) + " Gb"
 		self.folderSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.folderSize(folderPath: self.tracksUrlString))) + " Gb"
-		
-	}
+		}
 	}
 	
 	// MARK: UITableViewDataSource
@@ -480,10 +512,5 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		self.player.fwdTrackToEnd()
 	}
 	
-	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-		if let dest = segue.destination as? SettingsViewController {
-			dest.controlsAudioDelegat = self
-		}
-	}
 }
 

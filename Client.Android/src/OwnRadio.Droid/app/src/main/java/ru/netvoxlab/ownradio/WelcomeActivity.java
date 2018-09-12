@@ -63,7 +63,7 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 		if (!prefManager.isFirstTimeLaunch()) {
 			launchHomeScreen();
 			((App)getApplicationContext()).setAutoPlay(true);
-			finish();
+			return;
 		}
 		networkStateReceiver = new NetworkStateReceiver();
 		networkStateReceiver.addListener(this);
@@ -103,10 +103,10 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 		
 		setContentView(R.layout.activity_welcome);
 		
-		viewPager = (ViewPager) findViewById(R.id.view_pager);
-		dotsLayout = (LinearLayout) findViewById(R.id.layoutDots);
+		viewPager = findViewById(R.id.view_pager);
+		dotsLayout = findViewById(R.id.layoutDots);
 		
-		videoView = (VideoView)findViewById(R.id.videoView);
+		videoView = findViewById(R.id.videoView);
 		videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
 			@Override
 			public void onPrepared(MediaPlayer mp) {
@@ -124,7 +124,7 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 			new Utilites().SendInformationTxt(getApplicationContext(), "Ошибка при подключении фонового видео " + ex.getLocalizedMessage());
 		}
 		
-		btnTryAgainCaching = (Button)findViewById(R.id.tryCachingAgain);
+		btnTryAgainCaching = findViewById(R.id.tryCachingAgain);
 		btnTryAgainCaching.setVisibility(View.GONE);
 		btnTryAgainCaching.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -351,10 +351,10 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 			container.addView(view);
 			
 			if(position == layouts.length - 1) {
-				progressBar = (ProgressBar) findViewById(R.id.progressBar);
+				progressBar = findViewById(R.id.progressBar);
 				if(progressBar != null)
 					progressBar.setVisibility(View.VISIBLE);
-				textCountTryCaching = (TextView) findViewById(R.id.countTryCaching);
+				textCountTryCaching = findViewById(R.id.countTryCaching);
 			}
 			return view;
 		}

@@ -3,6 +3,7 @@ package ru.netvoxlab.ownradio;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.method.LinkMovementMethod;
 import android.view.View;
 import android.view.Window;
 import android.widget.TextView;
@@ -15,6 +16,7 @@ public class AppInfoActivity extends AppCompatActivity {
 	Toolbar toolbar;
 	TextView textVersion;
 	
+	TextView aboutOwnradio;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		//Меняем тему, используемую при запуске приложения, на основную
@@ -34,6 +36,8 @@ public class AppInfoActivity extends AppCompatActivity {
 		});
 		textVersion = (TextView) findViewById(R.id.versionName);
 		textVersion.setText(new PrefManager(getApplicationContext()).getPrefItem(version));
+		aboutOwnradio = (TextView) findViewById(R.id.about_ownradio);
+		aboutOwnradio.setMovementMethod(LinkMovementMethod.getInstance());
 	}
 	
 	@Override

@@ -13,8 +13,8 @@
 	<color name="colorPrimaryNavBar">#404654</color>
 	<color name="colorPrimaryToolbar">#9903A9F4</color>
 	
-	<color name="ColorPrimaryProgressBar">#03A9F4</color>
-	<color name="ColorPrimaryProgressBarLine">#bab8b3</color>
+	<color name="ColorPrimaryProgressBar">#0071bb</color>
+	<color name="ColorPrimaryProgressBarLine">#e5e5e5</color>
 	
 	<color name="ColorPrimaryBtnPlay">#03A9F4</color>
 	
@@ -25,6 +25,7 @@
 	<color name="ColorPrimaryBtn70">#ff03A9F4</color>
 	<color name="ColorPrimaryBtn50">#ff03A9F4</color>
 	<color name="ColorPrimaryBtnDisable">#838687</color>
+	<color name="ColorTransparent">#00ffffff</color>
 	
 	<!--button's circle colors-->
 	<color name="btnCircleColorPrimary">#ffffff</color>

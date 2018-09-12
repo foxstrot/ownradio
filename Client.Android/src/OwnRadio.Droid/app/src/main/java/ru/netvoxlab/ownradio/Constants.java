@@ -24,4 +24,8 @@ public class Constants {
 	public static final String ACTION_FILLCACHE = "ru.netvoxlab.ownradio.action.FILLCACHE";
 	public static final String EXTRA_DEVICEID = "ru.netvoxlab.ownradio.extra.EXTRA_DEVICEID";
 	public static final String EXTRA_COUNT = "ru.netvoxlab.ownradio.extra.COUNT";
+	
+	public static final String ACTION_UPDATE_FILLCACHE_PROGRESS = "ru.netvoxlab.ownradio.action.ACTION_UPDATE_FILLCACHE_PROGRESS";
+	public static final String EXTRA_FILLCACHE_PROGRESS = "ru.netvoxlab.ownradio.extra.EXTRA_FILLCACHE_PROGRESS";
+	
 }

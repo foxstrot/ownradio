@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.DrawerLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/drawer_layout"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:fitsSystemWindows="true"
+	>
+	
+	<android.support.design.widget.NavigationView
+		android:id="@+id/nav_view"
+		android:layout_width="wrap_content"
+		android:layout_height="match_parent"
+		android:layout_gravity="start"
+		android:fitsSystemWindows="true"
+		app:itemTextColor="@color/menu_text_color"
+		app:headerLayout="@layout/nav_header_main"
+		app:menu="@menu/activity_main_drawer"
+		/>
+	
+	<android.support.constraint.ConstraintLayout
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="@android:color/white">
+		<ViewStub
+			android:id="@+id/viewStubRate"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="bottom"
+			android:inflatedId="@+id/rateRequestLayout"
+			android:layout="@layout/feedback_request_1" />
+		<ImageButton
+			android:id="@+id/addToRingtone"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="4dp"
+			android:background="@android:color/white"
+			app:layout_constraintBottom_toTopOf="@+id/trackTitle"
+			app:layout_constraintStart_toEndOf="@+id/trackTitle"
+			app:srcCompat="@drawable/ic_add_circle_black_16dp"/>
+		
+		<TextView
+			android:id="@+id/trackTitle"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_centerHorizontal="true"
+			android:layout_marginEnd="8dp"
+			android:layout_marginTop="104dp"
+			android:clickable="true"
+			android:contentDescription="@string/currently_playing_artist"
+			android:ellipsize="end"
+			android:fontFamily="sans-serif"
+			android:maxLines="1"
+			android:text="Test text Lay Me Down Radio Edit"
+			android:textAlignment="center"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			android:textColor="#FF000000"
+			app:layout_constraintEnd_toEndOf="@+id/btnTimer"
+			app:layout_constraintStart_toStartOf="@+id/btnAlarmClock"
+			app:layout_constraintTop_toTopOf="parent"/>
+		
+		<TextView
+			android:id="@+id/trackArtist"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_below="@+id/trackTitle"
+			android:layout_centerHorizontal="true"
+			android:layout_marginEnd="8dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="8dp"
+			android:clickable="true"
+			android:contentDescription="@string/currently_playing_song"
+			android:ellipsize="end"
+			
+			android:fontFamily="sans-serif-light"
+			android:maxLines="1"
+			android:text="Test text Luca Debonaire"
+			android:textAlignment="center"
+			android:textAppearance="?android:attr/textAppearanceSmall"
+			android:textColor="@color/textColorPrimaryDark"
+			app:layout_constraintEnd_toEndOf="@+id/trackTitle"
+			app:layout_constraintStart_toStartOf="@+id/trackTitle"
+			app:layout_constraintTop_toBottomOf="@+id/trackTitle"/>
+		
+		<ImageButton
+			android:id="@+id/btnPlayPause"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentStart="true"
+			android:layout_centerVertical="true"
+			android:layout_marginTop="56dp"
+			android:background="?selectableItemBackgroundBorderless"
+			android:elevation="10dp"
+			app:srcCompat="@drawable/btn_ic_play"
+			android:tintMode="src_in"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/trackArtist"/>
+		
+		<ImageButton
+			android:id="@+id/btnNext"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentEnd="true"
+			android:layout_centerVertical="true"
+			android:layout_marginTop="40dp"
+			android:background="?selectableItemBackgroundBorderless"
+			android:elevation="10dp"
+			app:srcCompat="@drawable/btn_ic_next"
+			android:tintMode="src_in"
+			app:layout_constraintEnd_toStartOf="@+id/btnTimer"
+			app:layout_constraintHorizontal_bias="0.5"
+			app:layout_constraintStart_toEndOf="@+id/btnAlarmClock"
+			app:layout_constraintTop_toBottomOf="@+id/btnPlayPause"/>
+		
+		<ImageButton
+			android:id="@+id/btnAlarmClock"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="8dp"
+			android:layout_marginTop="8dp"
+			android:background="@android:color/white"
+			app:layout_constraintBottom_toBottomOf="@+id/btnNext"
+			app:layout_constraintEnd_toStartOf="@+id/btnNext"
+			app:layout_constraintHorizontal_bias="0.5"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="@+id/btnNext"
+			app:srcCompat="@drawable/ic_access_alarm_black_24dp"/>
+		
+		
+		<ImageButton
+			android:id="@+id/btnTimer"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="8dp"
+			android:layout_marginTop="8dp"
+			android:background="@android:color/white"
+			app:layout_constraintBottom_toBottomOf="@+id/btnNext"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.5"
+			app:layout_constraintStart_toEndOf="@+id/btnNext"
+			app:layout_constraintTop_toTopOf="@+id/btnNext"
+			app:srcCompat="@drawable/ic_timer_black_24dp"/>
+		
+		
+		<TextView
+			android:id="@+id/fill_cache_progress"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Наполнение кеша:"
+			android:visibility="gone"
+			app:layout_constraintStart_toStartOf="@+id/tProgressLeft"
+			app:layout_constraintTop_toBottomOf="@+id/tProgressLeft"/>
+		
+		<ProgressBar
+			android:id="@+id/progressBar"
+			style="?android:attr/progressBarStyleHorizontal"
+			android:layout_width="0dp"
+			android:layout_height="5dp"
+			android:layout_marginTop="44dp"
+			android:indeterminate="false"
+			android:progress="95"
+			android:progressDrawable="@drawable/progress_bar"
+			app:layout_constraintEnd_toEndOf="@+id/btnTimer"
+			app:layout_constraintStart_toStartOf="@+id/btnAlarmClock"
+			app:layout_constraintTop_toBottomOf="@+id/btnNext"/>
+		
+		<TextView
+			android:id="@+id/tProgressLeft"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="3:12"
+			app:layout_constraintStart_toStartOf="@+id/progressBar"
+			app:layout_constraintTop_toBottomOf="@+id/progressBar"/>
+		
+		<TextView
+			android:id="@+id/tProgressRight"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="-1:05"
+			app:layout_constraintEnd_toEndOf="@+id/progressBar"
+			app:layout_constraintTop_toBottomOf="@+id/progressBar"/>
+		
+		<include
+			android:id="@+id/devInfo"
+			layout="@layout/content_main"
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_marginBottom="8dp"
+			android:layout_marginTop="8dp"
+			android:visibility="visible"
+			app:layout_constraintBottom_toBottomOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/trackArtist"/>
+	</android.support.constraint.ConstraintLayout>
+
+</android.support.v4.widget.DrawerLayout>

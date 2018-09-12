@@ -46,7 +46,7 @@ public class Utilites {
 					i.putExtra("ProgressOn", true);
 					mContext.sendBroadcast(i);
 					//		Запускаем кеширование треков - 3 шт
-					Intent downloaderIntent = new Intent(mContext, LongRequestAPIService.class);
+					Intent downloaderIntent = new Intent(mContext.getApplicationContext(), LongRequestAPIService.class);
 					downloaderIntent.setAction(ACTION_GETNEXTTRACK);
 					downloaderIntent.putExtra(EXTRA_DEVICEID, DeviceId);
 					downloaderIntent.putExtra(EXTRA_COUNT, 3);

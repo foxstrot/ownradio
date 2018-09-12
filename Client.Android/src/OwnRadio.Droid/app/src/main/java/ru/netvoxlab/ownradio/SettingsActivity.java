@@ -21,6 +21,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,9 +31,14 @@ import android.widget.Toast;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static ru.netvoxlab.ownradio.Constants.ACTION_FILLCACHE;
+import static ru.netvoxlab.ownradio.Constants.ACTION_UPDATE_FILLCACHE_PROGRESS;
+import static ru.netvoxlab.ownradio.Constants.EXTRA_COUNT;
+import static ru.netvoxlab.ownradio.Constants.EXTRA_DEVICEID;
+import static ru.netvoxlab.ownradio.Constants.EXTRA_FILLCACHE_PROGRESS;
+import static ru.netvoxlab.ownradio.Constants.TAG;
 import static ru.netvoxlab.ownradio.MainActivity.ActionStopPlayback;
 import static ru.netvoxlab.ownradio.MainActivity.version;
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
 
 /**
  * A {@link AppCompatPreferenceActivity} that presents a set of application settings. On
@@ -52,6 +58,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	 */
 	final static double bytesInGB = 1073741824.0d;
 	final static double bytesInMB = 1048576.0d;
+	static boolean isCachingStarted = false;
 //	MyPrefListener  myPrefListener = new MyPrefListener(this);
 	
 	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
@@ -234,7 +241,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			addPreferencesFromResource(R.xml.pref_general);
 			setHasOptionsMenu(true);
 			final TrackToCache memoryUtil = new TrackToCache(getActivity().getApplicationContext());
-			TrackDataAccess trackInfo = new TrackDataAccess(getActivity().getApplicationContext());
+			final TrackDataAccess trackInfo = new TrackDataAccess(getActivity().getApplicationContext());
 			double freeSpace = memoryUtil.FreeSpace();
 			double tracksSpace = memoryUtil.FolderSize(((App) getActivity().getApplicationContext()).getMusicDirectory());
 			double listeningTracksSpace = memoryUtil.ListeningTracksSize();
@@ -404,18 +411,55 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			});
 			
 			//Пункт меню "Заполнить кэш" - забивает доступный для приложения объем памяти треками (ограничения задаются настройками)
-			Preference fillCache = findPreference("fill_cache");
+			final Preference fillCache = findPreference("fill_cache");
 			fillCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 				@Override
 				public boolean onPreferenceClick(Preference preference) {
-					if (!new CheckConnection().CheckInetConnection(context)) {
+					final CheckConnection checkConnection = new CheckConnection();
+					if (!checkConnection.CheckInetConnection(context)) {
 						Toast.makeText(context.getApplicationContext(), "Подключение к интернету отсутствует", Toast.LENGTH_LONG).show();
 						return true;
 					}
+					if(isCachingStarted) {
+						Toast.makeText(context, "Заполнение кэша уже началось", Toast.LENGTH_LONG).show();
+						return true;
+					}
+					if(memoryUtil.CheckCacheDoing() == 0 && trackInfo.GetCountPlayTracks() <= 0)
+						return true;
+					((App)context.getApplicationContext()).setCountDownloadTrying(0);
+					final LongRequestAPIService longRequestAPIService = new LongRequestAPIService();
+					isCachingStarted = true;
+					((App)context.getApplicationContext()).setFillingCacheActive(true);
 					Toast.makeText(context, "Заполнение кэша началось", Toast.LENGTH_LONG).show();
-					Intent fillCache = new Intent(context, LongRequestAPIService.class);
-					fillCache.setAction(ACTION_FILLCACHE);
-					context.startService(fillCache);
+					
+					try{
+						
+						new Thread(new Runnable() {
+							@Override
+							public void run() {
+								while (memoryUtil.CheckCacheDoing() == 1 && checkConnection.CheckInetConnection(context)) {
+									Log.d(TAG, "waitingIntentCount" + longRequestAPIService.getWaitingIntentCount());
+									Intent downloaderIntent = new Intent(context.getApplicationContext(), LongRequestAPIService.class);
+									downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+									downloaderIntent.putExtra(EXTRA_DEVICEID, prefManager.getDeviceId());
+									downloaderIntent.putExtra(EXTRA_COUNT, 3);
+									context.getApplicationContext().startService(downloaderIntent);
+									try {
+										Thread.sleep(30000);
+									} catch (Exception ex) {
+										
+									}
+								}
+								Intent progressIntent = new Intent(ACTION_UPDATE_FILLCACHE_PROGRESS);
+								progressIntent.putExtra(EXTRA_FILLCACHE_PROGRESS, 0);
+								context.sendBroadcast(progressIntent);
+								isCachingStarted = false;
+								((App)context.getApplicationContext()).setFillingCacheActive(false);
+							}
+						}).start();
+					}catch (Exception ex){
+
+				}
 					return true;
 				}
 			});

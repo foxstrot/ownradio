@@ -89,7 +89,7 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 								" не совпала длина файла: <br/>" + response.headers().get("Content-Length").toString() + " байт отдано с сервера (response Content-length), <br/>" +
 								response.body().contentLength() + " байт отдано с сервера (body Content-length), <br/>" +
 								fileLength.toString() + " байт скачано</font>");
-						new Utilites().SendLogs(mContext, trackMap[0].get("deviceid"));
+//						new Utilites().SendLogs(mContext, trackMap[0].get("deviceid"));
 						
 						new TrackToCache(mContext).DeleteTrackFromCache(track);
 //						MediaPlayerService.player.pause();
