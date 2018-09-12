@@ -59,4 +59,22 @@ public class PrefManager {
 	public String getPrefItem(String key, String defaultItem){
 		return pref.getString(key, defaultItem);
 	}
+	
+	public int getPrefItemInt(String key, int defaultItem){
+		return pref.getInt(key, defaultItem);
+	}
+	
+	public void setPrefItemInt(String key, int item){
+		editor.putInt(key, item);
+		editor.commit();
+	}
+	
+	public boolean getPrefItemBool(String key, boolean defaultItem) {
+		return  pref.getBoolean(key, defaultItem);
+	}
+	
+	public void setPrefItemBool(String key, boolean item){
+		editor.putBoolean(key, item);
+		editor.commit();
+	}
 }

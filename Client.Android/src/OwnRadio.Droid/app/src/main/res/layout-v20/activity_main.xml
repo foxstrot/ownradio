@@ -35,6 +35,13 @@
 		android:layout_height="wrap_content"
 		>
 		
+		<ViewStub
+			android:id="@+id/viewStubRate"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="bottom"
+			android:inflatedId="@+id/rateRequestLayout"
+			android:layout="@layout/feedback_request_1" />
 		<LinearLayout
 			android:layout_width="match_parent"
 			android:layout_height="97dp"
@@ -43,6 +50,14 @@
 			>
 		
 		</LinearLayout>
+		<TextView
+			android:id="@+id/fill_cache_progress"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Наполнение кеша:"
+			android:layout_above="@+id/progressBar"
+			android:layout_marginStart="10dp"
+			android:visibility="gone"/>
 		<ProgressBar
 			android:id="@+id/progressBar"
 			style="?android:attr/progressBarStyleHorizontal"

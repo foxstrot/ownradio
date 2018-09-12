@@ -161,7 +161,7 @@
 	<string name="about_ownradio">
 		Приложение для тех у кого на домашнем компьютере скопилось mp3 больше чем может поместиться на телефон. Для работы приложения нужно установить микросервер с сайта ownradio.ru на домашний компьютер. Без установки микросервера вы будете слушать чужую волну)
 		\n Радио может работать без интерента в режиме офлайн, если наполнен кэш.
-		\n Тех поддержка vk.com/ownradio
+		\n Тех поддержка <a href="http://vk.com/ownradio">vk.com/ownradio</a>
 		</string>
 	<string name="date_updated">Обновлено </string>
 	
@@ -201,5 +201,30 @@
 	<string name="requires_free_space">Приложению требуется минимум 100MB свободного места во внутренней памяти устройства.</string>
 	<string name="button_ok">OK</string>
 	<string name="button_cancel">Отмена</string>
+
 	
+	<!-- In-app billing -->
+	<string name="btn_subscribe_on">Оформить подписку</string>
+	<string name="btn_subscribe_off">Подписка оформлена</string>
+	<string name="subscribe_title">Оформить подписку</string>
+	<string name="subscribe_description">Для того, чтобы получить доступ ко всем функциям приложения, вы можете оформить подписку на удобный вам срок.</string>
+	<string name="subscription_period_monthly">Месяц</string>
+	<string name="subscription_period_yearly">Год</string>
+	<string name="subscription_period_prompt">Выберите период подписки</string>
+	<string name="subscription_resignup_prompt">To reactivate your subscription, select your subscription period</string>
+	<string name="subscription_update_prompt">To change your subscription, select your new subscription period</string>
+	<string name="subscription_prompt_continue">Continue</string>
+	<string name="subscription_prompt_cancel">Cancel</string>
+	
+	<!-- Rate Request -->
+	<string name="btn_notshow_again">Не показывать больше</string>
+	<string name="btn_cancel_rate">Скрыть</string>
+	<string name="rate_request_message">Вы прослушали много треков в этой версии приложения. Вы можете оставить комментарий или пожелание в нашей группе <a href="https://vk.me/ownradio">вконтакте</a>. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в <a href="market://details?id=ru.netvoxlab.ownradio">Google Play</a>.</string>
+	<string name="feedback_request_message_1"><h2> Если вам есть что нам сказать, то напишите нам в группе в </h2> <a href="https://vk.me/ownradio">вконтакте</a>. <br/> Вам понравилась эта версия приложения?</string>
+	<string name="feedback_request_message_2">Вам понравилась эта версия приложения?</string>
+	<string name="feedback_request_message_3">Вам понравилась эта версия приложения?</string>
+	<string name="rate_request_message_with_subscribe">Вы прослушали много треков в этой версии приложения. Вы можете оставить комментарий или пожелание в нашей группе <a href="https://vk.me/ownradio">вконтакте</a>. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в <a href="market://details?id=ru.netvoxlab.ownradio">Google Play</a> или оформив <a href="iabilling_activity://IABillingActivity">подписку</a>.</string>
+	<string name="rate_request_message_2">Вы прослушали много треков в этой версии приложения. Вы можете оставить комментарий или пожелание в нашей группе <a href="https://vk.me/ownradio">вконтакте</a>. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в <a href="https://play.google.com/store/apps/details?id=ru.netvoxlab.ownradio">Google Play</a> или оформив <a href="iabilling_activity://IABillingActivity">подписку</a>.</string>
+	<string name="btn_vk_rate">VKontakte</string>
+	<string name="btn_google_play_rate">Google Play</string>
 </resources>

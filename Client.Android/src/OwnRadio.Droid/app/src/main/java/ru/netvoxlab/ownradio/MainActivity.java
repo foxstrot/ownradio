@@ -31,18 +31,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SwitchCompat;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewStub;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RatingBar;
 import android.widget.TextView;
 
 import org.apache.commons.io.FileUtils;
@@ -55,7 +58,9 @@ import java.util.UUID;
 
 import ru.netvoxlab.ownradio.receivers.NetworkStateReceiver;
 
+import static ru.netvoxlab.ownradio.Constants.ACTION_UPDATE_FILLCACHE_PROGRESS;
 import static ru.netvoxlab.ownradio.Constants.ALL_CONNECTION_TYPES;
+import static ru.netvoxlab.ownradio.Constants.EXTRA_FILLCACHE_PROGRESS;
 import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
 import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
 import static ru.netvoxlab.ownradio.Constants.TAG;
@@ -94,15 +99,24 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	TextView txtTrackTitle;
 	TextView txtTrackArtist;
 	
+	TextView txtFillCacheProgress;
+	
 	SwitchCompat switchOnlyWIFI;
 	
 	Toolbar toolbar;
+	ViewStub viewStubRate;
+	RatingBar ratingBar;
+	ImageButton btnRateOK;
+	Button btnRateCancel;
+	View rateRequestLayout;
+	TextView rateRequestMessage;
+	boolean isRateInflated = false;
 	
 	LinearLayout layoutDevelopersInfo;
 	public static File filePath;
 	boolean flagDevInfo = false;
 	
-	
+	int mCountListenForRateDialog = 5;
 	
 	public static final String ActionProgressBarUpdate = "ru.netvoxlab.ownradio.action.PROGRESSBAR_UPDATE";
 	public static final String ActionProgressBarFirstTracksLoad = "ru.netvoxlab.ownradio.action.PROGRESSBAR_FIRST_UPDATE";
@@ -111,8 +125,9 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	public static final String ActionSendInfoTxt = "ru.netvoxlab.ownradio.action.SEND_INFO_TXT";
 	public static final String ActionStopPlayback = "ru.netvoxlab.ownradio.action.STOP_PLAYBACK";
 	public static final String ActionCheckCountTracksAndDownloadIfNotEnought = "ru.netvoxlab.ownradio.action.CHECK_TRACKS_AND_DOWNLOAD";
+	public static final String ActionShowRateRequest = "ru.netvoxlab.ownradio.SHOW_RATING_REQUEST";
 	
-	public static final String numListenedTracks = "NUM_TRACKS_LISTENED_IN_VERSION";
+	public static final String NumListenedTracks = "NUM_TRACKS_LISTENED_IN_VERSION";
 	public static final String version = "VERSION";
 	ProgressDialog dialog;
 	int numberOfTaps = 0;
@@ -130,10 +145,10 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.activity_main);
-		toolbar = (Toolbar) findViewById(R.id.toolbar);
-		setSupportActionBar(toolbar);
-		getSupportActionBar().setDisplayShowTitleEnabled(false);
+		setContentView(R.layout.activity_main_new);
+//		toolbar = findViewById(R.id.toolbar);
+//		setSupportActionBar(toolbar);
+//		getSupportActionBar().setDisplayShowTitleEnabled(false);
 		prefManager = new PrefManager(getApplicationContext());
 		
 //		if (prefManager.isFirstTimeLaunch()) {
@@ -141,7 +156,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 //			finish();
 //		}
 		
-		final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		final DrawerLayout drawer = findViewById(R.id.drawer_layout);
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
 				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close){
 			@Override
@@ -160,7 +175,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		};
 		drawer.addDrawerListener(toggle);
 		toggle.syncState();
-		NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+		NavigationView navigationView = findViewById(R.id.nav_view);
 		navigationView.setNavigationItemSelectedListener(this);
 		navigationView.bringToFront();
 		navigationView.requestLayout();
@@ -173,7 +188,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		Menu menu = navigationView.getMenu();
 
 		
-		switchOnlyWIFI= (SwitchCompat) MenuItemCompat.getActionView(menu.findItem(R.id.app_bar_switch_only_wifi)).findViewById(R.id.switchWidget);
+		switchOnlyWIFI= MenuItemCompat.getActionView(menu.findItem(R.id.app_bar_switch_only_wifi)).findViewById(R.id.switchWidget);
 		switchOnlyWIFI.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton compoundButton, boolean state) {
@@ -185,23 +200,23 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		});
 		//Z
 		filePath = ((App)getApplicationContext()).getMusicDirectory();
-		textUserID = (TextView) findViewById(R.id.userID);
-		textVersionName = (TextView) findViewById(R.id.versionName);
-		textDeviceID = (TextView) findViewById(R.id.deviceID);
-		textUserID = (TextView) findViewById(R.id.userID);
-		txtTrackCount = (TextView) findViewById(R.id.txtTrackCount);
-		txtTrackCountInFolder = (TextView) findViewById(R.id.txtCountTrackInFolder);
-		txtMemoryUsed = (TextView) findViewById(R.id.txtMemoryUsed);
-		txtCountPlayTracks = (TextView) findViewById(R.id.txtCountPlayTracks);
+		textUserID = findViewById(R.id.userID);
+		textVersionName = findViewById(R.id.versionName);
+		textDeviceID = findViewById(R.id.deviceID);
+		textUserID = findViewById(R.id.userID);
+		txtTrackCount = findViewById(R.id.txtTrackCount);
+		txtTrackCountInFolder = findViewById(R.id.txtCountTrackInFolder);
+		txtMemoryUsed = findViewById(R.id.txtMemoryUsed);
+		txtCountPlayTracks = findViewById(R.id.txtCountPlayTracks);
 		txtCountPlayTracks.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 		
-		textInfo = (TextView) findViewById(R.id.textViewInfo);
+		textInfo = findViewById(R.id.textViewInfo);
 		textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 		
-		textTrackID = (TextView) findViewById(R.id.trackID);
+		textTrackID = findViewById(R.id.trackID);
 		
-		txtTrackTitle = (TextView) findViewById(R.id.trackTitle);
-		txtTrackArtist = (TextView) findViewById(R.id.trackArtist);
+		txtTrackTitle = findViewById(R.id.trackTitle);
+		txtTrackArtist = findViewById(R.id.trackArtist);
 		
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ActionProgressBarUpdate);
@@ -211,6 +226,8 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		filter.addAction(ActionProgressBarFirstTracksLoad);
 		filter.addAction(ActionStopPlayback);
 		filter.addAction(ActionCheckCountTracksAndDownloadIfNotEnought);
+		filter.addAction(ActionShowRateRequest);
+		filter.addAction(ACTION_UPDATE_FILLCACHE_PROGRESS);
 		registerReceiver(myReceiver, filter);
 		
 		this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
@@ -228,6 +245,13 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		try {
 			int currentVersion = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionCode;
+			//Если приложение было обновлено - обнуляем счетчик положительных прослушиваний для версии приложения
+			if(sp.getInt("lastVersion", -1) < currentVersion){
+				prefManager.setPrefItemInt("lastVersion", currentVersion);
+				prefManager.setPrefItemInt("listenTracksCountInLastVersion", 0);
+				prefManager.setPrefItemBool("isRateRequestAlreadyShown", false);
+			}
+			
 			if(sp.getInt("lastVersion", -1) < 34){
 				sp.edit().putInt("lastVersion", currentVersion).commit();
 				FileUtils.cleanDirectory(this.getExternalFilesDir(Environment.DIRECTORY_MUSIC));
@@ -239,9 +263,9 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 
 //         полная очистка настроек
 //         sp.edit().clear().commit();
-		layoutDevelopersInfo = (LinearLayout) findViewById(R.id.linearLayoutDevelopersInfo);
+		layoutDevelopersInfo = findViewById(R.id.devInfo);//linearLayoutDevelopersInfo
 		
-		btnPlayPause = (ImageButton) findViewById(R.id.btnPlayPause);
+		btnPlayPause = findViewById(R.id.btnPlayPause);
 		btnPlayPause.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -252,10 +276,25 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 					MediaPlayerService.playbackWithHSisInterrupted = false;
 				}
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
+				
+				//todo вернуть условия проверки
+				if(prefManager.getPrefItemInt("listenTracksCountInLastVersion", 0) >= mCountListenForRateDialog
+						&& !prefManager.getPrefItemBool("isRateRequestAlreadyShown", false)
+						&& prefManager.getPrefItemBool("isAllowShowRateRequestAgain", true)
+				 ) {
+					if (!isRateInflated) {
+						viewStubRate.setLayoutResource(R.layout.rate_request_cardview);
+						viewStubRate.inflate();
+						isRateInflated = true;
+					} else {
+						//todo отладить и согласовать макет
+						// rateRequestLayout.setVisibility(View.VISIBLE);
+					}
+				}
 			}
 		});
 		
-		btnNext = (ImageButton) findViewById(R.id.btnNext);
+		btnNext = findViewById(R.id.btnNext);
 		btnNext.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -273,7 +312,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			}
 		});
 		
-		btnSkipTrack = (ImageButton) findViewById(R.id.btnSkipTrack);
+		btnSkipTrack = findViewById(R.id.btnSkipTrack);
 		btnSkipTrack.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
@@ -282,18 +321,41 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			}
 		});
 		
-		Button btnTest = (Button) findViewById(R.id.btnTest);
+		Button btnTest = findViewById(R.id.btnTest);
 		btnTest.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				new Utilites().SendLogs(getApplicationContext(), DeviceId);
 			}
 		});
+		
+		viewStubRate = findViewById(R.id.viewStubRate);
+		viewStubRate.setOnInflateListener(new ViewStub.OnInflateListener() {
+			@Override
+			public void onInflate(ViewStub stub, View inflated) {
+				rateRequestMessage = findViewById(R.id.rateRequestMessage);//feedback_request_message_1
+				rateRequestMessage.setMovementMethod(LinkMovementMethod.getInstance());
+				rateRequestLayout = findViewById(R.id.rateRequestLayout);//(LinearLayout) findViewById(R.id.rateRequestLayout);
+				
+				btnRateCancel = findViewById(R.id.btnRateCancel);
+				btnRateCancel.setOnClickListener(new View.OnClickListener() {
+					@Override
+					public void onClick(View v) {
+						rateRequestLayout.setVisibility(View.GONE);
+						prefManager.setPrefItemBool("isRateRequestAlreadyShown", true);
+					}
+				});
+			}
+		});
+		
+		txtFillCacheProgress = findViewById(R.id.fill_cache_progress);
+		
+
 	}
 	
 	@Override
 	public void onBackPressed() {
-		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		DrawerLayout drawer = findViewById(R.id.drawer_layout);
 		if (drawer.isDrawerOpen(GravityCompat.START)) {
 			drawer.closeDrawer(GravityCompat.START);
 		} else {
@@ -337,7 +399,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		// Handle navigation view item clicks here.
 		int id = item.getItemId();
 //		PrefManager prefManager = new PrefManager(getApplicationContext());
-		DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+		DrawerLayout drawer = findViewById(R.id.drawer_layout);
 
 		switch(id){
 			case R.id.app_bar_switch_only_wifi:
@@ -351,11 +413,42 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				break;
 			case R.id.app_bar_rate_app:
 				final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
-				try {
-					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-				} catch (android.content.ActivityNotFoundException anfe) {
-					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-				}
+//				try {
+//					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+//				} catch (android.content.ActivityNotFoundException anfe) {
+//					startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+//				}
+				AlertDialog.Builder rateRequest = new AlertDialog.Builder(MainActivity.this);
+				rateRequest.setTitle("Оцените приложение")
+						.setMessage("Вы можете оставить комментарий или пожелание в нашей группе ВКонтакте. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в Google Play.")
+						.setCancelable(true)
+						.setPositiveButton(R.string.btn_vk_rate, new DialogInterface.OnClickListener() {
+							@Override
+							public void onClick(DialogInterface dialog, int which) {
+								startActivity( new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/ownradio")));
+							}
+						})
+						.setNegativeButton(R.string.btn_google_play_rate,
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog, int which) {
+										try {
+											startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+										} catch (android.content.ActivityNotFoundException anfe) {
+											startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+										}
+										dialog.dismiss();
+									}
+								})
+						.setNeutralButton(R.string.button_cancel,
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialog, int i) {
+										dialog.dismiss();
+									}
+								});
+				AlertDialog alert = rateRequest.create();
+				alert.show();
 				break;
 			case R.id.app_bar_settings:
 				Intent settingsActivity = new Intent(getBaseContext(),
@@ -365,6 +458,9 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				startActivity(settingsActivity);
 				drawer.closeDrawer(GravityCompat.START);
 				break;
+			case R.id.app_bar_subscribe:
+				Intent iabillingActivity = new Intent(getBaseContext(), IABillingActivity.class);
+				startActivity(iabillingActivity);
 		}
 		return true;
 	}
@@ -449,19 +545,19 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 					if (binder == null || binder.GetMediaPlayerService().player == null) {
 						txtTrackTitle.setText("");
 						txtTrackArtist.setText("");
-						btnPlayPause.setImageResource(R.drawable.btn_play);
+						btnPlayPause.setImageResource(R.drawable.btn_ic_play);
 						return;
 					}
 					
 					if (binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_STOPPED) {
-						btnPlayPause.setImageResource(R.drawable.btn_play);
+						btnPlayPause.setImageResource(R.drawable.btn_ic_play);
 						return;
 					}
 					
 					if (binder.GetMediaPlayerService().player != null && binder.GetMediaPlayerService().GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING) {
-						btnPlayPause.setImageResource(R.drawable.btn_pause);
+						btnPlayPause.setImageResource(R.drawable.btn_ic_pause);
 					} else {
-						btnPlayPause.setImageResource(R.drawable.btn_play);
+						btnPlayPause.setImageResource(R.drawable.btn_ic_play);
 					}
 					
 					if(binder.GetMediaPlayerService().player != null) {
@@ -473,7 +569,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 							artist = "Artist";
 						txtTrackTitle.setText(title);
 						txtTrackArtist.setText(artist);
-						textTrackID = (TextView) findViewById(R.id.trackID);
+						textTrackID = findViewById(R.id.trackID);
 						textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 					}
 				} catch (Exception ex) {
@@ -496,7 +592,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			if (intent.getAction() == ActionProgressBarUpdate) {
 				
 				if (progressBar == null)
-					progressBar = (ProgressBar) findViewById(R.id.progressBar);
+					progressBar = findViewById(R.id.progressBar);
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
@@ -520,9 +616,16 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 						progressBar.setSecondaryProgress(0);
 						
 						while (currentPosition < duration) {
+//							if(currentPosition <= 5000)
+//								binder.GetMediaPlayerService().FadeIn(.2f);
+//							else if (currentPosition >= duration - 5000)
+//								binder.GetMediaPlayerService().FadeOut(.2f);
+//							else
+//								binder.GetMediaPlayerService().pla
 							try {
 								Thread.sleep(1000);
 								currentPosition = binder.GetMediaPlayerService().GetPosition();
+								binder.GetMediaPlayerService().SaveLastPosition();
 //								currentPosition = binder.GetMediaPlayerService().GetPosition() / 1000;
 //								try {
 //									duration = binder.GetMediaPlayerService().GetDuration();
@@ -577,7 +680,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 								handler.post(new Runnable() {
 									@Override
 									public void run() {
-										dialog.setMessage(getResources().getString(R.string.wait_caching) + " \n" + ((App)getApplicationContext()).getCountDownloadTrying() + " попытка загрузки");
+										dialog.setMessage(getResources().getString(R.string.wait_caching) + " \n" + ((App)getApplicationContext()).getCountDownloadTrying()+1 + " попытка загрузки");
 									}
 								});
 							}
@@ -596,9 +699,15 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
 					}else {
 						btnNext.setClickable(true);
-						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnPlay));
+						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorTransparent));
 					}
 				}
+			}
+			
+			if(intent.getAction().equals(ACTION_UPDATE_FILLCACHE_PROGRESS)) {
+				int count = intent.getExtras().getInt(EXTRA_FILLCACHE_PROGRESS, 0);
+				if (count == 0)
+					txtFillCacheProgress.setVisibility(View.GONE);
 			}
 		}
 	};
@@ -621,11 +730,14 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		
 		txtTrackTitle.setOnTouchListener(this);
 		txtTrackArtist.setOnTouchListener(this);
-		toolbar.setOnTouchListener(this);
+//		toolbar.setOnTouchListener(this);
+		
+
+		
 		try {
 			//запускаем загрузку треков, если кеш пуст
 			if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
-				if (trackToCache.FreeSpace() + trackToCache.FolderSize(filePath) < 104857600) {
+				if(trackToCache.FreeSpace() + TrackToCache.FolderSize(filePath) < 104857600) {
 					AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 					builder.setTitle(getResources().getString(R.string.not_enough_free_space))
 							.setMessage(getResources().getString(R.string.requires_free_space))
@@ -652,7 +764,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				String info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName;
 				if(!info.equals(sp.getString("version", ""))){
 					sp.edit().putString(version, info).commit();
-					sp.edit().putString(numListenedTracks, "0").commit();
+					sp.edit().putString(NumListenedTracks, "0").commit();
 				}
 				textVersionName.setText("Version name: " + info);
 			} catch (PackageManager.NameNotFoundException e) {
@@ -693,12 +805,44 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			
 			new Utilites().CheckCountTracksAndDownloadIfNotEnought(MainActivity.this, DeviceId);
 			
+			if(((App)getApplicationContext()).getFillingCacheActive()){
+				final Handler h = new Handler();
+				txtFillCacheProgress.setVisibility(View.VISIBLE);
+					txtFillCacheProgress.setText("Кешировано треков: " + ((App)getApplicationContext()).getCountDownloadTrying());
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						while (txtFillCacheProgress.getVisibility() == View.VISIBLE) {
+							try {
+								Thread.sleep(5000);
+							} catch (Exception ex) {
+								
+							}
+							h.post(new Runnable() {
+								@Override
+								public void run() {
+									txtFillCacheProgress.setText("Кешировано треков: " + ((App)getApplicationContext()).getCountDownloadTrying());
+									
+								}
+							});
+							
+						}
+					}
+				}).start();
+			} else {
+				txtFillCacheProgress.setVisibility(View.GONE);
+			}
+			
+			if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
+				txtTrackTitle.setText("");
+				txtTrackArtist.setText("");
+			}
+			
 			return;
 		}catch (Exception ex) {
 			Log.d(TAG, " " + ex.getLocalizedMessage());
 			return;
 		}
-		
 		
 	}
 	
@@ -723,7 +867,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
 		txtTrackCountInFolder.setText("Count files in folder: " + trackToCache.TrackCountInFolder(filePath));
 		txtCountPlayTracks.setText(trackDataAccess.GetCountPlayTracksTable());
-		txtMemoryUsed.setText("Cache size: " + trackToCache.FolderSize(filePath) / 1048576 + " MB.");
+		txtMemoryUsed.setText("Cache size: " + TrackToCache.FolderSize(filePath) / 1048576 + " MB.");
 	}
 	
 	@Override
@@ -771,7 +915,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				if (line.contains(TAG))
 					log.append(line + "\n");
 			}
-			TextView textInfo = (TextView) findViewById(R.id.textViewInfo);
+			TextView textInfo = findViewById(R.id.textViewInfo);
 			textInfo.setMovementMethod(new android.text.method.ScrollingMovementMethod());
 			textInfo.setText(log.toString());
 		} catch (IOException e) {
@@ -810,9 +954,20 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		public void onServiceConnected(ComponentName componentName, IBinder service) {
 			MediaPlayerService.MediaPlayerServiceBinder mediaPlayerServiceBinder = (MediaPlayerService.MediaPlayerServiceBinder) service;
 			if (mediaPlayerServiceBinder != null) {
+				new Utilites().SendInformationTxt(getApplicationContext(), "onServiceConnected");
 				MediaPlayerService.MediaPlayerServiceBinder binder = (MediaPlayerService.MediaPlayerServiceBinder) service;
 				instance.binder = binder;
 				instance.isBound = true;
+				//предзагрузка трека, на котором остановилось воспроизведение
+				instance.binder.GetMediaPlayerService().PreloadTrack();
+				if(binder.GetMediaPlayerService().track != null) {
+					txtTrackTitle.setText(binder.GetMediaPlayerService().track.getAsString("title"));
+					txtTrackArtist.setText(binder.GetMediaPlayerService().track.getAsString("artist"));
+					if (progressBar == null)
+						progressBar = findViewById(R.id.progressBar);
+					progressBar.setMax(binder.GetMediaPlayerService().track.getAsInteger("length") * 1000);
+					progressBar.setProgress(binder.GetMediaPlayerService().startPosition);
+				}
 			}
 		}
 		

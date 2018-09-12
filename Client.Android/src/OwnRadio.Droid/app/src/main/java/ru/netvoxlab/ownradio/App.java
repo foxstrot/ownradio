@@ -4,6 +4,8 @@ package ru.netvoxlab.ownradio;
 import android.app.Application;
 import android.os.Environment;
 
+import org.solovyev.android.checkout.Billing;
+
 import java.io.File;
 
 /**
@@ -21,6 +23,30 @@ public class App extends Application {
 	private Process process;
 	private Integer countDownloadTrying;
 	private Boolean autoPlay;
+	private Boolean isFillingCacheActive;
+	
+	private static App instance;
+	
+	private final Billing mBilling = new Billing(this,  new Billing.DefaultConfiguration(){
+		@Override
+		public String getPublicKey(){
+			return "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyvzn+k5/eXZdtnHoO/zly7/hHZXVwihn6NRUCT06w597WJpT5GhTTi3SE8Ve4+kcaIAR20Au9bAje+XYWAtGckxNGK7q0RG5cBw05UEn0C/ZvWGunIIJw4rnMlMMu4Q3kNyHyvQhso3tVJCWdqdj3nZkj29MZJ6fU5EaNlxGEX5G7y6pvbevj8qikJhzIsKIxhVNwPfRPu5dalK0Ftan/7fzzsgq9DC3mh5AF6000I4oeocgBhlZQB4znOoJ9omWmcQ6PdUNGul8ny+TNYbQpl/aF9/09DsXlkHZSZ83bJYPsYUogw3AR356siyEOks3Dim5or8pC298NLH+XiNu6QIDAQAB";
+		}
+	});
+	
+	public App(){
+		instance = this;
+	}
+	
+	public static App get(){
+		return instance;
+	}
+	
+	public Billing getBilling() {
+		return mBilling;
+	}
+	
+	
 	public void onCreate() {
 		super.onCreate();
 		countDownloadTrying = 0;
@@ -112,5 +138,13 @@ public class App extends Application {
 	
 	public void setAutoPlay(Boolean autoPlay){
 		this.autoPlay = autoPlay;
+	}
+	
+	public Boolean getFillingCacheActive() {
+		return isFillingCacheActive;
+	}
+	
+	public void setFillingCacheActive(Boolean fillingCacheActive) {
+		isFillingCacheActive = fillingCacheActive;
 	}
 }

@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Handler;
 import android.os.StatFs;
 import android.util.Log;
 
@@ -17,6 +16,9 @@ import java.util.Map;
 
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
+import static ru.netvoxlab.ownradio.RequestAPIService.ACTION_GETNEXTTRACK;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_COUNT;
+import static ru.netvoxlab.ownradio.RequestAPIService.EXTRA_DEVICEID;
 
 /**
  * Created by a.polunina on 24.10.2016.
@@ -32,7 +34,6 @@ public class TrackToCache {
 	final static double bytesInGB = 1073741824.0d;
 	final static double bytesInMB = 1048576.0d;
 	final String TAG = "ownRadio";
-	Handler handler = new Handler();
 
 	public TrackToCache(Context context) {
 		mContext = context;
@@ -61,6 +62,7 @@ public class TrackToCache {
 				case DOWNLOAD_FILE_TO_CACHE: {
 					try {
 						((App)mContext).setCountDownloadTrying((((App)mContext).getCountDownloadTrying()+1));
+						Log.d(TAG, "Попытка " +(((App)mContext).getCountDownloadTrying()+1) );
 						final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
 						trackId = trackMap.get("id");
 						trackMap.put("deviceid", deviceId);
@@ -68,7 +70,6 @@ public class TrackToCache {
 							Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
 							break;
 						}
-						Log.d(TAG,  "Download track " + trackId + " is started");
 						new Utilites().SendInformationTxt(mContext, "Download track " + trackId + " is started");
 //						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
 						do{
@@ -97,6 +98,7 @@ public class TrackToCache {
 					if(track == null)
 						return "Отсутствуют файлы для удаления";
 					DeleteTrackFromCache(track);
+					i--;
 					break;
 				}
 			}
@@ -179,10 +181,19 @@ public class TrackToCache {
 	public int CheckCacheDoing(){
 		long cacheSize = FolderSize(pathToCache);
 		long availableSpace = FreeSpace();
+		long keyMaxMemorySize;
 		String[] memorySizeArray = mContext.getResources().getStringArray(R.array.pref_max_memory_size_values);
 		PrefManager prefManager = new PrefManager(mContext);
-		//получаем максимальный размер кеша из настроек
-		long keyMaxMemorySize = (long)(bytesInGB * Double.valueOf(prefManager.getPrefItem("max_memory_size", "0.0d")));
+		
+		//TODO размер кэша в зависимости от подписки
+		//Если подписка оформлена - считываем размер кэша, заданный пользователем
+		if(prefManager.getPrefItemBool("is_subscribed", false)) {
+			//получаем максимальный размер кеша из настроек
+			keyMaxMemorySize = (long) (bytesInGB * Double.valueOf(prefManager.getPrefItem("max_memory_size", "0.0d")));
+		}else{
+			//если нет подписки - ограничиваем размер кэша 1 гигабайтом
+			keyMaxMemorySize = (long) (1 * bytesInGB);
+		}
 		if(keyMaxMemorySize == 0)
 			keyMaxMemorySize = Long.MAX_VALUE;
 		if(cacheSize < keyMaxMemorySize && cacheSize < (cacheSize + availableSpace) * 0.3)
@@ -251,6 +262,7 @@ public class TrackToCache {
 		try {
 			FileUtils.cleanDirectory(pathToCache);
 			new TrackDataAccess(mContext).DeleteAllTracksFromCache();
+			((App)mContext).setCountDownloadTrying(0);
 			return true;
 		}catch (Exception ex){
 			return false;
@@ -282,21 +294,30 @@ public class TrackToCache {
 			String trackId;
 			
 			
-			while (CheckCacheDoing() == DOWNLOAD_FILE_TO_CACHE){
-				final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
-				trackId = trackMap.get("id");
-				if (trackDataAccess.CheckTrackExistInDB(trackId)) {
-					Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
-					break;
-				}
-				trackMap.put("deviceid", deviceId);
-				new Utilites().SendInformationTxt(mContext, "Download track " + trackId + " is started");
-				new DownloadTracks(mContext).execute(trackMap).get();
-				if(new TrackDataAccess(mContext).GetExistTracksCount() >=1){
-					Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
-					progressIntent.putExtra("ProgressOn", false);
-					mContext.sendBroadcast(progressIntent);
-				}
+			while (CheckCacheDoing() == DOWNLOAD_FILE_TO_CACHE && new CheckConnection().CheckInetConnection(mContext)){
+				Intent downloaderIntent = new Intent(mContext.getApplicationContext(), LongRequestAPIService.class);
+				downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+				downloaderIntent.putExtra(EXTRA_DEVICEID, deviceId);
+				downloaderIntent.putExtra(EXTRA_COUNT, 3);
+				mContext.getApplicationContext().startService(downloaderIntent);
+				
+				Thread.sleep(60000);
+//
+//				final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
+//				trackId = trackMap.get("id");
+//				if (trackDataAccess.CheckTrackExistInDB(trackId)) {
+//					Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
+//					break;
+//				}
+//				trackMap.put("deviceid", deviceId);
+//				new Utilites().SendInformationTxt(mContext, "Download track " + trackId + " is started");
+//
+//				new DownloadTracks(mContext).execute(trackMap).get();
+//				if(new TrackDataAccess(mContext).GetExistTracksCount() >=1){
+//					Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
+//					progressIntent.putExtra("ProgressOn", false);
+//					mContext.sendBroadcast(progressIntent);
+//				}
 			}
 		}catch (Exception ex){
 			
