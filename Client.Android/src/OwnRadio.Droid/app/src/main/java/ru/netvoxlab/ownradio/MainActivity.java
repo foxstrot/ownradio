@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -47,6 +48,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.commons.io.FileUtils;
 
@@ -81,7 +83,8 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	ImageButton btnPlayPause;
 	ImageButton btnNext;
 	ImageButton btnSkipTrack;
-//	TrackDB trackDB;
+	ImageButton btnTimer;
+	//	TrackDB trackDB;
 	private Handler handler = new Handler();
 	private Handler handlerEvent = new Handler();
 	ProgressBar progressBar;
@@ -155,7 +158,8 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 //			startActivity(new Intent(MainActivity.this, WelcomeActivity.class));
 //			finish();
 //		}
-		
+
+
 		final DrawerLayout drawer = findViewById(R.id.drawer_layout);
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
 				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close){
@@ -349,10 +353,29 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		});
 		
 		txtFillCacheProgress = findViewById(R.id.fill_cache_progress);
-		
+
+		btnTimer = (ImageButton) findViewById(R.id.btnTimer);
+
+		btnTimer.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Intent timerSleepActivity = new Intent(getBaseContext(), TimerSleep.class);
+				startActivityForResult(timerSleepActivity, 0);
+			}
+
+		});
 
 	}
-	
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == RESULT_OK) {
+			finish();
+		} else {
+
+		}
+	}
+
 	@Override
 	public void onBackPressed() {
 		DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -461,6 +484,11 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			case R.id.app_bar_subscribe:
 				Intent iabillingActivity = new Intent(getBaseContext(), IABillingActivity.class);
 				startActivity(iabillingActivity);
+
+			case R.id.app_bar_switch_sleeping_mode:
+				Intent timerSleepActivity = new Intent(getBaseContext(), TimerSleep.class);
+				timerSleepActivity.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+				startActivity(timerSleepActivity);
 		}
 		return true;
 	}

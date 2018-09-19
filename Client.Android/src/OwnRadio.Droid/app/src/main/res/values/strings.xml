@@ -1,230 +1,230 @@
 <resources>
-	<string name="app_name">ownRadio</string>
-	<string name="currently_playing_song">Song currently playing</string>
-	<string name="currently_playing_artist">Artist of currently playing song</string>
-	<string name="title_activity_main">MainActivity</string>
-	
-	<string name="navigation_drawer_open">Open navigation drawer</string>
-	<string name="navigation_drawer_close">Close navigation drawer</string>
-	<string name="action_settings">Настройки</string>
-	
-	
-	<string name="label_pause">Pause</string>
-	<string name="label_play">Play</string>
-	<string name="label_next">Next</string>
-	<string name="title_activity_settings">Настройки</string>
-	
-	<!-- Strings related to Settings -->
-	
-	<!-- Example General settings -->
-	<string name="pref_header_general">General</string>
-	
-	<string name="pref_title_social_recommendations">Enable social recommendations</string>
-	
-	
-	<string name="pref_title_display_name">Display name</string>
-	<string name="pref_default_display_name">John Smith</string>
-	
-	<string name="pref_title_add_friends_to_messages">Add friends to messages</string>
-	<string-array name="pref_example_list_titles">
-		<item>Always</item>
-		<item>When possible</item>
-		<item>Never</item>
-	</string-array>
-	<string-array name="pref_example_list_values">
-		<item>1</item>
-		<item>0</item>
-		<item>-1</item>
-	</string-array>
-	
-	<!-- Example settings for Data & Sync -->
-	<string name="pref_header_data_sync">Data &amp; sync</string>
-	
-	<string name="pref_title_sync_frequency">Sync frequency</string>
-	<string-array name="pref_sync_frequency_titles">
-		<item>15 minutes</item>
-		<item>30 minutes</item>
-		<item>1 hour</item>
-		<item>3 hours</item>
-		<item>6 hours</item>
-		<item>Never</item>
-	</string-array>
-	<string-array name="pref_sync_frequency_values">
-		<item>15</item>
-		<item>30</item>
-		<item>60</item>
-		<item>180</item>
-		<item>360</item>
-		<item>-1</item>
-	</string-array>
-	
-	<string-array name="list_preference_entries">
-		<item>Entry 1</item>
-		<item>Entry 2</item>
-		<item>Entry 3</item>
-	</string-array>
-	
-	<string-array name="list_preference_entry_values">
-		<item>1</item>
-		<item>2</item>
-		<item>3</item>
-	</string-array>
-	
-	<string-array name="multi_select_list_preference_default_value"/>
-	
-	<string name="pref_title_system_sync_settings">System sync settings</string>
-	
-	<!-- Example settings for Notifications -->
-	<string name="pref_header_notifications">Notifications</string>
-	
-	<string name="pref_title_new_message_notifications">New message notifications</string>
-	
-	<string name="pref_title_ringtone">Ringtone</string>
-	<string name="pref_ringtone_silent">Silent</string>
-	
-	<string name="pref_title_vibrate">Vibrate</string>
-	
-	<!--NavigationView-->
-	<string name="sleeping_mode">Режим сна</string>
-	<string name="alarm_clock">Будильник </string>
-	
-	<!-- Settings -->
-	<string name="pref_header_internet_connection">Подключение к интернету</string>
-	
-	<string-array name="pref_internet_connection_titles">
-		<item>@string/pref_only_wifi</item>
-		<item>@string/pref_mobile_and_wifi</item>
-	</string-array>
-	<string-array name="pref_internet_connection_values">
-		<item>0</item>
-		<item>1</item>
-	</string-array>
-	<string name="pref_only_wifi">Только wifi</string>
-	<string name="pref_mobile_and_wifi">Moб. интернет и wifi</string>
-	
-	<string name="pref_header_only_own_tracks">Слушать только свои треки</string>
-	<string name="pref_read_about_microserver">Подробнее о том как установить микросервер. Только для пользователей ipv6</string>
-	<string name="pref_read_about_upload_own_tracks">Подробнее о том, как загрузить свои треки на сервер</string>
-	<string name="pref_header_app">Приложение</string>
-	<string name="pref_about_app">Подробнее о приложении</string>
-	<string name="pref_header_about_app">О приложении</string>
-	<string name="pref_write_to_the_developers">Написать разработчикам</string>
-	<string name="pref_rate_app">Оценить приложение</string>
-	<string name="pref_header_system_info">Системная информация для отладки</string>
-	<string name="pref_header_count_tracks">Количество прослушиваний и количество треков</string>
-	<string name="pref_last_log_recs">Последние строки лога</string>
-	<string name="pref_send_log">Отправить лог на сервер</string>
-	<string name="pref_header_log">Логи устройства</string>
-	<string name="tracks">треков</string>
-	<string name="pref_memory">Память</string>
-	<string name="pref_max_memory_size">Занимать не более</string>
-	<string-array name="pref_max_memory_size_titles">
-		<item>"1 GB"</item>
-		<item>"2 GB"</item>
-		<item>"4 GB"</item>
-		<item>"8 GB"</item>
-		<item>"16 GB"</item>
-		<item>"32 GB"</item>
-		<item>"64 GB"</item>
-	</string-array>
-	<string-array name="pref_max_memory_size_values">
-		<item>1</item>
-		<item>2</item>
-		<item>4</item>
-		<item>8</item>
-		<item>16</item>
-		<item>32</item>
-		<item>64</item>
-	</string-array>
-	<string name="pref_percent_of_free_memory1">А также не более 30%% от свободной памяти</string>
-	<string name="pref_percent_of_free_memory">А также не более 30% от свободной памяти</string>
-	<string name="pref_free_memory_size">Свободно</string>
-	<string name="pref_all_tracks_size">Занято</string>
-	<string name="pref_listening_tracks_size_size">Из них уже прослушанных</string>
-	<string name="pref_clear_cache">Очистить кэш</string>
-	<string name="summary_clear_all_cache">Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш</string>
-	<string name="summary_clear_listening_cache">Удалить прослушанные треки</string>
-	<string name="delete_all_alert_title">Удалить кешированные треки</string>
-	<string name="delete_all_alert_message">Внимание. Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш</string>
-	<string name="alert_positive_button">ОК</string>
-	<string name="alert_negative_button">Отмена</string>
-	<string name="pref_fill_cache">Заполнить кэш</string>
-	<string name="summary_fill_cache">Заполнить треками определенный настройками объём памяти</string>
-	
-	<string name="title_dialog_clear_listening_cache">Удаление прослушанных треков</string>
-	<string name="dialog_clear_listening_cache">Вы хотите удалить прослушанные треки из кэша?</string>
-	<string name="title_dialog_clear_all_cache">Удаление всех треков</string>
-	<string name="dialog_clear_all_cache">Вы уверены что хотите удалить все треки из кэша? Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш.</string>
-	<string name="log_is_send">Логи отправлены</string>
-	<!--About app-->
-	<string name="current_version">Текущая версия</string>
-	<string name="about_ownradio">
+    <string name="app_name">ownRadio</string>
+    <string name="currently_playing_song">Song currently playing</string>
+    <string name="currently_playing_artist">Artist of currently playing song</string>
+    <string name="title_activity_main">MainActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_settings">Настройки</string>
+
+
+    <string name="label_pause">Pause</string>
+    <string name="label_play">Play</string>
+    <string name="label_next">Next</string>
+    <string name="title_activity_settings">Настройки</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+    <string name="pref_header_general">General</string>
+
+    <string name="pref_title_social_recommendations">Enable social recommendations</string>
+
+
+    <string name="pref_title_display_name">Display name</string>
+    <string name="pref_default_display_name">John Smith</string>
+
+    <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
+    <string-array name="pref_example_list_titles">
+        <item>Always</item>
+        <item>When possible</item>
+        <item>Never</item>
+    </string-array>
+    <string-array name="pref_example_list_values">
+        <item>1</item>
+        <item>0</item>
+        <item>-1</item>
+    </string-array>
+
+    <!-- Example settings for Data & Sync -->
+    <string name="pref_header_data_sync">Data &amp; sync</string>
+
+    <string name="pref_title_sync_frequency">Sync frequency</string>
+    <string-array name="pref_sync_frequency_titles">
+        <item>15 minutes</item>
+        <item>30 minutes</item>
+        <item>1 hour</item>
+        <item>3 hours</item>
+        <item>6 hours</item>
+        <item>Never</item>
+    </string-array>
+    <string-array name="pref_sync_frequency_values">
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>180</item>
+        <item>360</item>
+        <item>-1</item>
+    </string-array>
+
+    <string-array name="list_preference_entries">
+        <item>Entry 1</item>
+        <item>Entry 2</item>
+        <item>Entry 3</item>
+    </string-array>
+
+    <string-array name="list_preference_entry_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <string-array name="multi_select_list_preference_default_value" />
+
+    <string name="pref_title_system_sync_settings">System sync settings</string>
+
+    <!-- Example settings for Notifications -->
+    <string name="pref_header_notifications">Notifications</string>
+
+    <string name="pref_title_new_message_notifications">New message notifications</string>
+
+    <string name="pref_title_ringtone">Ringtone</string>
+    <string name="pref_ringtone_silent">Silent</string>
+
+    <string name="pref_title_vibrate">Vibrate</string>
+
+    <!--NavigationView-->
+    <string name="sleeping_mode">Режим сна</string>
+    <string name="alarm_clock">Будильник </string>
+
+    <!-- Settings -->
+    <string name="pref_header_internet_connection">Подключение к интернету</string>
+
+    <string-array name="pref_internet_connection_titles">
+        <item>@string/pref_only_wifi</item>
+        <item>@string/pref_mobile_and_wifi</item>
+    </string-array>
+    <string-array name="pref_internet_connection_values">
+        <item>0</item>
+        <item>1</item>
+    </string-array>
+    <string name="pref_only_wifi">Только wifi</string>
+    <string name="pref_mobile_and_wifi">Moб. интернет и wifi</string>
+
+    <string name="pref_header_only_own_tracks">Слушать только свои треки</string>
+    <string name="pref_read_about_microserver">Подробнее о том как установить микросервер. Только для пользователей ipv6</string>
+    <string name="pref_read_about_upload_own_tracks">Подробнее о том, как загрузить свои треки на сервер</string>
+    <string name="pref_header_app">Приложение</string>
+    <string name="pref_about_app">Подробнее о приложении</string>
+    <string name="pref_header_about_app">О приложении</string>
+    <string name="pref_write_to_the_developers">Написать разработчикам</string>
+    <string name="pref_rate_app">Оценить приложение</string>
+    <string name="pref_header_system_info">Системная информация для отладки</string>
+    <string name="pref_header_count_tracks">Количество прослушиваний и количество треков</string>
+    <string name="pref_last_log_recs">Последние строки лога</string>
+    <string name="pref_send_log">Отправить лог на сервер</string>
+    <string name="pref_header_log">Логи устройства</string>
+    <string name="tracks">треков</string>
+    <string name="pref_memory">Память</string>
+    <string name="pref_max_memory_size">Занимать не более</string>
+    <string-array name="pref_max_memory_size_titles">
+        <item>"1 GB"</item>
+        <item>"2 GB"</item>
+        <item>"4 GB"</item>
+        <item>"8 GB"</item>
+        <item>"16 GB"</item>
+        <item>"32 GB"</item>
+        <item>"64 GB"</item>
+    </string-array>
+    <string-array name="pref_max_memory_size_values">
+        <item>1</item>
+        <item>2</item>
+        <item>4</item>
+        <item>8</item>
+        <item>16</item>
+        <item>32</item>
+        <item>64</item>
+    </string-array>
+    <string name="pref_percent_of_free_memory1">А также не более 30%% от свободной памяти</string>
+    <string name="pref_percent_of_free_memory">А также не более 30% от свободной памяти</string>
+    <string name="pref_free_memory_size">Свободно</string>
+    <string name="pref_all_tracks_size">Занято</string>
+    <string name="pref_listening_tracks_size_size">Из них уже прослушанных</string>
+    <string name="pref_clear_cache">Очистить кэш</string>
+    <string name="summary_clear_all_cache">Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш</string>
+    <string name="summary_clear_listening_cache">Удалить прослушанные треки</string>
+    <string name="delete_all_alert_title">Удалить кешированные треки</string>
+    <string name="delete_all_alert_message">Внимание. Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш</string>
+    <string name="alert_positive_button">ОК</string>
+    <string name="alert_negative_button">Отмена</string>
+    <string name="pref_fill_cache">Заполнить кэш</string>
+    <string name="summary_fill_cache">Заполнить треками определенный настройками объём памяти</string>
+
+    <string name="title_dialog_clear_listening_cache">Удаление прослушанных треков</string>
+    <string name="dialog_clear_listening_cache">Вы хотите удалить прослушанные треки из кэша?</string>
+    <string name="title_dialog_clear_all_cache">Удаление всех треков</string>
+    <string name="dialog_clear_all_cache">Вы уверены что хотите удалить все треки из кэша? Приложение не сможет проигрывать треки в офлайне пока не будет наполнен кэш.</string>
+    <string name="log_is_send">Логи отправлены</string>
+    <!--About app-->
+    <string name="current_version">Текущая версия</string>
+    <string name="about_ownradio">
 		Приложение для тех у кого на домашнем компьютере скопилось mp3 больше чем может поместиться на телефон. Для работы приложения нужно установить микросервер с сайта ownradio.ru на домашний компьютер. Без установки микросервера вы будете слушать чужую волну)
 		\n Радио может работать без интерента в режиме офлайн, если наполнен кэш.
 		\n Тех поддержка <a href="http://vk.com/ownradio">vk.com/ownradio</a>
 		</string>
-	<string name="date_updated">Обновлено </string>
-	
-	
-	<string name="section_format">Hello World from section: %1$d</string>
-	
-	<!--Welcome Activity-->
-	<string name="next">NEXT</string>
-	<string name="skip">SKIP</string>
-	<string name="start">GOT IT</string>
-	<string name="try_again">TRY AGAIN</string>
-	<string name="slide_1_title">Автоматическая предзагрузка треков пока есть интернет.</string>
-	<string name="slide_1_desc"></string>
-	
-	<string name="slide_2_title">Персональные рекомендации.</string>
-	<string name="slide_2_desc"></string>
-	
-	<string name="slide_3_title">Если трек прослушан, значит вам он нравится.</string>
-	<string name="slide_3_desc"></string>
-	
-	<string name="slide_4_title">Если пропущен, значит не очень ).</string>
-	<string name="slide_4_desc"></string>
-	
-	<string name="slide_5_title">Идет предзагрузка. Подождите.</string>
-	<string name="slide_5_check_connection">Для предзагрузки необходим интернет. Включите интернет и попробуйте снова.</string>
-	<string name="slide_5_desc"></string>
-	
-	<string name="play_again_desc">To see the welcome slider again, goto Settings -> apps -> welcome slider -> clear data</string>
-	<string name="play_again">Play Again</string>
-	<string name="try_caching_again">Попробовать еще раз</string>
-	<string name="count_tracks_listened_table">Информации о треках не найдено</string>
-	
-	<string name="is_caching">Кеширование...</string>
-	<string name="wait_caching">Отсутствуют кешированные треки. Подождите пока треки кешируются.</string>
-	
-	<string name="not_enough_free_space">Недостаточно свободной памяти на устройстве</string>
-	<string name="requires_free_space">Приложению требуется минимум 100MB свободного места во внутренней памяти устройства.</string>
-	<string name="button_ok">OK</string>
-	<string name="button_cancel">Отмена</string>
+    <string name="date_updated">Обновлено </string>
 
-	
-	<!-- In-app billing -->
-	<string name="btn_subscribe_on">Оформить подписку</string>
-	<string name="btn_subscribe_off">Подписка оформлена</string>
-	<string name="subscribe_title">Оформить подписку</string>
-	<string name="subscribe_description">Для того, чтобы получить доступ ко всем функциям приложения, вы можете оформить подписку на удобный вам срок.</string>
-	<string name="subscription_period_monthly">Месяц</string>
-	<string name="subscription_period_yearly">Год</string>
-	<string name="subscription_period_prompt">Выберите период подписки</string>
-	<string name="subscription_resignup_prompt">To reactivate your subscription, select your subscription period</string>
-	<string name="subscription_update_prompt">To change your subscription, select your new subscription period</string>
-	<string name="subscription_prompt_continue">Continue</string>
-	<string name="subscription_prompt_cancel">Cancel</string>
-	
-	<!-- Rate Request -->
-	<string name="btn_notshow_again">Не показывать больше</string>
-	<string name="btn_cancel_rate">Скрыть</string>
-	<string name="rate_request_message">Вы прослушали много треков в этой версии приложения. Вы можете оставить комментарий или пожелание в нашей группе <a href="https://vk.me/ownradio">вконтакте</a>. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в <a href="market://details?id=ru.netvoxlab.ownradio">Google Play</a>.</string>
-	<string name="feedback_request_message_1"><h2> Если вам есть что нам сказать, то напишите нам в группе в </h2> <a href="https://vk.me/ownradio">вконтакте</a>. <br/> Вам понравилась эта версия приложения?</string>
-	<string name="feedback_request_message_2">Вам понравилась эта версия приложения?</string>
-	<string name="feedback_request_message_3">Вам понравилась эта версия приложения?</string>
-	<string name="rate_request_message_with_subscribe">Вы прослушали много треков в этой версии приложения. Вы можете оставить комментарий или пожелание в нашей группе <a href="https://vk.me/ownradio">вконтакте</a>. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в <a href="market://details?id=ru.netvoxlab.ownradio">Google Play</a> или оформив <a href="iabilling_activity://IABillingActivity">подписку</a>.</string>
-	<string name="rate_request_message_2">Вы прослушали много треков в этой версии приложения. Вы можете оставить комментарий или пожелание в нашей группе <a href="https://vk.me/ownradio">вконтакте</a>. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в <a href="https://play.google.com/store/apps/details?id=ru.netvoxlab.ownradio">Google Play</a> или оформив <a href="iabilling_activity://IABillingActivity">подписку</a>.</string>
-	<string name="btn_vk_rate">VKontakte</string>
-	<string name="btn_google_play_rate">Google Play</string>
+
+    <string name="section_format">Hello World from section: %1$d</string>
+
+    <!--Welcome Activity-->
+    <string name="next">NEXT</string>
+    <string name="skip">SKIP</string>
+    <string name="start">GOT IT</string>
+    <string name="try_again">TRY AGAIN</string>
+    <string name="slide_1_title">Автоматическая предзагрузка треков пока есть интернет.</string>
+    <string name="slide_1_desc"></string>
+
+    <string name="slide_2_title">Персональные рекомендации.</string>
+    <string name="slide_2_desc"></string>
+
+    <string name="slide_3_title">Если трек прослушан, значит вам он нравится.</string>
+    <string name="slide_3_desc"></string>
+
+    <string name="slide_4_title">Если пропущен, значит не очень ).</string>
+    <string name="slide_4_desc"></string>
+
+    <string name="slide_5_title">Идет предзагрузка. Подождите.</string>
+    <string name="slide_5_check_connection">Для предзагрузки необходим интернет. Включите интернет и попробуйте снова.</string>
+    <string name="slide_5_desc"></string>
+
+    <string name="play_again_desc">To see the welcome slider again, goto Settings -> apps -> welcome slider -> clear data</string>
+    <string name="play_again">Play Again</string>
+    <string name="try_caching_again">Попробовать еще раз</string>
+    <string name="count_tracks_listened_table">Информации о треках не найдено</string>
+
+    <string name="is_caching">Кеширование...</string>
+    <string name="wait_caching">Отсутствуют кешированные треки. Подождите пока треки кешируются.</string>
+
+    <string name="not_enough_free_space">Недостаточно свободной памяти на устройстве</string>
+    <string name="requires_free_space">Приложению требуется минимум 100MB свободного места во внутренней памяти устройства.</string>
+    <string name="button_ok">OK</string>
+    <string name="button_cancel">Отмена</string>
+
+
+    <!-- In-app billing -->
+    <string name="btn_subscribe_on">Оформить подписку</string>
+    <string name="btn_subscribe_off">Подписка оформлена</string>
+    <string name="subscribe_title">Оформить подписку</string>
+    <string name="subscribe_description">Для того, чтобы получить доступ ко всем функциям приложения, вы можете оформить подписку на удобный вам срок.</string>
+    <string name="subscription_period_monthly">Месяц</string>
+    <string name="subscription_period_yearly">Год</string>
+    <string name="subscription_period_prompt">Выберите период подписки</string>
+    <string name="subscription_resignup_prompt">To reactivate your subscription, select your subscription period</string>
+    <string name="subscription_update_prompt">To change your subscription, select your new subscription period</string>
+    <string name="subscription_prompt_continue">Continue</string>
+    <string name="subscription_prompt_cancel">Cancel</string>
+
+    <!-- Rate Request -->
+    <string name="btn_notshow_again">Не показывать больше</string>
+    <string name="btn_cancel_rate">Скрыть</string>
+    <string name="rate_request_message">Вы прослушали много треков в этой версии приложения. Вы можете оставить комментарий или пожелание в нашей группе <a href="https://vk.me/ownradio">вконтакте</a>. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в <a href="market://details?id=ru.netvoxlab.ownradio">Google Play</a>.</string>
+    <string name="feedback_request_message_1"><h2> Если вам есть что нам сказать, то напишите нам в группе в </h2> <a href="https://vk.me/ownradio">вконтакте</a>. <br /> Вам понравилась эта версия приложения?</string>
+    <string name="feedback_request_message_2">Вам понравилась эта версия приложения?</string>
+    <string name="feedback_request_message_3">Вам понравилась эта версия приложения?</string>
+    <string name="rate_request_message_with_subscribe">Вы прослушали много треков в этой версии приложения. Вы можете оставить комментарий или пожелание в нашей группе <a href="https://vk.me/ownradio">вконтакте</a>. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в <a href="market://details?id=ru.netvoxlab.ownradio">Google Play</a> или оформив <a href="iabilling_activity://IABillingActivity">подписку</a>.</string>
+    <string name="rate_request_message_2">Вы прослушали много треков в этой версии приложения. Вы можете оставить комментарий или пожелание в нашей группе <a href="https://vk.me/ownradio">вконтакте</a>. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в <a href="https://play.google.com/store/apps/details?id=ru.netvoxlab.ownradio">Google Play</a> или оформив <a href="iabilling_activity://IABillingActivity">подписку</a>.</string>
+    <string name="btn_vk_rate">VKontakte</string>
+    <string name="btn_google_play_rate">Google Play</string>
 </resources>
