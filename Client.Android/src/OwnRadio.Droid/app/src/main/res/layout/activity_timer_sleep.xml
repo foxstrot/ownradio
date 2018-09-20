@@ -66,13 +66,13 @@
         app:layout_constraintHorizontal_bias="0.509"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView"
-        app:pointer_color="#48406d"
-        app:pointer_halo_color="#88252525"
+        app:pointer_color="#2aabe3"
+        app:pointer_halo_color="#2aabe3"
         app:pointer_size="10dp"
         app:show_text="false"
         app:text_color="#868686"
         app:text_size="65sp"
-        app:wheel_active_color="#48406d"
+        app:wheel_active_color="#2aabe3"
         app:wheel_unactive_color="#FFCCCCCC" />
 
     <ImageView
@@ -85,14 +85,13 @@
         android:layout_marginRight="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="20dp"
-        app:srcCompat="@drawable/ic_red_bud"
+        app:srcCompat="@drawable/ic_grey_bud"
         app:layout_constraintBottom_toTopOf="@+id/timeDuration"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/picker" />
 
-    <TextView
-        android:id="@+id/timeDuration"
+    <TextView android:id="@+id/timeDuration"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="20dp"

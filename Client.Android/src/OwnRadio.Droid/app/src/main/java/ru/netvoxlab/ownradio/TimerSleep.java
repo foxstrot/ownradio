@@ -13,10 +13,14 @@ import android.widget.Toast;
 
 import com.jesusm.holocircleseekbar.lib.HoloCircleSeekBar;
 
+/**
+ * Created by valko on 19.09.2018
+ */
+
 public class TimerSleep extends AppCompatActivity {
 
-    private  int TimeSeconds;
-    private int CurrentTime;
+    private  int timeSeconds;
+    private int currentTime;
     private final String[] HOURS = { "час", "часа", "часов" };
     private final String[] MINUTES = { "минута", "минуты", "минут" };
 
@@ -38,15 +42,14 @@ public class TimerSleep extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_timer_sleep);
 
-        picker = (HoloCircleSeekBar ) findViewById(R.id.picker);
+        picker = findViewById(R.id.picker);
         picker.setMax(4 * 60);
 
-        // init all comptonents
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        btnGo = (ImageView) findViewById(R.id.btnGo);
-        timeDuration = (TextView) findViewById(R.id.timeDuration);
-        txtProgress = (TextView) findViewById(R.id.txtProgress);
-
+        // init all components
+        toolbar = findViewById(R.id.toolbar);
+        btnGo = findViewById(R.id.btnGo);
+        timeDuration = findViewById(R.id.timeDuration);
+        txtProgress = findViewById(R.id.txtProgress);
 
         setSupportActionBar(toolbar);
 
@@ -59,17 +62,19 @@ public class TimerSleep extends AppCompatActivity {
         btnGo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // если таймер идет, то останавливаем его
                 if(isEnableTimer) {
                     timeDuration.setText("Таймер выключен");
                     isEnableTimer = false;
                     timer.cancel();
                     Toast.makeText(getApplicationContext(),"Таймер успешно остановлен",Toast.LENGTH_SHORT).show();
+                    btnGo.setImageResource(R.drawable.ic_grey_bud);
                 }
                 else {
+                    // иначе запускаем таймер
                     StartTimer();
                     Toast.makeText(getApplicationContext(),"Таймер успешно запущен",Toast.LENGTH_SHORT).show();
                 }
-
             }
         });
 
@@ -81,19 +86,21 @@ public class TimerSleep extends AppCompatActivity {
 
             @Override
             public void onStartTrackingTouch(HoloCircleSeekBar holoCircleSeekBar) {
+                // по нажатию на seekbar обновляем его значение
                 int progress = holoCircleSeekBar.getValue();
                 SetTextTime(progress);
             }
 
             @Override
             public void onStopTrackingTouch(HoloCircleSeekBar holoCircleSeekBar) {
-                RestartTimer();
+                RestartTimer(); // пытаемся перезапустить таймер
             }
         });
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        // кнопка назад
         switch (item.getItemId()) {
             case android.R.id.home:
                 onBackPressed();
@@ -104,7 +111,8 @@ public class TimerSleep extends AppCompatActivity {
 
     private void RestartTimer()
     {
-        if(CurrentTime != TimeSeconds && isEnableTimer) {
+        // если время таймера текущее отличается от seekbar и таймер идет, то перезапускаем его
+        if(currentTime != timeSeconds && isEnableTimer) {
             timer.cancel();
             StartTimer();
             Toast.makeText(getApplicationContext(), "Таймер успешно перезапущен", Toast.LENGTH_SHORT).show();
@@ -121,31 +129,22 @@ public class TimerSleep extends AppCompatActivity {
         String time = hours + ":" + min;
 
         txtProgress.setText(time);
-
-        hours += " " + GetCase(_hours, HOURS);
-        min += " " + GetCase(_min, MINUTES);
-
-        time = hours + " " + min;
-
-        int max = 4 * 60;
-        int percent = progress * 100 / max;
-
-        TimeSeconds = progress * 60; // min * 60
-
+        timeSeconds = progress * 60;
     }
 
     private void StartTimer()
     {
-        CurrentTime = TimeSeconds;
+        currentTime = timeSeconds;
 
-        timer = new CountDownTimer(TimeSeconds * 1000, 1000) {
+        // создаем таймер
+        timer = new CountDownTimer(timeSeconds * 1000, 1000) {
             public void onTick(long millisUntilFinished) {
-                int _seconds =  (int) ( millisUntilFinished / 1000 );
-                int _hours = _seconds / 3600;
-                _seconds -= _hours * 3600;
-                int _min = _seconds / 60 ;
-                _seconds -= _min * 60;
-                _min += _seconds > 0 ? 1 : 0;
+                int _seconds =  (int) ( millisUntilFinished / 1000 ); // ищем секунды
+                int _hours = _seconds / 3600; // находим часы
+                _seconds -= _hours * 3600; // записываем остаток секунд
+                int _min = _seconds / 60 ; // находим минуты
+                _seconds -= _min * 60; // записываем остаток секунд
+                _min += _seconds > 0 ? 1 : 0; // если секунд больше 0 то добавляем минуту для отображения
 
                 String hours = _hours > 9 ? String.valueOf(_hours) : "0" + _hours;
                 hours += " " + GetCase(_hours, HOURS);
@@ -155,6 +154,7 @@ public class TimerSleep extends AppCompatActivity {
 
                 timeDuration.setText("Таймер выключится через " + time);
 
+                btnGo.setImageResource(R.drawable.ic_blu_bud);
             }
 
             public void onFinish() {
@@ -166,6 +166,7 @@ public class TimerSleep extends AppCompatActivity {
         isEnableTimer = true;
     }
 
+    // ставим окончание по значению
     private String GetCase(Integer value, String [] options) {
 
         value = Math.abs(value) % 100;
