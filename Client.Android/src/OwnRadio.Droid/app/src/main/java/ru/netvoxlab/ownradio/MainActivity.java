@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -47,6 +48,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.commons.io.FileUtils;
 
@@ -65,7 +67,7 @@ import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
 import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
 import static ru.netvoxlab.ownradio.Constants.TAG;
 
-public class MainActivity extends AppCompatActivity	implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener, NetworkStateReceiver.NetworkStateReceiverListener {
+public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener, NetworkStateReceiver.NetworkStateReceiverListener {
 	
 	private APICalls apiCalls;
 	
@@ -81,7 +83,8 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	ImageButton btnPlayPause;
 	ImageButton btnNext;
 	ImageButton btnSkipTrack;
-//	TrackDB trackDB;
+	ImageButton btnTimer;
+	//	TrackDB trackDB;
 	private Handler handler = new Handler();
 	private Handler handlerEvent = new Handler();
 	ProgressBar progressBar;
@@ -142,7 +145,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	protected void onCreate(Bundle savedInstanceState) {
 		//Меняем тему, используемую при запуске приложения, на основную
 		setTheme(R.style.AppTheme);
-
+		
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main_new);
@@ -150,21 +153,22 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 //		setSupportActionBar(toolbar);
 //		getSupportActionBar().setDisplayShowTitleEnabled(false);
 		prefManager = new PrefManager(getApplicationContext());
-		
+
 //		if (prefManager.isFirstTimeLaunch()) {
 //			startActivity(new Intent(MainActivity.this, WelcomeActivity.class));
 //			finish();
 //		}
 		
+		
 		final DrawerLayout drawer = findViewById(R.id.drawer_layout);
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close){
+				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
 			@Override
 			public void onDrawerStateChanged(int newState) {
 				if (newState == DrawerLayout.STATE_SETTLING) {
 					if (!drawer.isDrawerOpen(GravityCompat.START)) {
 						String connectionType = prefManager.getPrefItem(INTERNET_CONNECTION_TYPE, ALL_CONNECTION_TYPES); //получаем настройки подключения
-						if(connectionType.equals(ONLY_WIFI))
+						if (connectionType.equals(ONLY_WIFI))
 							switchOnlyWIFI.setChecked(true);
 						else
 							switchOnlyWIFI.setChecked(false);
@@ -182,13 +186,13 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		try {
 			//получаем настройки приложения по умолчанию
 			PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
-		}catch (Exception ex){
+		} catch (Exception ex) {
 			
 		}
 		Menu menu = navigationView.getMenu();
-
 		
-		switchOnlyWIFI= MenuItemCompat.getActionView(menu.findItem(R.id.app_bar_switch_only_wifi)).findViewById(R.id.switchWidget);
+		
+		switchOnlyWIFI = MenuItemCompat.getActionView(menu.findItem(R.id.app_bar_switch_only_wifi)).findViewById(R.id.switchWidget);
 		switchOnlyWIFI.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton compoundButton, boolean state) {
@@ -199,7 +203,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			}
 		});
 		//Z
-		filePath = ((App)getApplicationContext()).getMusicDirectory();
+		filePath = ((App) getApplicationContext()).getMusicDirectory();
 		textUserID = findViewById(R.id.userID);
 		textVersionName = findViewById(R.id.versionName);
 		textDeviceID = findViewById(R.id.deviceID);
@@ -239,25 +243,25 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		
 		if (mediaPlayerServiceConnection == null)
 			InitilizeMedia();
-		
+
 //		trackDB = TrackDB.getInstance(getApplicationContext());
 //		trackDB = new TrackDB(MainActivity.this, 1);
 		sp = PreferenceManager.getDefaultSharedPreferences(this);
 		try {
 			int currentVersion = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionCode;
 			//Если приложение было обновлено - обнуляем счетчик положительных прослушиваний для версии приложения
-			if(sp.getInt("lastVersion", -1) < currentVersion){
+			if (sp.getInt("lastVersion", -1) < currentVersion) {
 				prefManager.setPrefItemInt("lastVersion", currentVersion);
 				prefManager.setPrefItemInt("listenTracksCountInLastVersion", 0);
 				prefManager.setPrefItemBool("isRateRequestAlreadyShown", false);
 			}
 			
-			if(sp.getInt("lastVersion", -1) < 34){
+			if (sp.getInt("lastVersion", -1) < 34) {
 				sp.edit().putInt("lastVersion", currentVersion).commit();
 				FileUtils.cleanDirectory(this.getExternalFilesDir(Environment.DIRECTORY_MUSIC));
 				this.deleteDatabase("ownradiodb.db3");
 			}
-		}catch (Exception ex){
+		} catch (Exception ex) {
 			new Utilites().SendInformationTxt(getApplicationContext(), "Error by get app version " + ex.getLocalizedMessage());
 		}
 
@@ -278,10 +282,10 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 				
 				//todo вернуть условия проверки
-				if(prefManager.getPrefItemInt("listenTracksCountInLastVersion", 0) >= mCountListenForRateDialog
+				if (prefManager.getPrefItemInt("listenTracksCountInLastVersion", 0) >= mCountListenForRateDialog
 						&& !prefManager.getPrefItemBool("isRateRequestAlreadyShown", false)
 						&& prefManager.getPrefItemBool("isAllowShowRateRequestAgain", true)
-				 ) {
+						) {
 					if (!isRateInflated) {
 						viewStubRate.setLayoutResource(R.layout.rate_request_cardview);
 						viewStubRate.inflate();
@@ -298,7 +302,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		btnNext.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				if (SystemClock.elapsedRealtime() - lastClickTime < 1000){
+				if (SystemClock.elapsedRealtime() - lastClickTime < 1000) {
 					Log.e(TAG, "Next return");
 					return;
 				}
@@ -316,7 +320,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		btnSkipTrack.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
-				if(binder.GetMediaPlayerService().player != null)
+				if (binder.GetMediaPlayerService().player != null)
 					binder.GetMediaPlayerService().onCompletion(binder.GetMediaPlayerService().player);
 			}
 		});
@@ -350,7 +354,26 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		
 		txtFillCacheProgress = findViewById(R.id.fill_cache_progress);
 		
-
+		btnTimer = (ImageButton) findViewById(R.id.btnTimer);
+		
+		btnTimer.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Intent timerSleepActivity = new Intent(getBaseContext(), TimerSleep.class);
+				startActivityForResult(timerSleepActivity, 0);
+			}
+			
+		});
+		
+	}
+	
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (resultCode == RESULT_OK) {
+			finish();
+		} else {
+		
+		}
 	}
 	
 	@Override
@@ -366,7 +389,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			startActivity(startMain);
 		}
 	}
-	
+
 //
 //	@Override
 //	public boolean onCreateOptionsMenu(Menu menu) {
@@ -374,7 +397,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 //		getMenuInflater().inflate(R.menu.main, menu);
 //		return true;
 //	}
-
+	
 	//	@Override
 //	public boolean onOptionsItemSelected(MenuItem item) {
 //		// Handle action bar item clicks here. The action bar will
@@ -392,7 +415,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 //
 //		return super.onOptionsItemSelected(item);
 //	}
-
+	
 	@SuppressWarnings("StatementWithEmptyBody")
 	@Override
 	public boolean onNavigationItemSelected(MenuItem item) {
@@ -400,16 +423,16 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		int id = item.getItemId();
 //		PrefManager prefManager = new PrefManager(getApplicationContext());
 		DrawerLayout drawer = findViewById(R.id.drawer_layout);
-
-		switch(id){
+		
+		switch (id) {
 			case R.id.app_bar_switch_only_wifi:
-				if(switchOnlyWIFI.isChecked())
+				if (switchOnlyWIFI.isChecked())
 					switchOnlyWIFI.setChecked(false);
 				else
 					switchOnlyWIFI.setChecked(true);
 				break;
 			case R.id.app_bar_write_to_developers:
-				startActivity( new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.me/ownradio")));
+				startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.me/ownradio")));
 				break;
 			case R.id.app_bar_rate_app:
 				final String appPackageName = getPackageName(); // getPackageName() from Context or Activity object
@@ -425,7 +448,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 						.setPositiveButton(R.string.btn_vk_rate, new DialogInterface.OnClickListener() {
 							@Override
 							public void onClick(DialogInterface dialog, int which) {
-								startActivity( new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/ownradio")));
+								startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://vk.com/ownradio")));
 							}
 						})
 						.setNegativeButton(R.string.btn_google_play_rate,
@@ -453,18 +476,23 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			case R.id.app_bar_settings:
 				Intent settingsActivity = new Intent(getBaseContext(),
 						SettingsActivity.class);
-				settingsActivity.putExtra( PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName() );
-				settingsActivity.putExtra( PreferenceActivity.EXTRA_NO_HEADERS, true );
+				settingsActivity.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName());
+				settingsActivity.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
 				startActivity(settingsActivity);
 				drawer.closeDrawer(GravityCompat.START);
 				break;
 			case R.id.app_bar_subscribe:
 				Intent iabillingActivity = new Intent(getBaseContext(), IABillingActivity.class);
 				startActivity(iabillingActivity);
+			
+			case R.id.app_bar_switch_sleeping_mode:
+				Intent timerSleepActivity = new Intent(getBaseContext(), TimerSleep.class);
+				timerSleepActivity.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+				startActivity(timerSleepActivity);
 		}
 		return true;
 	}
-
+	
 	
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
@@ -484,7 +512,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				}
 				
 				if (numberOfTaps > 0
-						&& (System.currentTimeMillis() - lastTapTimeMs) < 2*ViewConfiguration.getDoubleTapTimeout()) {
+						&& (System.currentTimeMillis() - lastTapTimeMs) < 2 * ViewConfiguration.getDoubleTapTimeout()) {
 					numberOfTaps += 1;
 				} else {
 					numberOfTaps = 1;
@@ -504,8 +532,8 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		return true;
 	}
 	
-	public void SetDevelopersInfo(){
-		if(!flagDevInfo)
+	public void SetDevelopersInfo() {
+		if (!flagDevInfo)
 			layoutDevelopersInfo.setVisibility(View.GONE);
 		else
 			layoutDevelopersInfo.setVisibility(View.VISIBLE);
@@ -514,7 +542,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	private BroadcastReceiver myReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, final Intent intent) {
-			if(intent.getAction() == ActionCheckCountTracksAndDownloadIfNotEnought) {
+			if (intent.getAction() == ActionCheckCountTracksAndDownloadIfNotEnought) {
 				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 				builder.setTitle("Ошибка")
 						.setMessage("Невозможно кешировать треки. Проверьте интернет подключение.")
@@ -530,7 +558,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				alert.show();
 			}
 			
-			if(intent.getAction() == ActionStopPlayback) {
+			if (intent.getAction() == ActionStopPlayback) {
 				binder.GetMediaPlayerService().Stop();
 				binder.GetMediaPlayerService().StopNotification();
 			}
@@ -560,7 +588,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 						btnPlayPause.setImageResource(R.drawable.btn_ic_play);
 					}
 					
-					if(binder.GetMediaPlayerService().player != null) {
+					if (binder.GetMediaPlayerService().player != null) {
 						title = binder.GetMediaPlayerService().track.getAsString("title");
 						artist = binder.GetMediaPlayerService().track.getAsString("artist");
 						if (title == null || title.isEmpty() || title.equals("null"))
@@ -584,7 +612,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			if (intent.getAction() == ActionSendInfoTxt) {
 				if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
 					textInfo.append(Html.fromHtml("<p><b>Info:</b> " + intent.getStringExtra("TEXTINFO") + "<br/></p>", Html.FROM_HTML_MODE_LEGACY));
-				}else{
+				} else {
 					textInfo.append(Html.fromHtml("<p><b>Info:</b> " + intent.getStringExtra("TEXTINFO") + "<br/></p>"));
 				}
 			}
@@ -596,7 +624,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
-						if(binder.GetMediaPlayerService().player == null){
+						if (binder.GetMediaPlayerService().player == null) {
 							progressBar.setMax(10000);
 							progressBar.setProgress(0);
 							return;
@@ -662,12 +690,12 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				}).start();
 			}
 			
-			if(intent.getAction() == ActionProgressBarFirstTracksLoad){
-				if(intent.getBooleanExtra("ProgressOn", false)) {
+			if (intent.getAction() == ActionProgressBarFirstTracksLoad) {
+				if (intent.getBooleanExtra("ProgressOn", false)) {
 					btnPlayPause.setClickable(false);
 					btnNext.setClickable(false);
 					btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
-					if(dialog == null)
+					if (dialog == null)
 						dialog = new ProgressDialog(MainActivity.this);
 					dialog.setTitle(getResources().getString(R.string.is_caching));
 					dialog.setMessage(getResources().getString(R.string.wait_caching));
@@ -675,12 +703,12 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
-							while (new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
+							while (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
 								// Обновляем счетчик количества попыток
 								handler.post(new Runnable() {
 									@Override
 									public void run() {
-										dialog.setMessage(getResources().getString(R.string.wait_caching) + " \n" + ((App)getApplicationContext()).getCountDownloadTrying()+1 + " попытка загрузки");
+										dialog.setMessage(getResources().getString(R.string.wait_caching) + " \n" + ((App) getApplicationContext()).getCountDownloadTrying() + 1 + " попытка загрузки");
 									}
 								});
 							}
@@ -688,23 +716,23 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 					}).start();
 					dialog.setCancelable(true);
 					dialog.show();
-				}else {
+				} else {
 					if (dialog != null)
 						dialog.dismiss();
 					btnPlayPause.setClickable(true);
 //					if(binder.GetMediaPlayerService().isAutoplay)
 //						binder.GetMediaPlayerService().Play();
-					if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
+					if (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
 						btnNext.setClickable(false);
 						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
-					}else {
+					} else {
 						btnNext.setClickable(true);
 						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorTransparent));
 					}
 				}
 			}
 			
-			if(intent.getAction().equals(ACTION_UPDATE_FILLCACHE_PROGRESS)) {
+			if (intent.getAction().equals(ACTION_UPDATE_FILLCACHE_PROGRESS)) {
 				int count = intent.getExtras().getInt(EXTRA_FILLCACHE_PROGRESS, 0);
 				if (count == 0)
 					txtFillCacheProgress.setVisibility(View.GONE);
@@ -712,7 +740,6 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		}
 	};
 	
-
 	
 	private void InitilizeMedia() {
 		mediaPlayerServiceIntent = new Intent(this, MediaPlayerService.class);
@@ -732,12 +759,11 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		txtTrackArtist.setOnTouchListener(this);
 //		toolbar.setOnTouchListener(this);
 		
-
 		
 		try {
 			//запускаем загрузку треков, если кеш пуст
-			if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
-				if(trackToCache.FreeSpace() + TrackToCache.FolderSize(filePath) < 104857600) {
+			if (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
+				if (trackToCache.FreeSpace() + TrackToCache.FolderSize(filePath) < 104857600) {
 					AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
 					builder.setTitle(getResources().getString(R.string.not_enough_free_space))
 							.setMessage(getResources().getString(R.string.requires_free_space))
@@ -762,7 +788,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			
 			try {
 				String info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), PackageManager.GET_META_DATA).versionName;
-				if(!info.equals(sp.getString("version", ""))){
+				if (!info.equals(sp.getString("version", ""))) {
 					sp.edit().putString(version, info).commit();
 					sp.edit().putString(NumListenedTracks, "0").commit();
 				}
@@ -805,10 +831,10 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 			
 			new Utilites().CheckCountTracksAndDownloadIfNotEnought(MainActivity.this, DeviceId);
 			
-			if(((App)getApplicationContext()).getFillingCacheActive()){
+			if (((App) getApplicationContext()).getFillingCacheActive()) {
 				final Handler h = new Handler();
 				txtFillCacheProgress.setVisibility(View.VISIBLE);
-					txtFillCacheProgress.setText("Кешировано треков: " + ((App)getApplicationContext()).getCountDownloadTrying());
+				txtFillCacheProgress.setText("Кешировано треков: " + ((App) getApplicationContext()).getCountDownloadTrying());
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
@@ -821,7 +847,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 							h.post(new Runnable() {
 								@Override
 								public void run() {
-									txtFillCacheProgress.setText("Кешировано треков: " + ((App)getApplicationContext()).getCountDownloadTrying());
+									txtFillCacheProgress.setText("Кешировано треков: " + ((App) getApplicationContext()).getCountDownloadTrying());
 									
 								}
 							});
@@ -833,13 +859,13 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				txtFillCacheProgress.setVisibility(View.GONE);
 			}
 			
-			if(new TrackDataAccess(getApplicationContext()).GetExistTracksCount()<1) {
+			if (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
 				txtTrackTitle.setText("");
 				txtTrackArtist.setText("");
 			}
 			
 			return;
-		}catch (Exception ex) {
+		} catch (Exception ex) {
 			Log.d(TAG, " " + ex.getLocalizedMessage());
 			return;
 		}
@@ -848,7 +874,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	
 	
 	@Override
-	public void onResume(){
+	public void onResume() {
 		super.onResume();
 		networkStateReceiver.addListener(this);
 		this.registerReceiver(networkStateReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
@@ -861,7 +887,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 		super.onPause();
 	}
 	
-	public void SetTrackInfoText(){
+	public void SetTrackInfoText() {
 		TrackDataAccess trackDataAccess = new TrackDataAccess(this);
 		TrackToCache trackToCache = new TrackToCache(this);
 		txtTrackCount.setText("Track count: " + trackDataAccess.GetExistTracksCount() + ".");
@@ -871,12 +897,12 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 	}
 	
 	@Override
-	public void onSaveInstanceState(Bundle savedInstanceState){
+	public void onSaveInstanceState(Bundle savedInstanceState) {
 		super.onSaveInstanceState(savedInstanceState);
 	}
 	
 	@Override
-	public void onDestroy(){
+	public void onDestroy() {
 		try {
 			unregisterReceiver(myReceiver);
 		} catch (Exception ex) {
@@ -934,13 +960,13 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 //			downloaderIntent.putExtra(EXTRA_COUNT, 1);
 //			startService(downloaderIntent);
 //		}
-    /* TODO: Your connection-oriented stuff here */
+		/* TODO: Your connection-oriented stuff here */
 	}
 	
 	@Override
 	public void networkUnavailable() {
 		new Utilites().SendInformationTxt(getApplicationContext(), "Интернет отключен");
-    /* TODO: Your disconnection-oriented stuff here */
+		/* TODO: Your disconnection-oriented stuff here */
 	}
 	
 	class MediaPlayerServiceConnection extends java.lang.Object implements ServiceConnection {
@@ -960,7 +986,7 @@ public class MainActivity extends AppCompatActivity	implements NavigationView.On
 				instance.isBound = true;
 				//предзагрузка трека, на котором остановилось воспроизведение
 				instance.binder.GetMediaPlayerService().PreloadTrack();
-				if(binder.GetMediaPlayerService().track != null) {
+				if (binder.GetMediaPlayerService().track != null) {
 					txtTrackTitle.setText(binder.GetMediaPlayerService().track.getAsString("title"));
 					txtTrackArtist.setText(binder.GetMediaPlayerService().track.getAsString("artist"));
 					if (progressBar == null)
