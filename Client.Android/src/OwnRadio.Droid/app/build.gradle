@@ -14,6 +14,20 @@ android {
 
 		vectorDrawables.useSupportLibrary = true
 	}
+	signingConfigs {
+		debug {
+			keyAlias 'ownradio'
+			keyPassword 'Hg26Trw='
+			storeFile file('C:/Users/a.polunina/Documents/Client.Android/src/OwnRadio.Droid/ru.netvoxlab.ownradio')
+			storePassword 'Hg26Trw='
+		}
+		release {
+			keyAlias 'ownradio'
+			keyPassword 'Hg26Trw='
+			storeFile file('C:/Users/a.polunina/Documents/Client.Android/src/OwnRadio.Droid/ru.netvoxlab.ownradio')
+			storePassword 'Hg26Trw='
+		}
+	}
 	buildTypes {
 		release {
 			minifyEnabled false
