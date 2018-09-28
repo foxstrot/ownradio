@@ -232,7 +232,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			return
 		}
 		DispatchQueue.global(qos: .background).async {
-			Downloader.sharedInstance.load { [unowned self] in
+			Downloader.sharedInstance.load(isSelfFlag: false){ [unowned self] in
 					self.updateUI()
 			}
 		}

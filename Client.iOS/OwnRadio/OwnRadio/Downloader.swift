@@ -10,7 +10,7 @@
 import Foundation
 import UIKit
 
-class Downloader {
+class Downloader: NSObject {
 	
 	static let sharedInstance = Downloader()
 	//	var taskQueue: OperationQueue?
@@ -21,24 +21,48 @@ class Downloader {
 	
 	let limitMemory =  UInt64(DiskStatus.freeDiskSpaceInBytes / 2)
 	var maxMemory = UInt64(1000000000)
+	var memoryBuffer = UInt()
 	
 	var requestCount = 0
 	var deleteCount = 0
+	var maxRequest = 9
 	var completionHandler:(()->Void)? = nil
-	
-	func load(complition: @escaping (() -> Void)) {
 
+	func load(isSelfFlag: Bool, complition: @escaping (() -> Void)) {
+		print("call load")
+		
 		if limitMemory < 1000000000 * (UserDefaults.standard.object(forKey: "maxMemorySize") as? UInt64)! {
 			maxMemory = limitMemory
 		} else {
 			maxMemory = 1000000000 * (UserDefaults.standard.object(forKey: "maxMemorySize") as? UInt64)!
 		}
-		//проверяем свободное место, если его достаточно - загружаем треки
+		
+		//если треки занимают больше места, чем максимально допустимо -
+		//удаляем "лишние" треки - в первую очередь прослушанные, затем, если необходимо - самые старые из загруженных
+		while (!isSelfFlag && DiskStatus.folderSize(folderPath: tracksUrlString) > maxMemory) {
+			// получаем трек проиграный большее кол-во раз
+			let song: SongObject? = CoreDataManager.instance.getOldTrack(onlyListen: false)
+			// получаем путь файла
+			guard song != nil && song?.trackID != nil else {
+				self.createPostNotificationSysInfo(message: "Не найден трек для удаления")
+				return
+			}
+			self.createPostNotificationSysInfo(message: "Память заполнена. Удаляем трек \(self.deleteCount)")
+			deleteOldTrack(song: song)
+		}
+		
+		//проверка подключения к интернету
+		guard currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable else {
+			self.requestCount = 0
+			return
+		}
+		
+		//делаем 10 попыток скачивания треков, если место свободное место закончилось, но есть прослушанные треки - удаляем их и загружаем новые, иначе перестаем пытаться скачать
 		if DiskStatus.folderSize(folderPath: tracksUrlString) < maxMemory  {
 			self.deleteCount = 0
 			//получаем trackId следующего трека и информацию о нем
 			self.completionHandler = complition
-			ApiService.shared.getTrackIDFromServer { [unowned self] (dict) in
+			ApiService.shared.getTrackIDFromServer(requestCount: self.requestCount) { [unowned self] (dict) in
 				guard dict["id"] != nil else {
 					return
 				}
@@ -69,11 +93,20 @@ class Downloader {
 					self.completionHandler!()
 				}
 				self.deleteCount += 1
+				
+				
+				// получаем трек проиграный большее кол-во раз
+				let song: SongObject? = CoreDataManager.instance.getOldTrack(onlyListen: true)
+				// получаем путь файла
+				guard song != nil && song?.trackID != nil else {
+					self.createPostNotificationSysInfo(message: "Память заполнена, нет прослуш треков")
+					self.requestCount = 0
+					return
+				}
 				self.createPostNotificationSysInfo(message: "Память заполнена. Удаляем трек \(self.deleteCount)")
-				deleteOldTrack()
+				deleteOldTrack(song: song)
 				
-				
-				self.load {
+				self.load (isSelfFlag: true){
 					
 				}
 				
@@ -85,6 +118,7 @@ class Downloader {
 	}
 	
 	func createDownloadTask(audioUrl:URL, destinationUrl:URL, dict:[String:AnyObject]) -> URLSessionDownloadTask {
+		print("call createDownloadTask")
 		return URLSession.shared.downloadTask(with: audioUrl, completionHandler: { (location, response, error) -> Void in
 			guard error == nil else {
 				self.createPostNotificationSysInfo(message: error.debugDescription)
@@ -142,22 +176,26 @@ class Downloader {
 						
 						CoreDataManager.instance.saveContext()
 						
-						if self.requestCount < 9 {
+						self.createPostNotificationSysInfo(message: "Трек (\(self.requestCount+1)) загружен \(trackEntity.recId ?? "")")
+						if self.requestCount < self.maxRequest {
 							if self.completionHandler != nil {
 								self.completionHandler!()
 							}
-							self.load(complition: self.completionHandler!)
 							self.requestCount += 1
+							self.load(isSelfFlag: true, complition: self.completionHandler!)
+							
 						} else {
 							if self.completionHandler != nil {
 								self.completionHandler!()
 							}
 							self.requestCount = 0
+							self.maxRequest = 9
 						}
 						
 						//				complition()
-						self.createPostNotificationSysInfo(message: "Трек загружен \(trackEntity.recId ?? "")")
+						
 						print("File moved to documents folder")
+
 					} catch let error as NSError {
 						print(error.localizedDescription)
 					}
@@ -165,19 +203,15 @@ class Downloader {
 			}
 		})
 	}
-	
+
 	func createPostNotificationSysInfo (message:String) {
 		NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":message])
 	}
 	
 	// удаление трека если память заполнена
-	func deleteOldTrack () {
-		// получаем трек проиграный большее кол-во раз
-		let song: SongObject? = CoreDataManager.instance.getOldTrack()
-		// получаем путь файла
-		guard song != nil && song?.trackID != nil else {
-			return
-		}
+	func deleteOldTrack (song: SongObject?) {
+		print("call deleteOldTrack")
+		
 		let path = self.tracksUrlString.appending((song?.path)!)
 		self.createPostNotificationSysInfo(message: "Удаляем \(song!.trackID.description)")
 		print("Удаляем \(song!.trackID.description)")
@@ -212,7 +246,7 @@ class Downloader {
 		let folderSize = DiskStatus.folderSize(folderPath: tracksUrlString)
 		
 		if folderSize < limitMemory && folderSize < maxMemory  {
-			self.load {
+			self.load (isSelfFlag: true){
 				
 				self.fillCache()
 			}

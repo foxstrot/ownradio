@@ -20,8 +20,8 @@ class ApiService {
 	}
 
 	//возвращает информацию о следующем треке
-	func getTrackIDFromServer (complition:  @escaping ([String:AnyObject]) -> Void)  {
-		
+	func getTrackIDFromServer (requestCount: Int, complition:  @escaping ([String:AnyObject]) -> Void)  {
+		print("call getTrackIDFromServer")
 		//формируем URL для получения информации о следующем треке (trackId, name, artist, methodId, length)
 		let trackurl = self.tracksUrl?.appendingPathComponent((UIDevice.current.identifierForVendor?.uuidString.lowercased())!).appendingPathComponent("/next")
 		
@@ -42,7 +42,7 @@ class ApiService {
 			
 			if error != nil {
 				if self.countRequest < 10 {
-					Downloader.sharedInstance.load(complition: { 
+					Downloader.sharedInstance.load(isSelfFlag: false, complition: { 
 						
 					})
 				}
@@ -58,9 +58,10 @@ class ApiService {
 						
 						if let json = anyJson as? [String:AnyObject] {
 							complition(json)
+							NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"(\(requestCount+1))Получ. инфа о загруж. треке (\(json["id"]))"])
+							print("Получена информация о следующем треке")
 						}
-						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Получ. инфа о загруж. треке"])
-						print("Получена информация о следующем треке")
+						
 					} catch (let error) {
 						print("Achtung! Eror! \(error)")
 					}
