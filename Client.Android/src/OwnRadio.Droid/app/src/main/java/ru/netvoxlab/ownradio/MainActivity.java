@@ -84,6 +84,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	ImageButton btnNext;
 	ImageButton btnSkipTrack;
 	ImageButton btnTimer;
+	ImageButton btnAlarmClock;
 	//	TrackDB trackDB;
 	private Handler handler = new Handler();
 	private Handler handlerEvent = new Handler();
@@ -354,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		
 		txtFillCacheProgress = findViewById(R.id.fill_cache_progress);
 		
-		btnTimer = (ImageButton) findViewById(R.id.btnTimer);
+		btnTimer = findViewById(R.id.btnTimer);
 		
 		btnTimer.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -363,6 +364,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				startActivityForResult(timerSleepActivity, 0);
 			}
 			
+		});
+		
+		btnAlarmClock = findViewById(R.id.btnAlarmClock);
+		
+		btnAlarmClock.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View view) {
+				Intent alarmClockActivity = new Intent(getBaseContext(), AlarmClock.class);
+				startActivity(alarmClockActivity);
+			}
 		});
 		
 	}
@@ -489,6 +500,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				Intent timerSleepActivity = new Intent(getBaseContext(), TimerSleep.class);
 				timerSleepActivity.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 				startActivity(timerSleepActivity);
+			case R.id.app_bar_switch_alarm_clock:
+				break;
 		}
 		return true;
 	}
