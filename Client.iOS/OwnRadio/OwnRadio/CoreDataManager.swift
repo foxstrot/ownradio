@@ -69,6 +69,7 @@ class CoreDataManager {
 		let coordinator = self.persistentStoreCoordinator
 		var managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
 		managedObjectContext.persistentStoreCoordinator = coordinator
+		managedObjectContext.retainsRegisteredObjects = true
 		return managedObjectContext
 	}()
 	
@@ -260,7 +261,7 @@ class CoreDataManager {
 	}
 	
 	// получает трек с найбольшим кол-вом проигрываний
-	func getOldTrack () -> SongObject? {
+	func getOldTrack (onlyListen: Bool) -> SongObject? {
 		// устанавливаем сортировку по кол-ву поигрываний и по дате
 		let countSortDescriptor = NSSortDescriptor(key: "countPlay", ascending: false)
 		let dateSortDescriptor = NSSortDescriptor(key: "playingDate", ascending: true)
@@ -270,7 +271,11 @@ class CoreDataManager {
 		let fetchRequest: NSFetchRequest<TrackEntity> = TrackEntity.fetchRequest()
 		fetchRequest.sortDescriptors = sortDescriptors
 //		задаем предикат
-		fetchRequest.predicate = NSPredicate(format: "countPlay >= %d", 0)
+		if(onlyListen){
+			fetchRequest.predicate = NSPredicate(format: "countPlay > %d", 0)
+		}else {
+			fetchRequest.predicate = NSPredicate(format: "countPlay >= %d", 0)
+		}
 		fetchRequest.fetchLimit = 1
 		let  song = SongObject()
 		do {

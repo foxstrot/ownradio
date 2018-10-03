@@ -6,7 +6,9 @@ import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.NumberPicker;
 import android.widget.TextView;
@@ -54,6 +56,8 @@ public class AlarmClock extends AppCompatActivity {
 	private NumberPicker numberHours;
 	private NumberPicker numberMinutes;
 	
+	private Toolbar toolbar;
+	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -61,8 +65,20 @@ public class AlarmClock extends AppCompatActivity {
 		setTheme(R.style.AppTheme);
 		
 		super.onCreate(savedInstanceState);
+		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_alarm_clock);
 		
+		toolbar = findViewById(R.id.toolbar);
+		setSupportActionBar(toolbar);
+		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+		getSupportActionBar().setDisplayShowHomeEnabled(true);
+		toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				onBackPressed();
+			}
+		});
+
 		imageView = findViewById(R.id.imageView);
 		
 		txtProgress = findViewById(R.id.txtProgress);

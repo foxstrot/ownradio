@@ -6,13 +6,11 @@
 	android:layout_height="match_parent"
 	tools:context=".TimerSleep">
 	
-	<android.support.v7.widget.Toolbar
-		android:id="@+id/toolbar"
+	<include
+		layout="@layout/app_bar"
+		android:id="@+id/toolbar1"
 		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:background="?attr/colorPrimary"
-		android:minHeight="?attr/actionBarSize"></android.support.v7.widget.Toolbar>
-	
+		android:layout_height="wrap_content"/>
 	<TextView
 		android:id="@+id/textView"
 		android:layout_width="345dp"
@@ -27,7 +25,7 @@
 		android:textColor="#000"
 		app:layout_constraintEnd_toEndOf="parent"
 		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintTop_toBottomOf="@+id/toolbar"
+		app:layout_constraintTop_toBottomOf="@+id/toolbar1"
 		tools:ignore="MissingConstraints" />
 	
 	<TextView

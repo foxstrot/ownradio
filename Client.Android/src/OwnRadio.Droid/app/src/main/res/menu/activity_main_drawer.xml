@@ -2,45 +2,46 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
 	  xmlns:app="http://schemas.android.com/apk/res-auto">
 	
-
-	
 	<group android:checkableBehavior="single" >
 		<item
 			android:id="@+id/app_bar_switch_only_wifi"
 			android:title="@string/pref_only_wifi"
+			android:icon="@drawable/ic_wifi"
 			app:actionLayout="@layout/switch_item"/>
-	</group>
-	<group android:checkableBehavior="single"
-		   android:visible="false"
-		>
-		<item
-			android:id="@+id/app_bar_switch_sleeping_mode"
-			android:title="@string/sleeping_mode"
-			app:actionLayout="@layout/switch_item"/>
-	</group>
-	<group android:checkableBehavior="single"
-		android:visible="false">
-		<item
-			android:id="@+id/app_bar_switch_alarm_clock"
-			android:title="@string/alarm_clock"
-			app:actionLayout="@layout/switch_item"/>
-	</group>
-	<group android:checkableBehavior="single">
-		<item
-			android:id="@+id/app_bar_write_to_developers"
-			android:title="@string/pref_write_to_the_developers"
-			/>
-	</group>
-	<group android:checkableBehavior="single">
-		<item
-			android:id="@+id/app_bar_rate_app"
-			android:title="@string/pref_rate_app"
-			/>
 	</group>
 	<group android:checkableBehavior="single">
 		<item
 			android:id="@+id/app_bar_settings"
 			android:title="Настройки"
+			android:icon="@drawable/ic_set"
+			/>
+	</group>
+	<group android:checkableBehavior="single"
+		   android:visible="true">
+		<item
+			android:id="@+id/app_bar_switch_alarm_clock"
+			android:title="@string/alarm_clock"
+			android:icon="@drawable/ic_set_bud"/>
+	</group>
+	<group android:checkableBehavior="single"
+		   android:visible="true">
+		<item
+			android:id="@+id/app_bar_switch_sleeping_mode"
+			android:title="@string/sleeping_mode"
+			android:icon="@drawable/ic_set_tim"/>
+	</group>
+	<group android:checkableBehavior="single">
+		<item
+			android:id="@+id/app_bar_rate_app"
+			android:title="@string/pref_rate_app"
+			android:icon="@drawable/ic_set_zv"
+			/>
+	</group>
+	<group android:checkableBehavior="single">
+		<item
+			android:id="@+id/app_bar_write_to_developers"
+			android:title="@string/pref_write_to_the_developers"
+			android:icon="@drawable/ic_set_let"
 			/>
 	</group>
 	<group android:checkableBehavior="single">

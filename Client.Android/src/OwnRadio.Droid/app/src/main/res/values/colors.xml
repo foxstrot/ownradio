@@ -19,7 +19,8 @@
 	<color name="ColorPrimaryBtnPlay">#03A9F4</color>
 	
 	
-	<color name="menu_text_color">#7d7e7e</color>
+	<color name="menu_text_color">#000000</color>
+	<color name="menu_icon_color">#29aae1</color>
 	
 	<color name="ColorPrimaryBtn80">#ff03A9F4</color>
 	<color name="ColorPrimaryBtn70">#ff03A9F4</color>
@@ -74,4 +75,10 @@
 	<!--Settings-->
 	<color name="pref_header_color">#ececec</color>
 	<color name="pref_title_color">#7a7a7a</color>
+	
+
+	<!--slide-->
+	<color name="welcome_slider_text">#4c4070</color>
+	<color name="welcome_slider_text_2">#ec4234</color>
+
 </resources>

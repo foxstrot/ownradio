@@ -7,12 +7,7 @@
 				android:background="@color/ColorPrimaryProgressBarLine"
 				>
 	
-	<VideoView
-		android:id="@+id/videoView"
-		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:layout_centerInParent="true"
-		/>
+
 	
 	<android.support.v4.view.ViewPager
 		android:id="@+id/view_pager"
@@ -28,12 +23,7 @@
 		android:gravity="center"
 		android:orientation="horizontal"></LinearLayout>
 	
-	<View
-		android:layout_width="match_parent"
-		android:layout_height="1dp"
-		android:alpha=".5"
-		android:layout_above="@id/layoutDots"
-		android:background="@android:color/white" />
+
 
 	<Button
 		android:id="@+id/tryCachingAgain"

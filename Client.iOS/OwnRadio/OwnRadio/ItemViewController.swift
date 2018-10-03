@@ -61,7 +61,7 @@ class ItemViewController: UIViewController {
 		contentLbl.text = StartVideoViewController.sharedInstance.getContentLblByIndex(index: itemIndex)
 		StartVideoViewController.sharedInstance.timerStart()
 		DispatchQueue.global(qos: .background).async {
-			Downloader.sharedInstance.load(complition: {
+			Downloader.sharedInstance.load(isSelfFlag: false, complition: {
 				
 			})
 		}
