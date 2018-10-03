@@ -24,6 +24,7 @@
 	</style>
 	
 	<style name="splashScreenTheme" parent="AppTheme">
-		<item name="android:windowBackground">@drawable/launch_screen</item>
+		<item name="android:windowBackground">@android:color/white</item>
+		<!--<item name="android:windowBackground">@drawable/launch_screen</item>-->
 	</style>
 </resources>

@@ -4,8 +4,8 @@
 	<item android:drawable="@android:color/white"/>
 	<!-- Your product logo - 144dp color version of your app icon -->
 	<item>
-		<bitmap
-			android:src="@drawable/ic_launch_screen"
-			android:gravity="center"/>
+		<!--<bitmap-->
+			<!--android:src="@drawable/ic_launch_screen"-->
+			<!--android:gravity="center"/>-->
 	</item>
 </layer-list>

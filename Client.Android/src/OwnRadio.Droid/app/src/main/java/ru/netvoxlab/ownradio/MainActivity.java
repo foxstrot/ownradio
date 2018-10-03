@@ -10,7 +10,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.media.Image;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -48,7 +47,6 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.apache.commons.io.FileUtils;
 
@@ -115,6 +113,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	View rateRequestLayout;
 	TextView rateRequestMessage;
 	boolean isRateInflated = false;
+	
+	ImageButton btnMenu;
+	TextView txtProgressLeft;
+	TextView txtProgressRight;
 	
 	LinearLayout layoutDevelopersInfo;
 	public static File filePath;
@@ -223,6 +225,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		txtTrackTitle = findViewById(R.id.trackTitle);
 		txtTrackArtist = findViewById(R.id.trackArtist);
 		
+		txtProgressLeft = findViewById(R.id.tProgressLeft);
+		txtProgressRight= findViewById(R.id.tProgressRight);
+		
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ActionProgressBarUpdate);
 		filter.addAction(ActionTrackInfoUpdate);
@@ -283,19 +288,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 				
 				//todo вернуть условия проверки
-				if (prefManager.getPrefItemInt("listenTracksCountInLastVersion", 0) >= mCountListenForRateDialog
-						&& !prefManager.getPrefItemBool("isRateRequestAlreadyShown", false)
-						&& prefManager.getPrefItemBool("isAllowShowRateRequestAgain", true)
-						) {
-					if (!isRateInflated) {
-						viewStubRate.setLayoutResource(R.layout.rate_request_cardview);
-						viewStubRate.inflate();
-						isRateInflated = true;
-					} else {
-						//todo отладить и согласовать макет
-						// rateRequestLayout.setVisibility(View.VISIBLE);
-					}
-				}
+//				if (prefManager.getPrefItemInt("listenTracksCountInLastVersion", 0) >= mCountListenForRateDialog
+//						&& !prefManager.getPrefItemBool("isRateRequestAlreadyShown", false)
+//						&& prefManager.getPrefItemBool("isAllowShowRateRequestAgain", true)
+//						) {
+//					if (!isRateInflated) {
+//						viewStubRate.setLayoutResource(R.layout.rate_request_cardview);
+//						viewStubRate.inflate();
+//						isRateInflated = true;
+//					} else {
+//						//todo отладить и согласовать макет
+//						// rateRequestLayout.setVisibility(View.VISIBLE);
+//					}
+//				}
 			}
 		});
 		
@@ -373,6 +378,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			public void onClick(View view) {
 				Intent alarmClockActivity = new Intent(getBaseContext(), AlarmClock.class);
 				startActivity(alarmClockActivity);
+			}
+		});
+		
+		btnMenu = findViewById(R.id.btnMenu);
+		btnMenu.setOnClickListener(new View.OnClickListener(){
+			@Override
+			public void onClick(View view) {
+				Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
+				settingsActivity.putExtra(PreferenceActivity.EXTRA_SHOW_FRAGMENT, SettingsActivity.GeneralPreferenceFragment.class.getName());
+				settingsActivity.putExtra(PreferenceActivity.EXTRA_NO_HEADERS, true);
+				startActivity(settingsActivity);
 			}
 		});
 		
@@ -495,12 +511,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			case R.id.app_bar_subscribe:
 				Intent iabillingActivity = new Intent(getBaseContext(), IABillingActivity.class);
 				startActivity(iabillingActivity);
-			
+				break;
 			case R.id.app_bar_switch_sleeping_mode:
 				Intent timerSleepActivity = new Intent(getBaseContext(), TimerSleep.class);
 				timerSleepActivity.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 				startActivity(timerSleepActivity);
+				break;
 			case R.id.app_bar_switch_alarm_clock:
+				Intent alarmClockActivity = new Intent(getBaseContext(), AlarmClock.class);
+				startActivity(alarmClockActivity);
 				break;
 		}
 		return true;
@@ -694,8 +713,23 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //										duration = binder.GetMediaPlayerService().GetDuration() / 1000;
 									}
 									progressBar.setMax(duration);
-									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
-//									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition() / 1000);
+									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition() / 1000);
+									//todo:
+									int curSeconds = binder.GetMediaPlayerService().GetPosition() / 1000;
+									int curHours = curSeconds / 3600;
+									curSeconds -= curHours * 3600;
+									int curMin = curSeconds / 60;
+									curSeconds -= curMin * 60;
+									String curTime = (curHours != 0 ? (curHours + ":") : "") + (curMin !=0 ?(curMin + ":") : "") + (curSeconds !=0 ?(curSeconds) : "");
+									int nextSeconds = (duration - binder.GetMediaPlayerService().GetPosition()) / 1000;
+									int nextHours = nextSeconds / 3600;
+									nextSeconds -= nextHours * 3600;
+									int nextMin = nextSeconds / 60;
+									nextSeconds -= nextMin * 60;
+									String nextTime = "-" + (nextHours != 0 ? (nextHours + ":") : "") + (nextMin !=0 ?(nextMin + ":") : "") + (nextSeconds !=0 ?(nextSeconds) : "");
+									
+									txtProgressLeft.setText(curTime);
+									txtProgressRight.setText(nextTime);
 								}
 							});
 						}
@@ -707,7 +741,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				if (intent.getBooleanExtra("ProgressOn", false)) {
 					btnPlayPause.setClickable(false);
 					btnNext.setClickable(false);
-					btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
+					btnNext.setImageResource(R.drawable.btn_ic_grey_next);
+//					btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
 					if (dialog == null)
 						dialog = new ProgressDialog(MainActivity.this);
 					dialog.setTitle(getResources().getString(R.string.is_caching));
@@ -737,10 +772,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //						binder.GetMediaPlayerService().Play();
 					if (new TrackDataAccess(getApplicationContext()).GetExistTracksCount() < 1) {
 						btnNext.setClickable(false);
-						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
+						btnNext.setImageResource(R.drawable.btn_ic_grey_next);
+//						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorPrimaryBtnDisable));
 					} else {
 						btnNext.setClickable(true);
-						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorTransparent));
+						btnNext.setImageResource(R.drawable.btn_ic_next);
+//						btnNext.setColorFilter(ContextCompat.getColor(getApplicationContext(), R.color.ColorTransparent));
 					}
 				}
 			}

@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,7 +22,6 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.VideoView;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -46,7 +44,7 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 	private TextView[] dots;
 	private int[] layouts;
 	private PrefManager prefManager;
-	private VideoView videoView;
+//	private VideoView videoView;
 	private Uri uriVideoView;
 	private String deviceId;
 	final Handler loadHandler = new Handler();
@@ -106,20 +104,20 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 		viewPager = findViewById(R.id.view_pager);
 		dotsLayout = findViewById(R.id.layoutDots);
 		
-		videoView = findViewById(R.id.videoView);
-		videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-			@Override
-			public void onPrepared(MediaPlayer mp) {
-				mp.setLooping(true);
-				videoView.requestFocus();
-				videoView.start();
-			}
-		});
+//		videoView = findViewById(R.id.videoView);
+//		videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+//			@Override
+//			public void onPrepared(MediaPlayer mp) {
+//				mp.setLooping(true);
+//				videoView.requestFocus();
+//				videoView.start();
+//			}
+//		});
 		try {
 			uriVideoView = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.video_portrait);
-			videoView.setVideoURI(uriVideoView);
+//			videoView.setVideoURI(uriVideoView);
 			
-			setDimension();
+//			setDimension();
 		}catch (Exception ex){
 			new Utilites().SendInformationTxt(getApplicationContext(), "Ошибка при подключении фонового видео " + ex.getLocalizedMessage());
 		}
@@ -150,11 +148,17 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 		// layouts of all welcome sliders
 		// add few more layouts if you want
 		layouts = new int[]{
-				R.layout.welcome_slide1,
-				R.layout.welcome_slide2,
-				R.layout.welcome_slide3,
-				R.layout.welcome_slide4,
-				R.layout.welcome_slide5};
+				R.layout.launch_screen,
+				R.layout.slide1,
+				R.layout.slide2,
+				R.layout.slide3
+//				,
+//				R.layout.welcome_slide1,
+//				R.layout.welcome_slide2,
+//				R.layout.welcome_slide3,
+//				R.layout.welcome_slide4,
+//				R.layout.welcome_slide5
+		};
 		
 		// adding bottom dots
 		addBottomDots(0);
@@ -379,24 +383,24 @@ public class WelcomeActivity extends AppCompatActivity implements NetworkStateRe
 	
 	
 	// This method set dimension for video view
-	private void setDimension() {
-		// Adjust the size of the video
-		// so it fits on the screen
-		float videoProportion = getVideoProportion();
-		int screenWidth = getResources().getDisplayMetrics().widthPixels;
-		int screenHeight = getResources().getDisplayMetrics().heightPixels;
-		float screenProportion = (float) screenHeight / (float) screenWidth;
-		android.view.ViewGroup.LayoutParams lp = videoView.getLayoutParams();
-		
-		if (videoProportion < screenProportion) {
-			lp.height= screenHeight;
-			lp.width = (int) ((float) screenHeight / videoProportion);
-		} else {
-			lp.width = screenWidth;
-			lp.height = (int) ((float) screenWidth * videoProportion);
-		}
-		videoView.setLayoutParams(lp);
-	}
+//	private void setDimension() {
+//		// Adjust the size of the video
+//		// so it fits on the screen
+//		float videoProportion = getVideoProportion();
+//		int screenWidth = getResources().getDisplayMetrics().widthPixels;
+//		int screenHeight = getResources().getDisplayMetrics().heightPixels;
+//		float screenProportion = (float) screenHeight / (float) screenWidth;
+//		android.view.ViewGroup.LayoutParams lp = videoView.getLayoutParams();
+//
+//		if (videoProportion < screenProportion) {
+//			lp.height= screenHeight;
+//			lp.width = (int) ((float) screenHeight / videoProportion);
+//		} else {
+//			lp.width = screenWidth;
+//			lp.height = (int) ((float) screenWidth * videoProportion);
+//		}
+//		videoView.setLayoutParams(lp);
+//	}
 	
 	// This method gets the proportion of the video that you want to display.
 	private float getVideoProportion(){
