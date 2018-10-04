@@ -1,9 +1,11 @@
 package ru.netvoxlab.ownradio;
 
 import android.app.AlarmManager;
+import android.content.ContentValues;
 import android.content.SharedPreferences;
 import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
+import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -12,14 +14,23 @@ import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Dictionary;
 import java.util.Hashtable;
 
 import static ru.netvoxlab.ownradio.Constants.ALARM_TIME;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_TITLE;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
 import static ru.netvoxlab.ownradio.Constants.FRIDAY_DAY;
 import static ru.netvoxlab.ownradio.Constants.IS_ALARM_WORK;
+import static ru.netvoxlab.ownradio.Constants.IS_ONCE;
 import static ru.netvoxlab.ownradio.Constants.MONDAY_DAY;
 import static ru.netvoxlab.ownradio.Constants.SATURDAY_DAY;
 import static ru.netvoxlab.ownradio.Constants.SUNDAY_DAY;
@@ -30,7 +41,6 @@ import static ru.netvoxlab.ownradio.Constants.WEDNESDAY_DAY;
 public class AlarmClock extends AppCompatActivity {
 	
 	private final String[] DAYS_NAMES = {"Воскресенье", "Понедельник", "Вторник", "Среду", "Четверг", "Пятницу", "Субботу"};
-	
 	private final String[] HOURS = {"час", "часа", "часов"};
 	private final String[] MINUTES = {"минуту", "минуты", "минут"};
 	private final String[] DAYS = {"день", "дня", "дней"};
@@ -47,13 +57,20 @@ public class AlarmClock extends AppCompatActivity {
 	private TextView txtSaturday;
 	private TextView txtSunday;
 	
+	private TextView txtCurrentTrack;
+	private TextView txtCurrentPlayTrack;
+	
 	private SharedPreferences prefs;
 	
 	private CountDownTimer timer;
+	private CountDownTimer musicTimer;
 	
 	private NumberPicker numberHours;
 	private NumberPicker numberMinutes;
 	
+	private TrackDataAccess db;
+	
+	//пн=2, вт=3, ср=4, чт=5, пт=6, сб=7, вс=1
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +80,7 @@ public class AlarmClock extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_alarm_clock);
 		
+		// инициализируем все компоненты
 		imageView = findViewById(R.id.imageView);
 		
 		txtProgress = findViewById(R.id.txtProgress);
@@ -78,17 +96,19 @@ public class AlarmClock extends AppCompatActivity {
 		numberHours = findViewById(R.id.numberHours);
 		numberMinutes = findViewById(R.id.numberMinutes);
 		
+		txtCurrentTrack = findViewById(R.id.txtCurrentTrack);
+		txtCurrentPlayTrack = findViewById(R.id.txtCurrentPlayTrack);
+		
+		db = new TrackDataAccess(getApplicationContext());
+		
 		
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		
-		initialNumbers();
+		initialNumbers(); // загружаем цифры для часов, минут.
 		
-		initialComponents();
+		initialComponents(); // загружаем все настройки
 		
-		
-		//	numberHours.setOnValueChangedListener();
-		
-		numberHours.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+		NumberPicker.OnValueChangeListener timeVCListener = new NumberPicker.OnValueChangeListener() {
 			@Override
 			public void onValueChange(NumberPicker numberPicker, int i, int i1) {
 				String time = "";
@@ -99,9 +119,11 @@ public class AlarmClock extends AppCompatActivity {
 				
 				
 				if (prefs.getBoolean(IS_ALARM_WORK, false)) {
-					
 					if (prefs.getString(ALARM_TIME, "") != time) // время отличается, необходимо все таймеры перезапустить
 					{
+						if (prefs.getBoolean(IS_ONCE, false)) {
+							setNewDay(time);
+						}
 						restartAlarm(time); // перезапускаем таймеры
 						SharedPreferences.Editor prefEditor = prefs.edit();
 						prefEditor.putString(ALARM_TIME, time); // сохраняем новое время
@@ -110,37 +132,200 @@ public class AlarmClock extends AppCompatActivity {
 					}
 				}
 			}
-		});
+		};
 		
-		numberMinutes.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+		numberHours.setOnValueChangedListener(timeVCListener);
+		
+		numberMinutes.setOnValueChangedListener(timeVCListener);
+		
+		musicTimer = new CountDownTimer(Long.MAX_VALUE, 1000) {
 			@Override
-			public void onValueChange(NumberPicker numberPicker, int i, int i1) {
-				String time = "";
+			public void onTick(long l) {
+				ContentValues trackInfo = db.GetMostNewTrack();
 				
-				String addMinutes = numberMinutes.getValue() < 10 ? "0" + String.valueOf(numberMinutes.getValue()) : String.valueOf(numberMinutes.getValue());
-				String addHours = numberHours.getValue() < 10 ? "0" + String.valueOf(numberHours.getValue()) : String.valueOf(numberHours.getValue());
-				time = addHours + ":" + addMinutes;
+				if (trackInfo == null)
+					return;
 				
-				if (prefs.getBoolean(IS_ALARM_WORK, false)) {
-					
-					if (prefs.getString(ALARM_TIME, "") != time) // время отличается, необходимо все таймеры перезапустить
-					{
-						restartAlarm(time); // перезапускаем таймеры
-						SharedPreferences.Editor prefEditor = prefs.edit();
-						prefEditor.putString(ALARM_TIME, time); // сохраняем новое время
-						prefEditor.apply();
-						Toast.makeText(AlarmClock.this, "Будильник успешно перезапущен", Toast.LENGTH_SHORT).show();
-					}
+				String title = trackInfo.getAsString("title");
+				
+				if (title == "")
+					return;
+				
+				if (txtCurrentPlayTrack.getText() != title) {
+					txtCurrentPlayTrack.setText(title);
 				}
 			}
-		});
+			
+			@Override
+			public void onFinish() {
+			
+			}
+		};
+		
+		musicTimer.start();
 	}
 	
+	public void SetTrack(View view) {
+		// получаем сведения о текущем треке
+		ContentValues trackInfo = db.GetMostNewTrack();
+		
+		String title = trackInfo.getAsString("title");
+		String id = trackInfo.getAsString("id");
+		String url = trackInfo.getAsString("trackurl");
+		
+		//String directory = url.substring(0, url.indexOf("music/")) + "AlarmTrack/";
+		
+		String path = getPathAlarmTrack(url);
+		
+		copyFile(url, path); // копируем трек в папку
+		
+		txtCurrentTrack.setText(title); // устанавливаем его как трек для будильника
+		
+		SharedPreferences.Editor editor = prefs.edit();
+		
+		editor.putString(CURRENT_TRACK_TITLE, title);
+		editor.putString(CURRENT_TRACK_ID, id);
+		editor.putString(CURRENT_TRACK_URL, path);
+		
+		
+		editor.apply(); // сохраняем текущий трек
+	}
+	
+	private void copyFile(String src, String dest) {
+		File srcFile = new File(src);
+		File destFile = new File(dest);
+		
+		if (destFile.exists()) {
+			destFile.delete();
+		}
+		
+		try {
+			FileUtils.copyFile(srcFile, destFile);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private String getPathAlarmTrack(String url) {
+		String directory = url.substring(0, url.indexOf("music/")) + "AlarmTrack/";
+		String path = directory + "alarm.mp3";
+		
+		return path;
+	}
+	
+	
+	private void setNewDay(String time) {
+		int hours = TimePreference.getHour(time);
+		int mins = TimePreference.getMinute(time);
+		
+		String timesCurrent = new SimpleDateFormat("u:HH:mm").format(Calendar.getInstance().getTime());
+		
+		String[] curTimes = timesCurrent.split(":");
+		
+		int day = Integer.valueOf(curTimes[0]); // день недели
+		if (day == 7) {
+			day = 1;
+		} else {
+			day += 1;
+		}
+		
+		int currentHours = Integer.valueOf(curTimes[1]);
+		int currentMins = Integer.valueOf(curTimes[2]);
+		
+		boolean isNewDay = false;
+		
+		if (currentHours > hours) {
+			isNewDay = true;
+		} else if (currentHours == hours) {
+			if (currentMins > mins) {
+				isNewDay = true;
+			}
+		}
+		
+		SharedPreferences.Editor prefEditor = prefs.edit();
+		int resHours, resMins;
+		if (isNewDay) {
+			setPreference(day, false);
+			selectTextView(day, false);
+			if (++day > 7)
+				day = 1;
+			setPreference(day, true);
+			selectTextView(day, true);
+		} else {
+			setPreference(day, true);
+			selectTextView(day, true);
+			if (++day > 7)
+				day = 1;
+			setPreference(day, false);
+			selectTextView(day, false);
+		}
+		
+		resMins = mins - currentMins;
+		
+		if (resMins < 0) {
+			resMins += 60;
+			hours -= 1;
+		}
+		
+		resHours = hours - currentHours;
+		
+		if (resHours < 0) {
+			resHours += 24;
+		}
+		
+		String strTime = "Будильник зазвонит через";
+		
+		if (resHours > 0) {
+			
+			if (resHours > 24) {
+				int resDays = resHours / 24;
+				resHours -= resDays * 24;
+				
+				strTime += " " + resDays + " " + getCase(resDays, DAYS);
+			}
+			
+			strTime += " " + resHours + " " + getCase(resHours, HOURS);
+		}
+		
+		strTime += " " + resMins + " " + getCase(resMins, MINUTES);
+		
+		txtProgress.setText(strTime);
+		
+	}
+	
+	private void selectTextView(int dayWeek, boolean value) {
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putBoolean(IS_ONCE, false);
+		editor.apply();
+		
+		switch (dayWeek) {
+			case 1:
+				txtSunday.setBackgroundResource(value ? R.drawable.bottom_selected : 0);
+				break;
+			case 2:
+				txtMonday.setBackgroundResource(value ? R.drawable.bottom_selected : 0);
+				break;
+			case 3:
+				txtTuesday.setBackgroundResource(value ? R.drawable.bottom_selected : 0);
+				break;
+			case 4:
+				txtWednesday.setBackgroundResource(value ? R.drawable.bottom_selected : 0);
+				break;
+			case 5:
+				txtThursday.setBackgroundResource(value ? R.drawable.bottom_selected : 0);
+				break;
+			case 6:
+				txtFriday.setBackgroundResource(value ? R.drawable.bottom_selected : 0);
+				break;
+			case 7:
+				txtSaturday.setBackgroundResource(value ? R.drawable.bottom_selected : 0);
+				break;
+		}
+	}
 	
 	public void OnSelected(View view) {
 		TextView textView = (TextView) view;
 		boolean isSelected = false;
-		
 		
 		String time = numberHours.getValue() + ":" + numberMinutes.getValue();
 		
@@ -167,36 +352,70 @@ public class AlarmClock extends AppCompatActivity {
 		} else {
 			AlarmReceiver.stopAlarm(this, dayWeek);
 			
+			// если не выбран ни 1 день недели, останавливаем будильник
 			if (isNotSelected()) {
-				
 				stopAlarm();
+				
 				if (timer != null)
 					timer.cancel();
 				
 				txtProgress.setText("Будильник остановлен");
 				
 				SharedPreferences.Editor prefEditor = prefs.edit();
-				
 				prefEditor.putBoolean(IS_ALARM_WORK, false);
 				prefEditor.apply();
 			}
 			
 		}
-		//пн=2, вт=3, ср=4, чт=5, пт=6, сб=7, вс=1
 	}
 	
 	private void initialComponents() {
-		String time = prefs.getString(ALARM_TIME, "");
+		// получаем последний играющий трек ( текущий )
+		ContentValues trackInfo = db.GetMostNewTrack();
+		
+		if (trackInfo != null) {
+			
+			String id = trackInfo.getAsString("id");
+			String title = trackInfo.getAsString("title");
+			String url = trackInfo.getAsString("trackurl");
+			
+			txtCurrentPlayTrack.setText(title);
+			
+			String currentTrack = prefs.getString(CURRENT_TRACK_TITLE, "");
+			
+			if (currentTrack == "") // если текущий трек не установлен, то устанавливаем, который играет
+			{
+				String path = getPathAlarmTrack(url);
+				copyFile(url, path); // копируем трек в папку
+				
+				SharedPreferences.Editor editor = prefs.edit();
+				editor.putString(CURRENT_TRACK_ID, id);
+				editor.putString(CURRENT_TRACK_TITLE, title);
+				editor.putString(CURRENT_TRACK_URL, path);
+				editor.apply(); // сохраняем текущий трек
+				
+			}
+			
+			txtCurrentTrack.setText(prefs.getString(CURRENT_TRACK_TITLE, ""));
+		}
+		
+		String time = prefs.getString(ALARM_TIME, "8:00");
 		
 		numberHours.setValue(TimePreference.getHour(time));
 		numberMinutes.setValue(TimePreference.getMinute(time));
+		
+		if (prefs.getBoolean(IS_ONCE, false)) {
+			for (int i = 1; i <= 7; i++)
+				setPreference(i, false);
+			stopAlarm();
+			return;
+		}
 		
 		if (prefs.getBoolean(MONDAY_DAY, false)) {
 			txtMonday.setBackgroundResource(R.drawable.bottom_selected);
 		} else {
 			txtMonday.setBackgroundResource(0);
 		}
-		
 		
 		if (prefs.getBoolean(TUESDAY_DAY, false)) {
 			txtTuesday.setBackgroundResource(R.drawable.bottom_selected);
@@ -243,7 +462,6 @@ public class AlarmClock extends AppCompatActivity {
 		}
 	}
 	
-	
 	private void initialNumbers() {
 		String[] hourValues = new String[25];
 		
@@ -279,7 +497,6 @@ public class AlarmClock extends AppCompatActivity {
 		int hours = TimePreference.getHour(time);
 		int mins = TimePreference.getMinute(time);
 		
-		
 		String[] curTimes = timesCurrent.split(":");
 		
 		int day = Integer.valueOf(curTimes[0]); // день недели
@@ -310,9 +527,9 @@ public class AlarmClock extends AppCompatActivity {
 			}
 		}
 		
-		setPreference(dayWeek, true);
+		setPreference(dayWeek, true); // сохраняем, то что выбран день
 		
-		
+		// устанавливаем TextView подчеркнутым
 		switch (dayWeek) {
 			case 1:
 				txtSunday.setBackgroundResource(R.drawable.bottom_selected);
@@ -338,8 +555,10 @@ public class AlarmClock extends AppCompatActivity {
 				break;
 		}
 		
+		SharedPreferences.Editor prefEditor = prefs.edit();
+		prefEditor.putBoolean(IS_ONCE, true);
+		prefEditor.apply();
 		AlarmReceiver.setTime(getApplicationContext(), time, dayWeek);
-		
 	}
 	
 	private void startTimer(final SharedPreferences.Editor prefEditor) {
@@ -360,11 +579,9 @@ public class AlarmClock extends AppCompatActivity {
 		int currentHours = Integer.valueOf(curTimes[1]);
 		int currentMins = Integer.valueOf(curTimes[2]);
 		
-		// если ни стоит ни 1 день
+		// если не удалось перезапустить, то есть ни 1 день не выбран
 		if (!isRestart) {
-			setAlarmDay(timesCurrent, time);
-			//Toast.makeText(this, "Установите дни для будильника", Toast.LENGTH_SHORT).show();
-			//return;
+			setAlarmDay(timesCurrent, time); // устанавливаем ближайший день
 		}
 		
 		if (!prefs.getBoolean(IS_ALARM_WORK, false)) {
@@ -372,12 +589,10 @@ public class AlarmClock extends AppCompatActivity {
 		}
 		
 		imageView.setImageResource(R.drawable.ic_blu_bud);
-		prefEditor.putBoolean(IS_ALARM_WORK, true);
-		
+		prefEditor.putBoolean(IS_ALARM_WORK, true); // устанавливаем флаг, то что будильник запущен
 		
 		int hours = TimePreference.getHour(time);
 		int mins = TimePreference.getMinute(time);
-		
 		
 		boolean isNewDay = false;
 		
@@ -400,7 +615,9 @@ public class AlarmClock extends AppCompatActivity {
 		
 		hours -= currentHours;
 		
-		if (hours < 0) {
+		if (hours == 0 && mins == 0) {
+			hours += 24 * 7;
+		} else if (hours < 0) {
 			hours += 24 * 7;
 		}
 		
@@ -410,7 +627,7 @@ public class AlarmClock extends AppCompatActivity {
 			@Override
 			public void onTick(long l) {
 				if (prefs.getBoolean(IS_ALARM_WORK, false)) {
-					setTime();
+					setTime(); // обновляем надпись, количество времени до будильника
 				}
 			}
 			
@@ -424,9 +641,9 @@ public class AlarmClock extends AppCompatActivity {
 	}
 	
 	public void btnStartClock(View view) {
-		
 		SharedPreferences.Editor prefEditor = prefs.edit();
 		
+		// если будильник работает и мы нажали на кнопку, останавливаем его
 		if (prefs.getBoolean(IS_ALARM_WORK, false)) {
 			stopAlarm();
 			imageView.setImageResource(R.drawable.ic_grey_bud);
@@ -437,12 +654,12 @@ public class AlarmClock extends AppCompatActivity {
 			}
 			txtProgress.setText("Будильник остановлен");
 		} else {
+			// запускаем будильник
 			startTimer(prefEditor);
 		}
 		
 		prefEditor.apply();
 	}
-	
 	
 	boolean isNotSelected() {
 		boolean isNotSelected = true;
@@ -463,6 +680,7 @@ public class AlarmClock extends AppCompatActivity {
 			isNotSelected = false;
 		}
 		
+		// возращаем true , если ни 1 день недели не выбран
 		return isNotSelected;
 	}
 	
@@ -476,12 +694,15 @@ public class AlarmClock extends AppCompatActivity {
 			}
 		}
 		
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putBoolean(IS_ONCE, false);
+		editor.apply();
 	}
 	
 	private boolean restartAlarm(String time) {
 		boolean isRestart = false;
 		
-		stopAlarm();
+		stopAlarm(); // останавливаем все будильники
 		
 		if (prefs.getBoolean(SUNDAY_DAY, false)) {
 			AlarmReceiver.setTime(this, time, 1);
@@ -518,14 +739,16 @@ public class AlarmClock extends AppCompatActivity {
 			isRestart = true;
 		}
 		
-		if(isRestart)
+		if (isRestart)
 			imageView.setImageResource(R.drawable.ic_blu_bud);
 		
+		
+		// возращаем true если будильник удалось перезапустить ( выбран хотя бы 1 день )
 		return isRestart;
 	}
 	
 	private void setPreference(int tag, boolean isChecked) {
-		
+		// сохраняем выбранные дни
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		SharedPreferences.Editor prefEditor = prefs.edit();
 		
@@ -557,13 +780,12 @@ public class AlarmClock extends AppCompatActivity {
 	}
 	
 	private void setTime() {
+		String time = numberHours.getValue() + ":" + numberMinutes.getValue(); // получаем установленное время
 		
-		String time = numberHours.getValue() + ":" + numberMinutes.getValue();
+		int hours = TimePreference.getHour(time); // получаем часы
+		int mins = TimePreference.getMinute(time); // получаем минуты
 		
-		int hours = TimePreference.getHour(time);
-		int mins = TimePreference.getMinute(time);
-		
-		String timesCurrent = new SimpleDateFormat("u:HH:mm").format(Calendar.getInstance().getTime());
+		String timesCurrent = new SimpleDateFormat("u:HH:mm").format(Calendar.getInstance().getTime()); // полуаем текущее время и день
 		
 		String[] curTimes = timesCurrent.split(":");
 		
@@ -580,6 +802,7 @@ public class AlarmClock extends AppCompatActivity {
 		
 		boolean isNewDay = false;
 		
+		// если текущее время больше установленного, то это новый день
 		if (currentHours > hours)
 			isNewDay = true;
 		else if (hours == currentHours) {
@@ -588,15 +811,15 @@ public class AlarmClock extends AppCompatActivity {
 			}
 		}
 		
-		int hoursToDay = getHoursToDay(day, isNewDay);
-		
+		int hoursToDay = getHoursToDay(day, isNewDay); // получаем количество часов до дня
 		
 		hours += hoursToDay;
 		
 		int resHours, resMins;
 		
-		resMins = mins - currentMins;
+		resMins = mins - currentMins; // вычитаем минуты
 		
+		// если получилось отрицательное число, то берем 1 час
 		if (resMins < 0) {
 			resMins += 60;
 			hours -= 1;
@@ -604,22 +827,21 @@ public class AlarmClock extends AppCompatActivity {
 		
 		resHours = hours - currentHours;
 		
-		if (resHours < 0) {
-			
-			
+		if (resHours == 0 && resMins == 0) {
 			resHours += 24 * 7;
 		}
 		
-		String resTime = resHours + ":" + resMins;
+		// если часы получились отрицательные, то будильник зазвончит через неделю
+		if (resHours < 0) {
+			resHours += 24 * 7;
+		}
 		
 		String strTime = "Будильник зазвонит через";
 		
 		if (resHours > 0) {
-			
 			if (resHours > 24) {
 				int resDays = resHours / 24;
 				resHours -= resDays * 24;
-				
 				strTime += " " + resDays + " " + getCase(resDays, DAYS);
 			}
 			
@@ -632,7 +854,6 @@ public class AlarmClock extends AppCompatActivity {
 	}
 	
 	private int getHoursToDay(int dayWeek, boolean isNewDay) {
-		
 		Dictionary<Integer, String> dist = new Hashtable<Integer, String>();
 		
 		dist.put(1, SUNDAY_DAY);
@@ -643,6 +864,7 @@ public class AlarmClock extends AppCompatActivity {
 		dist.put(6, FRIDAY_DAY);
 		dist.put(7, SATURDAY_DAY);
 		
+		// инициализируем дни
 		
 		int count = 0;
 		
@@ -652,11 +874,13 @@ public class AlarmClock extends AppCompatActivity {
 			
 			if (prefs.getBoolean(dist.get(curDay), false)) {
 				
+				// если день выбранный и текущий равны и время текущее меньше установленного, то это новый день
 				if (curDay == dayWeek && isNewDay) {
 					curDay += 1;
 					continue;
 				}
 				
+				// если дни равны и время текущее меньше установлеенного значит будильник должен сработать сегодня
 				if (curDay == dayWeek && !isNewDay)
 					return 0;
 				
@@ -665,6 +889,7 @@ public class AlarmClock extends AppCompatActivity {
 					add = 7;
 				}
 				
+				// высчитываем количество часов до дня
 				return (curDay + add - dayWeek) * 24;
 			}
 			
