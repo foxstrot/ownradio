@@ -144,6 +144,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	
 	private NetworkStateReceiver networkStateReceiver;
 	
+	public String GetTrackId(){
+		return binder.GetMediaPlayerService().TrackID;
+	}
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		//Меняем тему, используемую при запуске приложения, на основную

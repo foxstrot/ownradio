@@ -3,23 +3,35 @@ package ru.netvoxlab.ownradio;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
+import static android.content.Context.AUDIO_SERVICE;
 import static ru.netvoxlab.ownradio.Constants.ACTION_CLOSE_APP;
 import static ru.netvoxlab.ownradio.Constants.ACTION_EXIT_APP;
 import static ru.netvoxlab.ownradio.Constants.ACTION_START_APP;
 import static ru.netvoxlab.ownradio.Constants.ALARM_TIME;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_TITLE;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
+import static ru.netvoxlab.ownradio.Constants.IS_ONCE;
 import static ru.netvoxlab.ownradio.Constants.TAG;
 
 public class AlarmReceiver extends BroadcastReceiver {
@@ -29,7 +41,8 @@ public class AlarmReceiver extends BroadcastReceiver {
 		
 		int dayWeek = Integer.valueOf(intent.getAction());
 		
-		//restartAlarm(context, dayWeek);
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+		
 		Log.d(TAG, "AlarmReceiver action Start");
 		Intent i = new Intent(context, MainActivity.class);
 		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -38,7 +51,37 @@ public class AlarmReceiver extends BroadcastReceiver {
 				| PowerManager.ON_AFTER_RELEASE, "wakeup");
 		wl.acquire();
 		context.startActivity(i);
-		Toast.makeText(context, "Start app", Toast.LENGTH_SHORT).show();
+		
+		// Запуск музыки
+		String path = prefs.getString(CURRENT_TRACK_URL, "");
+		SharedPreferences.Editor editor = prefs.edit();
+		File file = new File(path);
+		if (path == ""  || !file.exists()) {
+			TrackDataAccess db = new TrackDataAccess(context);
+			ContentValues trackInfo = db.GetMostNewTrack();
+			
+			if(trackInfo == null)
+			{
+				Toast.makeText(context, "Загрузите пожалуйста музыку...", Toast.LENGTH_SHORT).show();
+				return;
+			}
+			
+			editor.putString(CURRENT_TRACK_ID, trackInfo.getAsString("id"));
+			editor.putString(CURRENT_TRACK_TITLE, trackInfo.getAsString("title"));
+			path = trackInfo.getAsString("trackurl");
+			String directory = path.substring(0, path.indexOf("music/")) + "AlarmTrack/";
+			path = directory + "alarm.mp3";
+
+			editor.putString(CURRENT_TRACK_URL, path);
+			editor.apply();
+		}
+		
+		final AudioManager mAudioManager = (AudioManager) context.getSystemService(AUDIO_SERVICE);
+		mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
+		MediaPlayer mp = MediaPlayer.create(context, Uri.parse(path));
+		mp.setLooping(true); // повторение музыки пока не выключит пользователь
+		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+		mp.start();
 		wl.release();
 	}
 	
@@ -78,7 +121,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 		AlarmManager am = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
 		
 		
-		Log.d(TAG,"TIMEALARM: mslsec: " + alarmTime.getTimeInMillis());
+		Log.d(TAG, "TIMEALARM: mslsec: " + alarmTime.getTimeInMillis());
 		
 		
 		if (Build.VERSION.SDK_INT >= 23) {
@@ -94,7 +137,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 		SharedPreferences.Editor prefEditor = prefs.edit();
 		prefEditor.putString(ALARM_TIME, time);
 		prefEditor.apply();
-
+		
 		Log.d(TAG, " alarmTime=" + alarmTime.getTime().toString() + " type=" + dayWeek);
 	}
 	
