@@ -45,5 +45,10 @@ public class Constants {
 	public static final String SUNDAY_DAY = "chSunday";
 	public static final String IS_ALARM_WORK = "isAlarmWork";
 	
+	public static final String IS_ONCE = "isOnce";
+	
+	public static final String CURRENT_TRACK_TITLE = "currentTrackTitle";
+	public static final String CURRENT_TRACK_ID = "currentTrackId";
+	public static final String CURRENT_TRACK_URL = "currentTrackUrl";
 	
 }
