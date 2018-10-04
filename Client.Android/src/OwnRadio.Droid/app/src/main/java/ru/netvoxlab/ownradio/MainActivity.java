@@ -717,7 +717,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //										duration = binder.GetMediaPlayerService().GetDuration() / 1000;
 									}
 									progressBar.setMax(duration);
-									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition() / 1000);
+									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
 									//todo:
 									int curSeconds = binder.GetMediaPlayerService().GetPosition() / 1000;
 									int curHours = curSeconds / 3600;
