@@ -227,4 +227,14 @@
 	<string name="rate_request_message_2">Вы прослушали много треков в этой версии приложения. Вы можете оставить комментарий или пожелание в нашей группе <a href="https://vk.me/ownradio">вконтакте</a>. Если Вам понравилось приложение, вы можете поддержать нас оставив положительный отзыв в <a href="https://play.google.com/store/apps/details?id=ru.netvoxlab.ownradio">Google Play</a> или оформив <a href="iabilling_activity://IABillingActivity">подписку</a>.</string>
 	<string name="btn_vk_rate">VKontakte</string>
 	<string name="btn_google_play_rate">Google Play</string>
+	
+	<!--Welcome Slides-->
+	<string name="launch_screen_1">Возьми   в   дорогу</string>
+	<string name="launch_screen_2">любимую музыку</string>
+	<string name="welcome_slide_1_1">Не требует</string>
+	<string name="welcome_slide_1_2">авторизации</string>
+	<string name="welcome_slide_2_1">Персональные</string>
+	<string name="welcome_slide_2_2">рекомендации</string>
+	<string name="welcome_slide_3_1">Работает без</string>
+	<string name="welcome_slide_3_2">мобильного интернета</string>
 </resources>

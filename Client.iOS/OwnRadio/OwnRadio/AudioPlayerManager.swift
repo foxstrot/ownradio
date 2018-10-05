@@ -357,12 +357,12 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 			self.playerItem = nil
 			configurePlayingSong(song: playingSong)
 		}
-		//проверка подключения к интернету
-		guard currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable else {
-			return
-		}
+//		//проверка подключения к интернету
+//		guard currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable else {
+//			return
+//		}
 		DispatchQueue.global(qos: .background).async {
-			Downloader.sharedInstance.load(complition: complition)
+			Downloader.sharedInstance.load(isSelfFlag: false, complition: complition)
 		}
 	}
 	

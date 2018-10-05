@@ -71,7 +71,7 @@ class StartVideoViewController: UIViewController, UIPageViewControllerDataSource
 		}
 		
 		DispatchQueue.global(qos: .background).async {
-			Downloader.sharedInstance.load(complition: {
+			Downloader.sharedInstance.load(isSelfFlag: false, complition: {
 				
 			})
 		}
@@ -217,7 +217,7 @@ class StartVideoViewController: UIViewController, UIPageViewControllerDataSource
 						pageItemController.countTrying = self.countTrying
 						
 						DispatchQueue.global(qos: .background).async {
-							Downloader.sharedInstance.load(complition: {
+							Downloader.sharedInstance.load(isSelfFlag: false, complition: {
 								
 							})
 						}
