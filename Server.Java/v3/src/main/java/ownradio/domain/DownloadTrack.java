@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.util.UUID;
@@ -30,6 +31,8 @@ public class DownloadTrack extends AbstractEntity {
 
 	private Integer methodid;
 
+	@Type(type="pg-uuid")
+	@Column(columnDefinition = "uuid")
 	private UUID userrecommendid;
 
 	private String txtrecommendinfo;
