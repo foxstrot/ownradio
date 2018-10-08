@@ -920,9 +920,6 @@ END;
 LANGUAGE plpgsql;
 
 
-
-DROP FUNCTION getnexttrack_v2(uuid);
-
 CREATE OR REPLACE FUNCTION getnexttrack_v2(IN i_deviceid uuid)
 	RETURNS TABLE(track character varying, method integer, useridrecommended character varying, txtrecommendinfo character varying, timeexecute character varying) AS
 '
