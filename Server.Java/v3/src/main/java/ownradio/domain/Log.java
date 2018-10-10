@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -22,6 +23,8 @@ import java.util.UUID;
 public class Log extends AbstractEntity {
 	@Column(columnDefinition="TEXT")
 	private String logtext;
+	@Type(type="pg-uuid")
+	@Column(columnDefinition = "uuid")
 	private UUID deviceid;
 	@Column(columnDefinition="TEXT")
 	private String response;

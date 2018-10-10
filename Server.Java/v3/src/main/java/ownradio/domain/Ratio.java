@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 
@@ -21,12 +22,15 @@ import javax.persistence.*;
 public class Ratio extends AbstractEntity {
 //	@ManyToOne
 	@JoinColumn(name = "userid")
-	@Column(nullable = false)
+	@Type(type="pg-uuid")
+	@Column(nullable = false, columnDefinition = "uuid")
 	private User userid1;
 
 //	@ManyToOne
 	@JoinColumn(name = "userid")
-	@Column(nullable = false)
+	@Type(type="pg-uuid")
+	@Column(nullable = false, columnDefinition = "uuid")
+
 	private User userid2;
 
 	private Integer ratio;
