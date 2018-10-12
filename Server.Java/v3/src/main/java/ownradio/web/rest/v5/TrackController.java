@@ -64,12 +64,12 @@ public class TrackController {
 		Log logRec = new Log();
 		logRec.setRecname("Upload");
 		logRec.setDeviceid(trackDTO.getDeviceId());
-		logRec.setLogtext("/v5/tracks; Body: TrackidId=" + trackDTO.getFileGuid() +", fileName=" + trackDTO.getFileName() + ", filePath=" + trackDTO.getFilePath() + ", deviceid=" + trackDTO.getDeviceId() + ", musicFile=" + (trackDTO.getMusicFile() != null ? trackDTO.getMusicFile().getOriginalFilename() : null));
+		logRec.setLogtext("/v5/tracks; Body: TrackidId=" + trackDTO.getFileGuid() + ", fileName=" + trackDTO.getFileName() + ", filePath=" + trackDTO.getFilePath() + ", deviceid=" + trackDTO.getDeviceId() + ", musicFile=" + (trackDTO.getMusicFile() != null ? trackDTO.getMusicFile().getOriginalFilename() : null));
 		logService.save(logRec);
-		if(trackService.getById(trackDTO.getTrack().getRecid()) != null){
+		if (trackService.getById(trackDTO.getTrack().getRecid()) != null) {
 			logRec.setResponse("Http.Status=" + HttpStatus.CONFLICT + "; This uuid already exist!");
 			logService.save(logRec);
-			return  new ResponseEntity<>(HttpStatus.CONFLICT);
+			return new ResponseEntity<>(HttpStatus.CONFLICT);
 		}
 
 		if (trackDTO.getMusicFile() == null || trackDTO.getMusicFile().isEmpty()) {
@@ -106,7 +106,7 @@ public class TrackController {
 	//Метод выдачи трека, способный выдавать как весь файл сразу, так и ранжируя по байтам
 	//Для получения определенный байт файла требуется задать диапазон в заголовке запроса
 	//Пример: ("Range","bytes=0-49") запрашивает первые 50 байт файла
-	private void getResponseEntity(@PathVariable UUID id, @PathVariable UUID deviceId, HttpServletRequest request, HttpServletResponse response){
+	private void getResponseEntity(@PathVariable UUID id, @PathVariable UUID deviceId, HttpServletRequest request, HttpServletResponse response) {
 		Log logRec = new Log();
 		logRec.setRecname("GetTrackdById");
 		logRec.setDeviceid(deviceId);
@@ -128,10 +128,10 @@ public class TrackController {
 				logService.save(logRec);
 			} else {
 				response.sendError(HttpServletResponse.SC_NOT_FOUND);
-				logRec.setResponse("Http.Status=" + HttpServletResponse.SC_NOT_FOUND+ "; trackid=" + id.toString());
+				logRec.setResponse("Http.Status=" + HttpServletResponse.SC_NOT_FOUND + "; trackid=" + id.toString());
 				logService.save(logRec);
 			}
-		}catch (Exception ex){
+		} catch (Exception ex) {
 
 		}
 	}
@@ -139,34 +139,34 @@ public class TrackController {
 	//Метод выдачи трека, способный выдавать как весь файл сразу, так и ранжируя по байтам
 	//Для получения определенный байт файла требуется задать диапазон в заголовке запроса
 	//Пример: ("Range","bytes=0-49") запрашивает первые 50 байт файла
-	@RequestMapping(value="/{id}/range", method = RequestMethod.GET)
-	public void serveFile(@PathVariable  UUID id, HttpServletRequest request, HttpServletResponse response) {
+	@RequestMapping(value = "/{id}/range", method = RequestMethod.GET)
+	public void serveFile(@PathVariable UUID id, HttpServletRequest request, HttpServletResponse response) {
 		Track track = trackService.getById(id);
 		try {
 			MultipartFileSender.fromURIString(track.getPath())
 					.with(request)
 					.with(response)
 					.serveResource();
-		}catch (Exception ex){
+		} catch (Exception ex) {
 
 		}
 	}
 
-	@RequestMapping(value="/{id}/{deviceId}", method = RequestMethod.POST, headers = "Content-Type=application/json")
-	public ResponseEntity<?> setTrackIsCorrect(@PathVariable UUID id, @PathVariable UUID deviceId, @RequestBody Track trackEntity){
+	@RequestMapping(value = "/{id}/{deviceId}", method = RequestMethod.POST, headers = "Content-Type=application/json")
+	public ResponseEntity<?> setTrackIsCorrect(@PathVariable UUID id, @PathVariable UUID deviceId, @RequestBody Track trackEntity) {
 		Log logRec = new Log();
 		logRec.setRecname("setTrackIsCorrect");
 		logRec.setDeviceid(deviceId);
 		logRec.setLogtext("/v5/tracks/" + id + "/" + deviceId + "isCorrect" + trackEntity.getIscorrect());
 		logService.save(logRec);
 		Track track = trackService.getById(id);
-		if(track != null && trackEntity.getIscorrect() != null){
+		if (track != null && trackEntity.getIscorrect() != null) {
 			track.setIscorrect(trackEntity.getIscorrect());
 			trackRepository.saveAndFlush(track);
 			logRec.setResponse("HttpStatus = " + HttpStatus.CREATED + ", isCorrect = " + trackEntity.getIscorrect());
 			logService.save(logRec);
 			return new ResponseEntity<>(HttpStatus.CREATED);
-		}else {
+		} else {
 			logRec.setResponse("Track not fount. HttpStatus = " + HttpStatus.NOT_FOUND + ", isCorrect = " + trackEntity.getIscorrect());
 			logService.save(logRec);
 			return new ResponseEntity<>(HttpStatus.NOT_FOUND);
