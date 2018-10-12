@@ -131,3 +131,33 @@ Content-Type →application/json;charset=UTF-8
 * `208, "Already Reported"` - если история с таким UUID уже отдавалась
 * `404, "Not found"` - если deviceId или trackid не найден
 * `500, "Internal Server Error"` – если произошел сбой на сервере
+
+Развертывание
+---
+### Необходимые компоненты
+##### IntelliJ IDEA Ultimate
+* [Скачать](https://www.jetbrains.com/idea/)
+##### Java 8
+* [Скачать](https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html)
+##### Postgres 9.6
+* [Скачать](https://www.postgresql.org/about/news/1703/)
+##### Lombok plugin (в IntelliJ IDEA Ultimate)
+* `Нажимаем сочитаение клавиш Ctrl+Alt+S (File->Settings)`
+* `Вводим в поиске Plugins`
+* `Находим Lombok plugin и устанавливаем`
+##### Создание конфигурации prod
+* `Нажимаем Shift+Alt+F10 (Edit Configuraions) `
+* `Add->Spring Boot`
+* `Name = prod`
+* `Main class = ownradio.Application`
+*  `Active profiles = prod`
+*  `Нажимаем Apply и выбираем его ( если не выбрался автоматически )`
+##### Создание базы данных
+* `Заходим в pgAdmin`
+* `Создаем сервер (если не создан по умолчанию host = 127.0.0.1, port = 5432, если отличается изменить в профиле prod)`
+* `Создаем базу данных`
+* `Создаем расширение с именем uuid-ossp`
+* `Далее выполняем скрипт advance.sql`
+##### Настройка профиля prod
+* `Открываем application-prod.properties`
+* `Задаём данные подключения к созданной  username, password, url (jdbc:postgresql://host:port/databaseName)`
