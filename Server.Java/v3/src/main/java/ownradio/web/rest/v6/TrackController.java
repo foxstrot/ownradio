@@ -1,4 +1,4 @@
-package ownradio.web.rest.v5;
+package ownradio.web.rest.v6;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -19,12 +19,13 @@ import javax.servlet.http.HttpServletResponse;
 import java.util.UUID;
 
 /**
- * Created by a.polunina on 27.06.2017.
+ * Created by valko.s on 10.10.2018.
  */
 @Slf4j
 //@CrossOrigin
-@RestController("TrackControllerV5")
-@RequestMapping(value = "/v5/tracks")
+@RestController("TrackControllerV6")
+@RequestMapping(value = "/v6/tracks")
+
 public class TrackController {
 	private final TrackService trackService;
 	private final LogService logService;
@@ -44,6 +45,10 @@ public class TrackController {
 		private String filePath;
 		private UUID deviceId;
 		private MultipartFile musicFile;
+		private String title;
+		private String artist;
+		private Integer length;
+		private Integer size;
 
 		public Track getTrack() {
 			Device device = new Device();
@@ -55,6 +60,15 @@ public class TrackController {
 			track.setPath("---");
 			track.setLocaldevicepathupload(filePath);
 
+
+			boolean saveFilledInfo = false;
+			track.setRecname(title);
+			track.setArtist(artist);
+			track.setLength(length);
+			track.setSize(size);
+
+			if (title != null && artist != null && length != null && size != null)
+				track.setIsfilledinfo(1);
 			return track;
 		}
 	}
@@ -64,7 +78,7 @@ public class TrackController {
 		Log logRec = new Log();
 		logRec.setRecname("Upload");
 		logRec.setDeviceid(trackDTO.getDeviceId());
-		logRec.setLogtext("/v5/tracks; Body: TrackidId=" + trackDTO.getFileGuid() + ", fileName=" + trackDTO.getFileName() + ", filePath=" + trackDTO.getFilePath() + ", deviceid=" + trackDTO.getDeviceId() + ", musicFile=" + (trackDTO.getMusicFile() != null ? trackDTO.getMusicFile().getOriginalFilename() : null));
+		logRec.setLogtext("/v6/tracks; Body: TrackidId=" + trackDTO.getFileGuid() + ", fileName=" + trackDTO.getFileName() + ", filePath=" + trackDTO.getFilePath() + ", deviceid=" + trackDTO.getDeviceId() + ", musicFile=" + (trackDTO.getMusicFile() != null ? trackDTO.getMusicFile().getOriginalFilename() : null));
 		logService.save(logRec);
 		if (trackService.getById(trackDTO.getTrack().getRecid()) != null) {
 			logRec.setResponse("Http.Status=" + HttpStatus.CONFLICT + "; This uuid already exist!");
@@ -79,8 +93,14 @@ public class TrackController {
 		}
 
 		try {
-			trackService.save(trackDTO.getTrack(), trackDTO.getMusicFile());
-			trackService.setTrackInfo(trackDTO.getTrack().getRecid());
+			Track track = trackDTO.getTrack();
+			trackService.save(track, trackDTO.getMusicFile());
+			if (track.getIsfilledinfo() != null && track.getIsfilledinfo() != 1)
+				trackService.setTrackInfo(track.getRecid());
+			else {
+				track = trackRepository.findOne(track.getRecid());
+				trackRepository.saveAndFlush(track);
+			}
 			logRec.setResponse("Http.Status=" + HttpStatus.CREATED);
 			logService.save(logRec);
 			return new ResponseEntity<>(HttpStatus.CREATED);
@@ -110,7 +130,7 @@ public class TrackController {
 		Log logRec = new Log();
 		logRec.setRecname("GetTrackdById");
 		logRec.setDeviceid(deviceId);
-		logRec.setLogtext("/v5/tracks/" + id + "/" + deviceId + ", Range " + request.getHeader("Range"));
+		logRec.setLogtext("/v6/tracks/" + id + "/" + deviceId + ", Range " + request.getHeader("Range"));
 		logService.save(logRec);
 		Track track = trackService.getById(id);
 		try {
@@ -157,7 +177,7 @@ public class TrackController {
 		Log logRec = new Log();
 		logRec.setRecname("setTrackIsCorrect");
 		logRec.setDeviceid(deviceId);
-		logRec.setLogtext("/v5/tracks/" + id + "/" + deviceId + "isCorrect" + trackEntity.getIscorrect());
+		logRec.setLogtext("/v6/tracks/" + id + "/" + deviceId + "isCorrect" + trackEntity.getIscorrect());
 		logService.save(logRec);
 		Track track = trackService.getById(id);
 		if (track != null && trackEntity.getIscorrect() != null) {

@@ -61,7 +61,7 @@ namespace Downloader
 						_db.SaveChanges();
 						progress.Report(percentage);
 					}
-					catch
+					catch(Exception ex)
 					{
 						log.Report($@"{tracks[i].Guid}.mp3 - Неизвестная ошибка");
 						_db.Tracks.Add(tracks[i]);

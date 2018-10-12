@@ -26,9 +26,13 @@ public interface TrackRepository extends JpaRepository<Track, UUID> {
 	@Query(value = "select registertrack(?1, ?2, ?3, ?4)", nativeQuery = true)
 	boolean registerTrack(UUID trackId, String localDevicePathUpload, String path, UUID deviceId);
 
+	@Query(value = "select registertrack_v2(?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)", nativeQuery = true)
+	boolean registerTrackV2(UUID trackId, String localDevicePathUpload, String path, UUID deviceId, String title,
+							String artist, Integer length, Integer size);
+
 	List<Track> findAllByDeviceRecidOrderByReccreatedDesc(UUID id, Pageable pageable);
 
-//	@Query(value = "select new ownradio.domain.UploadersRating(u, count(t)) from User u, Track t where u.recid = t.deviceid group by t.deviceid order by max (t.reccreated) desc")
+	//	@Query(value = "select new ownradio.domain.UploadersRating(u, count(t)) from User u, Track t where u.recid = t.deviceid group by t.deviceid order by max (t.reccreated) desc")
 	@Query(value = "select * from getuploadersrating()", nativeQuery = true)
 	List<Object[]> findUploadersRating();
 }
