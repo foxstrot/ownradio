@@ -47,6 +47,7 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RatingBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import org.apache.commons.io.FileUtils;
 
@@ -144,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	
 	private NetworkStateReceiver networkStateReceiver;
 	
-	public String GetTrackId(){
+	public String GetTrackId() {
 		return binder.GetMediaPlayerService().TrackID;
 	}
 	
@@ -230,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		txtTrackArtist = findViewById(R.id.trackArtist);
 		
 		txtProgressLeft = findViewById(R.id.tProgressLeft);
-		txtProgressRight= findViewById(R.id.tProgressRight);
+		txtProgressRight = findViewById(R.id.tProgressRight);
 		
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(ActionProgressBarUpdate);
@@ -386,7 +387,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		});
 		
 		btnMenu = findViewById(R.id.btnMenu);
-		btnMenu.setOnClickListener(new View.OnClickListener(){
+		btnMenu.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View view) {
 				Intent settingsActivity = new Intent(getBaseContext(), SettingsActivity.class);
@@ -575,6 +576,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			layoutDevelopersInfo.setVisibility(View.VISIBLE);
 	}
 	
+	private float curVolume = 0.0f;
 	private BroadcastReceiver myReceiver = new BroadcastReceiver() {
 		@Override
 		public void onReceive(Context context, final Intent intent) {
@@ -654,7 +656,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			}
 			
 			if (intent.getAction() == ActionProgressBarUpdate) {
-				
+				curVolume = 0.1f;
 				if (progressBar == null)
 					progressBar = findViewById(R.id.progressBar);
 				new Thread(new Runnable() {
@@ -720,17 +722,31 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 									progressBar.setProgress(binder.GetMediaPlayerService().GetPosition());
 									//todo:
 									int curSeconds = binder.GetMediaPlayerService().GetPosition() / 1000;
+									
+									if (curSeconds <= 10 && curVolume <= 1.0f) {
+										curVolume += 0.1f;
+										binder.GetMediaPlayerService().SetVolume(curVolume);
+									}
+									
 									int curHours = curSeconds / 3600;
 									curSeconds -= curHours * 3600;
 									int curMin = curSeconds / 60;
 									curSeconds -= curMin * 60;
-									String curTime = (curHours != 0 ? (curHours + ":") : "") + (curMin !=0 ?(curMin + ":") : "") + (curSeconds !=0 ?(curSeconds) : "");
+									String curTime = (curHours != 0 ? (curHours + ":") : "") + (curMin != 0 ? (curMin + ":") : "") + (curSeconds != 0 ? (curSeconds) : "");
 									int nextSeconds = (duration - binder.GetMediaPlayerService().GetPosition()) / 1000;
+									
+									//todo:add logical volume
+									if(nextSeconds <= 10 && curVolume >= 0f)
+									{
+										curVolume-=0.1f;
+										binder.GetMediaPlayerService().SetVolume(curVolume);
+									}
+									
 									int nextHours = nextSeconds / 3600;
 									nextSeconds -= nextHours * 3600;
 									int nextMin = nextSeconds / 60;
 									nextSeconds -= nextMin * 60;
-									String nextTime = "-" + (nextHours != 0 ? (nextHours + ":") : "") + (nextMin !=0 ?(nextMin + ":") : "") + (nextSeconds !=0 ?(nextSeconds) : "");
+									String nextTime = "-" + (nextHours != 0 ? (nextHours + ":") : "") + (nextMin != 0 ? (nextMin + ":") : "") + (nextSeconds != 0 ? (nextSeconds) : "");
 									
 									txtProgressLeft.setText(curTime);
 									txtProgressRight.setText(nextTime);

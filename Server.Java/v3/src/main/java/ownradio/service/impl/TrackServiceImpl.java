@@ -59,19 +59,19 @@ public class TrackServiceImpl implements TrackService {
 		NextTrack nextTrack = new NextTrack();
 
 		List<Object[]> objects = null;
-		try{
+		try {
 			objects = trackRepository.getNextTrackV2(deviceId);
-		}catch (Exception ex){
+		} catch (Exception ex) {
 			ex.getLocalizedMessage();
 		}
-		if(objects != null) {
+		if (objects != null) {
 			nextTrack.setTrackid(UUID.fromString((String) objects.get(0)[0]));
 			nextTrack.setMethodid((Integer) objects.get(0)[1]);
-			if(objects.get(0)[2] != null) nextTrack.setUseridrecommended(UUID.fromString((String) objects.get(0)[2]));
-			if(objects.get(0)[3] != null) nextTrack.setTxtrecommendinfo((String) objects.get(0)[3]);
-			if(objects.get(0)[4] != null) nextTrack.setTimeexecute((String) objects.get(0)[4]);
+			if (objects.get(0)[2] != null) nextTrack.setUseridrecommended(UUID.fromString((String) objects.get(0)[2]));
+			if (objects.get(0)[3] != null) nextTrack.setTxtrecommendinfo((String) objects.get(0)[3]);
+			if (objects.get(0)[4] != null) nextTrack.setTimeexecute((String) objects.get(0)[4]);
 			return nextTrack;
-		}else{
+		} else {
 			return null;
 		}
 	}
@@ -79,7 +79,15 @@ public class TrackServiceImpl implements TrackService {
 	@Override
 	@Transactional
 	public void save(Track track, MultipartFile file) {
-		boolean result = trackRepository.registerTrack(track.getRecid(), track.getLocaldevicepathupload(), track.getPath(), track.getDevice().getRecid());
+
+		boolean result = false;
+		if (track.getArtist() == null || track.getRecname() == null ||
+				track.getSize() == null || track.getLength() == null)
+			result = trackRepository.registerTrack(track.getRecid(), track.getLocaldevicepathupload(), track.getPath(), track.getDevice().getRecid());
+		else
+			result = trackRepository.registerTrackV2(track.getRecid(), track.getLocaldevicepathupload(), track.getPath(), track.getDevice().getRecid(),
+					track.getRecname(), track.getArtist(), track.getLength(), track.getSize());
+
 		if (!result) {
 			throw new RuntimeException();
 		}
@@ -110,7 +118,7 @@ public class TrackServiceImpl implements TrackService {
 				track.setLength((int) mp3File.getLengthInSeconds());//duration track
 				track.setSize((int) mp3File.getLength() / 1024);//size in kilobytes
 
-				if(mp3File.getLayer().equals("II"))
+				if (mp3File.getLayer().equals("II"))
 					track.setIscorrect(0);
 
 				if (mp3File.hasId3v2Tag()) {
@@ -118,12 +126,12 @@ public class TrackServiceImpl implements TrackService {
 					title = DecodeUtil.Decode(id3v2Tag2.getTitle());
 					artist = DecodeUtil.Decode(id3v2Tag2.getArtist());
 				}
-				if(mp3File.hasId3v1Tag()) {
+				if (mp3File.hasId3v1Tag()) {
 					ID3v1 id3v1Tag1 = mp3File.getId3v1Tag();
-					if(title == null || title.equals("null") || title.isEmpty())
-					title = DecodeUtil.Decode(id3v1Tag1.getTitle());
-					if(artist == null || artist.equals("null") || artist.isEmpty())
-					artist = DecodeUtil.Decode(id3v1Tag1.getArtist());
+					if (title == null || title.equals("null") || title.isEmpty())
+						title = DecodeUtil.Decode(id3v1Tag1.getTitle());
+					if (artist == null || artist.equals("null") || artist.isEmpty())
+						artist = DecodeUtil.Decode(id3v1Tag1.getArtist());
 				}
 
 				if (title != null && !title.equals("null") && !title.isEmpty()) {
@@ -139,7 +147,7 @@ public class TrackServiceImpl implements TrackService {
 					track.setIsfilledinfo(1);
 				trackRepository.saveAndFlush(track);
 			} catch (Exception ex) {
-				if(mp3File == null) {
+				if (mp3File == null) {
 					track.setIscorrect(0);
 					trackRepository.saveAndFlush(track);
 				}
@@ -149,20 +157,20 @@ public class TrackServiceImpl implements TrackService {
 
 	@Transactional
 	@Override
-	public List<UploadersRating> getUploadersRating(){
+	public List<UploadersRating> getUploadersRating() {
 		List<UploadersRating> uploadersRatingList = new ArrayList<>();
 		List<Object[]> objects = trackRepository.findUploadersRating();
 		if (objects != null) {
 			for (int i = 0; i < objects.size(); i++) {
 				UploadersRating uploadersRating = new UploadersRating();
 				uploadersRating.setUser(userRepository.findOne(UUID.fromString((String) objects.get(i)[0])));
-				uploadersRating.setUploadtracks((BigInteger)objects.get(i)[1]);
-				uploadersRating.setLastactive((String)objects.get(i)[2]);
+				uploadersRating.setUploadtracks((BigInteger) objects.get(i)[1]);
+				uploadersRating.setLastactive((String) objects.get(i)[2]);
 				uploadersRatingList.add(uploadersRating);
 			}
-	} else {
-		return null;
-	}
+		} else {
+			return null;
+		}
 		return uploadersRatingList;
 	}
 }
