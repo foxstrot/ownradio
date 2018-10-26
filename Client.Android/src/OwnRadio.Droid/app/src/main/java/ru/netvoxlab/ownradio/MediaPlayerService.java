@@ -18,7 +18,6 @@ import android.media.MediaPlayer;
 import android.net.wifi.WifiManager;
 import android.os.Binder;
 import android.os.Build;
-import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
@@ -38,12 +37,16 @@ import android.widget.Toast;
 import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.TimeZone;
+import java.util.concurrent.ExecutionException;
 
 import ru.netvoxlab.ownradio.utils.ResourceHelper;
 
 import static android.app.PendingIntent.getActivity;
 import static ru.netvoxlab.ownradio.MainActivity.ActionButtonImgUpdate;
+import static ru.netvoxlab.ownradio.MainActivity.ActionNotFoundTrack;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionTrackInfoUpdate;
@@ -104,11 +107,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	float speed = 0.05f;
 	
 	PrefManager prefManager;
-	
-	/*FadeOut Track*/
-	private CountDownTimer timer;
-	private int durationTrack;
-	private float curVolume = 0.1f;
 	
 	public int GetMediaPlayerState() {
 		return (mediaControllerCompat.getPlaybackState() != null ? mediaControllerCompat.getPlaybackState().getState() : PlaybackStateCompat.STATE_NONE);
@@ -380,17 +378,17 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		}
 	}
 	
+	public void InitiMedia() {
+		if (player == null)
+			InitializePlayer();
+		
+		if (mediaSessionCompat == null)
+			InitMediaSession();
+	}
 	
 	public void Play() {
 		Log.d(TAG, "Play(): ");
 		playbackWithHSisInterrupted = false;
-		
-		if (timer != null) {
-			timer.cancel();
-			timer = null;
-		}
-		
-		//audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
 		
 		
 		//todo:add code
@@ -402,12 +400,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				return;
 			}
 			
-			
-			//CountDownTimer
-			
-			//	timer.start();
-			
-			
 			player.start();
 			utilites.SendInformationTxt(getApplicationContext(), "Play(): start");
 
@@ -417,9 +409,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			UpdateMediaMetadataCompat();
 		}
 		
-		if (player == null)
+		if (player == null) {
 			InitializePlayer();
-		
+			player.setVolume(0.1f, 0.1f);
+		}
 		if (mediaSessionCompat == null)
 			InitMediaSession();
 		
@@ -480,8 +473,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			//записываем время начала проигрывания трека
 			new TrackDataAccess(getApplicationContext()).SetTimeAndCountStartPlayback(track);
 			
-			loadTimer(); // load Timer
-			
 			utilites.SendInformationTxt(getApplicationContext(), "SetTimeAndCountStartPlayback for track " + track.getAsString("id"));
 			
 			wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP, "OwnRadioPlayback");
@@ -532,41 +523,10 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	
 	
 	public void SetVolume(float volume) {
-		player.setVolume(volume, volume);
+		if (player != null)
+			player.setVolume(volume, volume);
 	}
 	
-	private void loadTimer() {
-	/*	curVolume = 0.1f;
-		durationTrack = player.getDuration() / 1000; // получаем длительность песни
-		
-		if (durationTrack < 0)
-			return;
-		
-		player.setVolume(curVolume, curVolume);
-		timer = new CountDownTimer(durationTrack * 1000, 1000) {
-			@Override
-			public void onTick(long l) {
-				int pos = player.getCurrentPosition() / 1000;
-				if (durationTrack - pos <= 10) {
-					if (curVolume > 0) {
-						curVolume -= 0.1f;
-					}
-				} else {
-					if (curVolume < 1.0f) {
-						curVolume += 0.1;
-					}
-				}
-				
-				player.setVolume(curVolume, curVolume);
-			}
-			
-			@Override
-			public void onFinish() {
-				player.setVolume(0.1f, 0.1f);
-			}
-		}.start();*/
-		
-	}
 	
 	public void Pause() {
 		if (player == null)
@@ -694,6 +654,83 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			ex.getLocalizedMessage();
 		}
 	}
+	
+	private Map<String, String> createMap(String id) {
+		Map<String, String> obj = new HashMap<String, String>();
+		obj.put("id", id);
+		obj.put("deviceid", null);
+		
+		return obj;
+	}
+	
+	
+	public boolean DownloadFile(String id) {
+		boolean isDownload = false;
+		try {
+			Map<String, String> obj = createMap(id);
+			isDownload = new DownloadTracks(getApplicationContext()).execute(obj).get();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		} catch (ExecutionException e) {
+			e.printStackTrace();
+		}
+		
+		return isDownload;
+	}
+	
+	
+	public void PlayAlarmTrack(String id, String url) {
+		player = null;
+		
+		track = trackDataAccess.GetTrackById(id);
+		if (track == null) {
+			
+			track = new ContentValues();
+			track.put("id", id);
+			track.put("title", "Track");
+			track.put("artist", "Artist");
+		}
+		
+		TrackID = id;
+		trackURL = url;
+		
+		Play();
+	}
+	
+	public boolean PlayNewTrack(String id) {
+		player = null;
+		
+		track = trackDataAccess.GetTrackById(id);
+		if (track == null) {
+			
+			boolean isDownload = DownloadFile(id);
+			
+			if (isDownload) {
+				track = trackDataAccess.GetTrackById(id);
+			} else {
+				Intent intent = new Intent(ActionNotFoundTrack);
+				sendBroadcast(intent);
+			}
+		}
+		
+		if (track != null) {
+			startPosition = 0;
+			TrackID = track.getAsString("id");
+			trackURL = track.getAsString("trackurl");
+			
+			File file = new File(trackURL);
+			if (!file.exists()) {
+				boolean isDownload = DownloadFile(id);
+				if (!isDownload) {
+					return false;
+				}
+			}
+			return true;
+		}
+		
+		return false;
+	}
+	
 	
 	private boolean getTrackForPlayFromDB() {
 		boolean flagFindTrack = false;

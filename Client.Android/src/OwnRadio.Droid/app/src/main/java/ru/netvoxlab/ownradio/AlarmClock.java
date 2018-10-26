@@ -3,24 +3,26 @@ package ru.netvoxlab.ownradio;
 import android.app.AlarmManager;
 import android.content.ContentValues;
 import android.content.SharedPreferences;
+import android.media.AudioManager;
 import android.os.CountDownTimer;
 import android.preference.PreferenceManager;
-import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Window;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.NumberPicker;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Dictionary;
@@ -30,8 +32,11 @@ import static ru.netvoxlab.ownradio.Constants.ALARM_TIME;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_TITLE;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_VOLUME;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_VOLUME_PERCENT;
 import static ru.netvoxlab.ownradio.Constants.FRIDAY_DAY;
 import static ru.netvoxlab.ownradio.Constants.IS_ALARM_WORK;
+import static ru.netvoxlab.ownradio.Constants.IS_CHANGE_VOLUME;
 import static ru.netvoxlab.ownradio.Constants.IS_ONCE;
 import static ru.netvoxlab.ownradio.Constants.MONDAY_DAY;
 import static ru.netvoxlab.ownradio.Constants.SATURDAY_DAY;
@@ -76,6 +81,12 @@ public class AlarmClock extends AppCompatActivity {
 	
 	//пн=2, вт=3, ср=4, чт=5, пт=6, сб=7, вс=1
 	
+	private CheckBox checkVolume;
+	private SeekBar seekBarVolume;
+	private TextView txtVolumePercent;
+	
+	private int maxVolume = 0;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		//Меняем тему, используемую при запуске приложения, на основную
@@ -84,6 +95,7 @@ public class AlarmClock extends AppCompatActivity {
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_alarm_clock);
+		
 		
 		toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
@@ -95,7 +107,7 @@ public class AlarmClock extends AppCompatActivity {
 				onBackPressed();
 			}
 		});
-
+		
 		// инициализируем все компоненты
 		imageView = findViewById(R.id.imageView);
 		
@@ -117,8 +129,26 @@ public class AlarmClock extends AppCompatActivity {
 		
 		db = new TrackDataAccess(getApplicationContext());
 		
-		
 		prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		
+		
+		checkVolume = findViewById(R.id.checkVolume);
+		seekBarVolume = findViewById(R.id.seekBarVolume);
+		txtVolumePercent = findViewById(R.id.txtVolumePercent);
+		checkVolume.setChecked(prefs.getBoolean(IS_CHANGE_VOLUME, false));
+		
+		AudioManager mAudioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+		maxVolume = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+		
+		int volumePercent = prefs.getInt(CURRENT_VOLUME_PERCENT, 0);
+		
+		seekBarVolume.setMax(maxVolume);
+		seekBarVolume.setProgress(prefs.getInt(CURRENT_VOLUME, 0));
+		seekBarVolume.setEnabled(checkVolume.isChecked());
+		
+		txtVolumePercent.setText(volumePercent + " %");
+		
+
 		
 		initialNumbers(); // загружаем цифры для часов, минут.
 		
@@ -179,6 +209,31 @@ public class AlarmClock extends AppCompatActivity {
 		};
 		
 		musicTimer.start();
+		
+		// change SeekBar
+		seekBarVolume.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+			@Override
+			public void onProgressChanged(SeekBar seekBar, int i, boolean b) {
+				int percent = i * 100 / maxVolume;
+				txtVolumePercent.setText(percent + " %");
+				SharedPreferences.Editor editor = prefs.edit();
+				editor.putInt(CURRENT_VOLUME_PERCENT, percent);
+				editor.putInt(CURRENT_VOLUME, i);
+				editor.apply();
+			}
+			
+			@Override
+			public void onStartTrackingTouch(SeekBar seekBar) {
+			
+			}
+			
+			@Override
+			public void onStopTrackingTouch(SeekBar seekBar) {
+				// TODO:ADD LOGICAL TO TEXT PERCENT
+			}
+		});
+		
+		
 	}
 	
 	public void SetTrack(View view) {
@@ -205,6 +260,17 @@ public class AlarmClock extends AppCompatActivity {
 		
 		
 		editor.apply(); // сохраняем текущий трек
+	}
+	
+	public void OnCheckVolume(View view) {
+		
+		boolean isChecked = checkVolume.isChecked();
+		
+		seekBarVolume.setEnabled(isChecked);
+		
+		SharedPreferences.Editor editor = prefs.edit();
+		editor.putBoolean(IS_CHANGE_VOLUME, isChecked);
+		editor.apply();
 	}
 	
 	private void copyFile(String src, String dest) {

@@ -51,4 +51,9 @@ public class Constants {
 	public static final String CURRENT_TRACK_ID = "currentTrackId";
 	public static final String CURRENT_TRACK_URL = "currentTrackUrl";
 	
+	
+	public static final String IS_CHANGE_VOLUME = "isChangeVolume";
+	public static final String CURRENT_VOLUME_PERCENT = "currentVolumePercent";
+	public static final String CURRENT_VOLUME = "currentVolume";
+	
 }

@@ -43,6 +43,16 @@
 				<!-- <data android:scheme="file" /> -->
 			</intent-filter>
 			
+			<intent-filter>
+				<action android:name="android.intent.action.VIEW" />
+				<category android:name="android.intent.category.BROWSABLE"/>
+				<category android:name="android.intent.category.DEFAULT" />
+				
+				<data android:scheme="http"  android:host="ownradio.ru"  android:path="/" />
+			
+			</intent-filter>
+			
+			
 			<!-- <intent-filter> -->
 			<!-- <action android:name="android.intent.action.MAIN"/> -->
 			<!-- &lt;!&ndash; <action android:name="android.intent.action.MEDIA_MOUNTED" /> &ndash;&gt; -->

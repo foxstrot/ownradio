@@ -31,37 +31,39 @@ import static ru.netvoxlab.ownradio.Constants.ALARM_TIME;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_TITLE;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_VOLUME;
+import static ru.netvoxlab.ownradio.Constants.IS_CHANGE_VOLUME;
 import static ru.netvoxlab.ownradio.Constants.IS_ONCE;
 import static ru.netvoxlab.ownradio.Constants.TAG;
+import static ru.netvoxlab.ownradio.MainActivity.ActionAlarm;
 
 public class AlarmReceiver extends BroadcastReceiver {
 	
 	@Override
-	public void onReceive(Context context, Intent intent) {
+	public void onReceive(final Context context, Intent intent) {
 		
 		int dayWeek = Integer.valueOf(intent.getAction());
 		
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		
 		Log.d(TAG, "AlarmReceiver action Start");
-		Intent i = new Intent(context, MainActivity.class);
+		Intent i = new Intent(ActionAlarm);
 		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 		PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP //Включает экран, но не снимает блокировку
 				| PowerManager.ON_AFTER_RELEASE, "wakeup");
 		wl.acquire();
-		context.startActivity(i);
+		//context.startActivity(i);
 		
 		// Запуск музыки
 		String path = prefs.getString(CURRENT_TRACK_URL, "");
 		SharedPreferences.Editor editor = prefs.edit();
 		File file = new File(path);
-		if (path == ""  || !file.exists()) {
+		if (path == "" || !file.exists()) {
 			TrackDataAccess db = new TrackDataAccess(context);
 			ContentValues trackInfo = db.GetMostNewTrack();
 			
-			if(trackInfo == null)
-			{
+			if (trackInfo == null) {
 				Toast.makeText(context, "Загрузите пожалуйста музыку...", Toast.LENGTH_SHORT).show();
 				return;
 			}
@@ -71,17 +73,22 @@ public class AlarmReceiver extends BroadcastReceiver {
 			path = trackInfo.getAsString("trackurl");
 			String directory = path.substring(0, path.indexOf("music/")) + "AlarmTrack/";
 			path = directory + "alarm.mp3";
-
+			
 			editor.putString(CURRENT_TRACK_URL, path);
 			editor.apply();
+			
 		}
 		
-		final AudioManager mAudioManager = (AudioManager) context.getSystemService(AUDIO_SERVICE);
-		mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
-		MediaPlayer mp = MediaPlayer.create(context, Uri.parse(path));
-		mp.setLooping(true); // повторение музыки пока не выключит пользователь
+		
+		if (prefs.getBoolean(IS_CHANGE_VOLUME, false)) {
+			final AudioManager mAudioManager = (AudioManager) context.getSystemService(AUDIO_SERVICE);
+			mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, prefs.getInt(CURRENT_VOLUME, 0), 0);
+		/*MediaPlayer mp = MediaPlayer.create(context, Uri.parse(path));
+		//mp.setLooping(true); // повторение музыки пока не выключит пользователь
 		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-		mp.start();
+		mp.start();*/
+		}
+		context.sendBroadcast(i);
 		wl.release();
 	}
 	
