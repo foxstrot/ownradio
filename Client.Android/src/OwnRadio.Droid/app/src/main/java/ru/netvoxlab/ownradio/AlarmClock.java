@@ -29,6 +29,7 @@ import java.util.Dictionary;
 import java.util.Hashtable;
 
 import static ru.netvoxlab.ownradio.Constants.ALARM_TIME;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ARTIST;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_TITLE;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
@@ -38,6 +39,7 @@ import static ru.netvoxlab.ownradio.Constants.FRIDAY_DAY;
 import static ru.netvoxlab.ownradio.Constants.IS_ALARM_WORK;
 import static ru.netvoxlab.ownradio.Constants.IS_CHANGE_VOLUME;
 import static ru.netvoxlab.ownradio.Constants.IS_ONCE;
+import static ru.netvoxlab.ownradio.Constants.IS_TIME_ALARM;
 import static ru.netvoxlab.ownradio.Constants.MONDAY_DAY;
 import static ru.netvoxlab.ownradio.Constants.SATURDAY_DAY;
 import static ru.netvoxlab.ownradio.Constants.SUNDAY_DAY;
@@ -148,7 +150,6 @@ public class AlarmClock extends AppCompatActivity {
 		
 		txtVolumePercent.setText(volumePercent + " %");
 		
-
 		
 		initialNumbers(); // загружаем цифры для часов, минут.
 		
@@ -241,6 +242,7 @@ public class AlarmClock extends AppCompatActivity {
 		ContentValues trackInfo = db.GetMostNewTrack();
 		
 		String title = trackInfo.getAsString("title");
+		String artist = trackInfo.getAsString("artist");
 		String id = trackInfo.getAsString("id");
 		String url = trackInfo.getAsString("trackurl");
 		
@@ -255,6 +257,7 @@ public class AlarmClock extends AppCompatActivity {
 		SharedPreferences.Editor editor = prefs.edit();
 		
 		editor.putString(CURRENT_TRACK_TITLE, title);
+		editor.putString(CURRENT_TRACK_ARTIST, artist);
 		editor.putString(CURRENT_TRACK_ID, id);
 		editor.putString(CURRENT_TRACK_URL, path);
 		
@@ -493,6 +496,19 @@ public class AlarmClock extends AppCompatActivity {
 			return;
 		}
 		
+		reloadDays();
+		
+		if (prefs.getBoolean(IS_ALARM_WORK, false)) {
+			setTime();
+			startTimer(prefs.edit());
+			imageView.setImageResource(R.drawable.ic_blu_bud);
+		} else {
+			imageView.setImageResource(R.drawable.ic_grey_bud);
+		}
+	}
+	
+	
+	private void reloadDays() {
 		if (prefs.getBoolean(MONDAY_DAY, false)) {
 			txtMonday.setBackgroundResource(R.drawable.bottom_selected);
 		} else {
@@ -534,15 +550,8 @@ public class AlarmClock extends AppCompatActivity {
 		} else {
 			txtSunday.setBackgroundResource(0);
 		}
-		
-		if (prefs.getBoolean(IS_ALARM_WORK, false)) {
-			setTime();
-			startTimer(prefs.edit());
-			imageView.setImageResource(R.drawable.ic_blu_bud);
-		} else {
-			imageView.setImageResource(R.drawable.ic_grey_bud);
-		}
 	}
+	
 	
 	private void initialNumbers() {
 		String[] hourValues = new String[25];
@@ -672,7 +681,7 @@ public class AlarmClock extends AppCompatActivity {
 		
 		imageView.setImageResource(R.drawable.ic_blu_bud);
 		prefEditor.putBoolean(IS_ALARM_WORK, true); // устанавливаем флаг, то что будильник запущен
-		
+		prefEditor.putBoolean(IS_TIME_ALARM, false);
 		int hours = TimePreference.getHour(time);
 		int mins = TimePreference.getMinute(time);
 		
@@ -708,7 +717,10 @@ public class AlarmClock extends AppCompatActivity {
 		timer = new CountDownTimer(mlsec, 1000) {
 			@Override
 			public void onTick(long l) {
-				if (prefs.getBoolean(IS_ALARM_WORK, false)) {
+				
+				if (prefs.getBoolean(IS_TIME_ALARM, false)) {
+					timer.onFinish();
+				} else if (prefs.getBoolean(IS_ALARM_WORK, false)) {
 					setTime(); // обновляем надпись, количество времени до будильника
 				}
 			}
@@ -716,6 +728,7 @@ public class AlarmClock extends AppCompatActivity {
 			@Override
 			public void onFinish() {
 				stopAlarm();
+				timer.cancel();
 			}
 		};
 		
@@ -769,15 +782,26 @@ public class AlarmClock extends AppCompatActivity {
 	private void stopAlarm() {
 		imageView.setImageResource(R.drawable.ic_grey_bud);
 		
+		txtProgress.setText("Будильник остановлен");
+		
+		boolean isTimeAlarm = prefs.getBoolean(IS_TIME_ALARM, false);
+		boolean isOnce = prefs.getBoolean(IS_ONCE, false);
+		
 		// если работает Alarm, то останавливаем
 		if (prefs.getBoolean(IS_ALARM_WORK, false)) {
 			for (int i = 1; i <= 7; i++) {
+				if (isOnce && isTimeAlarm) {
+					setPreference(i, false);
+				}
 				AlarmReceiver.stopAlarm(getApplicationContext(), i);
 			}
 		}
 		
+		reloadDays();
+		
 		SharedPreferences.Editor editor = prefs.edit();
 		editor.putBoolean(IS_ONCE, false);
+		editor.putBoolean(IS_ALARM_WORK, false);
 		editor.apply();
 	}
 	
@@ -837,6 +861,7 @@ public class AlarmClock extends AppCompatActivity {
 		switch (tag) {
 			case 1:
 				prefEditor.putBoolean(SUNDAY_DAY, isChecked);
+				
 				break;
 			case 2:
 				prefEditor.putBoolean(MONDAY_DAY, isChecked);
@@ -859,6 +884,7 @@ public class AlarmClock extends AppCompatActivity {
 		}
 		
 		prefEditor.apply();
+		
 	}
 	
 	private void setTime() {

@@ -12,6 +12,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
+import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -28,12 +29,15 @@ import static ru.netvoxlab.ownradio.Constants.ACTION_CLOSE_APP;
 import static ru.netvoxlab.ownradio.Constants.ACTION_EXIT_APP;
 import static ru.netvoxlab.ownradio.Constants.ACTION_START_APP;
 import static ru.netvoxlab.ownradio.Constants.ALARM_TIME;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ARTIST;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_TITLE;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_VOLUME;
+import static ru.netvoxlab.ownradio.Constants.IS_ALARM_WORK;
 import static ru.netvoxlab.ownradio.Constants.IS_CHANGE_VOLUME;
 import static ru.netvoxlab.ownradio.Constants.IS_ONCE;
+import static ru.netvoxlab.ownradio.Constants.IS_TIME_ALARM;
 import static ru.netvoxlab.ownradio.Constants.TAG;
 import static ru.netvoxlab.ownradio.MainActivity.ActionAlarm;
 
@@ -70,6 +74,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 			
 			editor.putString(CURRENT_TRACK_ID, trackInfo.getAsString("id"));
 			editor.putString(CURRENT_TRACK_TITLE, trackInfo.getAsString("title"));
+			editor.putString(CURRENT_TRACK_ARTIST, trackInfo.getAsString("artist"));
 			path = trackInfo.getAsString("trackurl");
 			String directory = path.substring(0, path.indexOf("music/")) + "AlarmTrack/";
 			path = directory + "alarm.mp3";
@@ -88,7 +93,15 @@ public class AlarmReceiver extends BroadcastReceiver {
 		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
 		mp.start();*/
 		}
+		
+		if(prefs.getBoolean(IS_ONCE, false))
+		{
+			editor.putBoolean(IS_TIME_ALARM, true); // off work alarm
+			editor.apply();
+		}
+		
 		context.sendBroadcast(i);
+		
 		wl.release();
 	}
 	

@@ -9,6 +9,7 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -22,6 +23,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
@@ -45,6 +47,8 @@ import java.util.concurrent.ExecutionException;
 import ru.netvoxlab.ownradio.utils.ResourceHelper;
 
 import static android.app.PendingIntent.getActivity;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ARTIST;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_TITLE;
 import static ru.netvoxlab.ownradio.MainActivity.ActionButtonImgUpdate;
 import static ru.netvoxlab.ownradio.MainActivity.ActionNotFoundTrack;
 import static ru.netvoxlab.ownradio.MainActivity.ActionProgressBarFirstTracksLoad;
@@ -680,15 +684,19 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	
 	
 	public void PlayAlarmTrack(String id, String url) {
-		player = null;
+		if (player != null && player.isPlaying()) {
+			player.stop();
+			player = null;
+		}
 		
 		track = trackDataAccess.GetTrackById(id);
 		if (track == null) {
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 			
 			track = new ContentValues();
 			track.put("id", id);
-			track.put("title", "Track");
-			track.put("artist", "Artist");
+			track.put("title", prefs.getString(CURRENT_TRACK_TITLE, "Track"));
+			track.put("artist", prefs.getString(CURRENT_TRACK_ARTIST, "Artist"));
 		}
 		
 		TrackID = id;
@@ -697,16 +705,21 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		Play();
 	}
 	
-	public boolean PlayNewTrack(String id) {
-		player = null;
+	public boolean PlayNewTrack(String id, String title, String artist) {
+		if (player != null && player.isPlaying()) {
+			player.stop();
+			player = null;
+		}
 		
 		track = trackDataAccess.GetTrackById(id);
+		
 		if (track == null) {
 			
 			boolean isDownload = DownloadFile(id);
 			
 			if (isDownload) {
 				track = trackDataAccess.GetTrackById(id);
+				track.put("");
 			} else {
 				Intent intent = new Intent(ActionNotFoundTrack);
 				sendBroadcast(intent);

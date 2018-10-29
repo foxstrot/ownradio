@@ -75,16 +75,6 @@ import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
 import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
 import static ru.netvoxlab.ownradio.Constants.TAG;
 
-class MyClass implements Serializable {
-	public MediaPlayerService.MediaPlayerServiceBinder binder;
-	
-	public MyClass(MediaPlayerService.MediaPlayerServiceBinder binder) {
-		this.binder = binder;
-	}
-	
-}
-
-
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener, NetworkStateReceiver.NetworkStateReceiverListener {
 	
 	private APICalls apiCalls;
@@ -409,12 +399,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			@Override
 			public void onClick(View view) {
 				Intent alarmClockActivity = new Intent(getBaseContext(), AlarmClock.class);
-				MyClass obj = new MyClass(binder);
-				
-				/*Gson gson = new Gson();
-				String studentDataObjectAsAString = gson.toJson(obj);
-				
-				alarmClockActivity.putExtra("binder", studentDataObjectAsAString);*/
 				startActivity(alarmClockActivity);
 			}
 		});
@@ -1009,6 +993,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	}
 	
 	public String TrackId;
+	public String TrackTitle;
+	public String TrackArtist;
 	
 	@Override
 	public void onResume() {
@@ -1017,8 +1003,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		Uri uri = intent.getData();
 		if (uri != null) {
 			try {
-				final String trackId = uri.getQueryParameter("trackId");
-				TrackId = trackId;
+				TrackId = uri.getQueryParameter("trackId");
+				TrackTitle = uri.getQueryParameter("title").replace('_', ' ');
+				TrackArtist = uri.getQueryParameter("artist").replace('_', ' ');
 				if (binder != null) {
 					if (binder.GetMediaPlayerService().player != null) {
 						binder.GetMediaPlayerService().Pause();
@@ -1062,7 +1049,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			Intent intent = new Intent(Intent.ACTION_SEND);
 			intent.setType("text/plain");
 			intent.putExtra(Intent.EXTRA_SUBJECT, "OwnRadio");
-			intent.putExtra(Intent.EXTRA_TEXT, "http://ownradio.ru/?trackId=" + trackId);
+			String title = txtTrackTitle.getText().toString().replace(' ', '_');
+			String artist = txtTrackArtist.getText().toString().replace(' ', '_');
+			intent.putExtra(Intent.EXTRA_TEXT, "http://ownradio.ru/?trackId=" + trackId + "&title=" + title + "&artist=" + artist);
 			startActivity(Intent.createChooser(intent, "Подделиться"));
 			/*ClipData clip = ClipData.newPlainText("Link", "ownradio.ru/?trackId=" + trackId);
 			clipboard.setPrimaryClip(clip);
@@ -1221,7 +1210,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		
 		@Override
 		public void run() {
-			if (binder.GetMediaPlayerService().PlayNewTrack(TrackId)) {
+			if (binder.GetMediaPlayerService().PlayNewTrack(TrackId, TrackTitle, TrackArtist)) {
 				handler.sendEmptyMessage(0);
 			} else {
 				dialog.dismiss();
