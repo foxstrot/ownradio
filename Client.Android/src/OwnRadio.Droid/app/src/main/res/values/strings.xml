@@ -237,4 +237,9 @@
 	<string name="welcome_slide_2_2">рекомендации</string>
 	<string name="welcome_slide_3_1">Работает без</string>
 	<string name="welcome_slide_3_2">мобильного интернета</string>
+	
+	
+	<!--Download file-->
+	<string name="download_title">Идет загрузка аудиозаписи</string>
+	<string name="download_message">Пожалуйста подождите...</string>
 </resources>

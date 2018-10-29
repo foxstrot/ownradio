@@ -12,6 +12,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
+import android.preference.Preference;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
@@ -28,60 +29,79 @@ import static ru.netvoxlab.ownradio.Constants.ACTION_CLOSE_APP;
 import static ru.netvoxlab.ownradio.Constants.ACTION_EXIT_APP;
 import static ru.netvoxlab.ownradio.Constants.ACTION_START_APP;
 import static ru.netvoxlab.ownradio.Constants.ALARM_TIME;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ARTIST;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_TITLE;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_VOLUME;
+import static ru.netvoxlab.ownradio.Constants.IS_ALARM_WORK;
+import static ru.netvoxlab.ownradio.Constants.IS_CHANGE_VOLUME;
 import static ru.netvoxlab.ownradio.Constants.IS_ONCE;
+import static ru.netvoxlab.ownradio.Constants.IS_TIME_ALARM;
 import static ru.netvoxlab.ownradio.Constants.TAG;
+import static ru.netvoxlab.ownradio.MainActivity.ActionAlarm;
 
 public class AlarmReceiver extends BroadcastReceiver {
 	
 	@Override
-	public void onReceive(Context context, Intent intent) {
+	public void onReceive(final Context context, Intent intent) {
 		
 		int dayWeek = Integer.valueOf(intent.getAction());
 		
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		
 		Log.d(TAG, "AlarmReceiver action Start");
-		Intent i = new Intent(context, MainActivity.class);
+		Intent i = new Intent(ActionAlarm);
 		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 		PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP //Включает экран, но не снимает блокировку
 				| PowerManager.ON_AFTER_RELEASE, "wakeup");
 		wl.acquire();
-		context.startActivity(i);
+		//context.startActivity(i);
 		
 		// Запуск музыки
 		String path = prefs.getString(CURRENT_TRACK_URL, "");
 		SharedPreferences.Editor editor = prefs.edit();
 		File file = new File(path);
-		if (path == ""  || !file.exists()) {
+		if (path == "" || !file.exists()) {
 			TrackDataAccess db = new TrackDataAccess(context);
 			ContentValues trackInfo = db.GetMostNewTrack();
 			
-			if(trackInfo == null)
-			{
+			if (trackInfo == null) {
 				Toast.makeText(context, "Загрузите пожалуйста музыку...", Toast.LENGTH_SHORT).show();
 				return;
 			}
 			
 			editor.putString(CURRENT_TRACK_ID, trackInfo.getAsString("id"));
 			editor.putString(CURRENT_TRACK_TITLE, trackInfo.getAsString("title"));
+			editor.putString(CURRENT_TRACK_ARTIST, trackInfo.getAsString("artist"));
 			path = trackInfo.getAsString("trackurl");
 			String directory = path.substring(0, path.indexOf("music/")) + "AlarmTrack/";
 			path = directory + "alarm.mp3";
-
+			
 			editor.putString(CURRENT_TRACK_URL, path);
+			editor.apply();
+			
+		}
+		
+		
+		if (prefs.getBoolean(IS_CHANGE_VOLUME, false)) {
+			final AudioManager mAudioManager = (AudioManager) context.getSystemService(AUDIO_SERVICE);
+			mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, prefs.getInt(CURRENT_VOLUME, 0), 0);
+		/*MediaPlayer mp = MediaPlayer.create(context, Uri.parse(path));
+		//mp.setLooping(true); // повторение музыки пока не выключит пользователь
+		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
+		mp.start();*/
+		}
+		
+		if(prefs.getBoolean(IS_ONCE, false))
+		{
+			editor.putBoolean(IS_TIME_ALARM, true); // off work alarm
 			editor.apply();
 		}
 		
-		final AudioManager mAudioManager = (AudioManager) context.getSystemService(AUDIO_SERVICE);
-		mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
-		MediaPlayer mp = MediaPlayer.create(context, Uri.parse(path));
-		mp.setLooping(true); // повторение музыки пока не выключит пользователь
-		mp.setAudioStreamType(AudioManager.STREAM_MUSIC);
-		mp.start();
+		context.sendBroadcast(i);
+		
 		wl.release();
 	}
 	

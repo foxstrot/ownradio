@@ -2,6 +2,8 @@ package ru.netvoxlab.ownradio;
 
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -16,6 +18,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.SystemClock;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
@@ -49,18 +52,24 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import ru.netvoxlab.ownradio.receivers.NetworkStateReceiver;
 
 import static ru.netvoxlab.ownradio.Constants.ACTION_UPDATE_FILLCACHE_PROGRESS;
 import static ru.netvoxlab.ownradio.Constants.ALL_CONNECTION_TYPES;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
+import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
 import static ru.netvoxlab.ownradio.Constants.EXTRA_FILLCACHE_PROGRESS;
 import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
 import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
@@ -133,6 +142,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	public static final String ActionStopPlayback = "ru.netvoxlab.ownradio.action.STOP_PLAYBACK";
 	public static final String ActionCheckCountTracksAndDownloadIfNotEnought = "ru.netvoxlab.ownradio.action.CHECK_TRACKS_AND_DOWNLOAD";
 	public static final String ActionShowRateRequest = "ru.netvoxlab.ownradio.SHOW_RATING_REQUEST";
+	public static final String ActionNotFoundTrack = "ru.netvoxlab.ownradio.NOT_FOUND_TRACK";
+	public static final String ActionAlarm = "ru.netvoxlab.ownradio.ACTION_ALARM";
+	
 	
 	public static final String NumListenedTracks = "NUM_TRACKS_LISTENED_IN_VERSION";
 	public static final String version = "VERSION";
@@ -149,6 +161,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		return binder.GetMediaPlayerService().TrackID;
 	}
 	
+	Intent intent;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		//Меняем тему, используемую при запуске приложения, на основную
@@ -161,6 +175,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //		setSupportActionBar(toolbar);
 //		getSupportActionBar().setDisplayShowTitleEnabled(false);
 		prefManager = new PrefManager(getApplicationContext());
+
 
 //		if (prefManager.isFirstTimeLaunch()) {
 //			startActivity(new Intent(MainActivity.this, WelcomeActivity.class));
@@ -243,6 +258,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		filter.addAction(ActionCheckCountTracksAndDownloadIfNotEnought);
 		filter.addAction(ActionShowRateRequest);
 		filter.addAction(ACTION_UPDATE_FILLCACHE_PROGRESS);
+		filter.addAction(ActionNotFoundTrack);
+		filter.addAction(ActionAlarm);
 		registerReceiver(myReceiver, filter);
 		
 		this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
@@ -398,6 +415,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		});
 		
 	}
+	
 	
 	@Override
 	public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -723,9 +741,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 									//todo:
 									int curSeconds = binder.GetMediaPlayerService().GetPosition() / 1000;
 									
-									if (curSeconds <= 10 && curVolume <= 1.0f) {
+									if (curSeconds < 10 && curVolume <= 1.0f) {
 										curVolume += 0.1f;
 										binder.GetMediaPlayerService().SetVolume(curVolume);
+										Log.d(TAG, "curVolume = " + curVolume + " seconds = " + curSeconds);
 									}
 									
 									int curHours = curSeconds / 3600;
@@ -735,11 +754,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 									String curTime = (curHours != 0 ? (curHours + ":") : "") + (curMin != 0 ? (curMin + ":") : "") + (curSeconds != 0 ? (curSeconds) : "");
 									int nextSeconds = (duration - binder.GetMediaPlayerService().GetPosition()) / 1000;
 									
-									//todo:add logical volume
-									if(nextSeconds <= 10 && curVolume >= 0f)
-									{
-										curVolume-=0.1f;
+									if (nextSeconds < 10 && curVolume >= 0f) {
+										curVolume -= 0.1f;
 										binder.GetMediaPlayerService().SetVolume(curVolume);
+										Log.d(TAG, "curVolume = " + curVolume + " seconds = " + nextSeconds);
 									}
 									
 									int nextHours = nextSeconds / 3600;
@@ -807,6 +825,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				if (count == 0)
 					txtFillCacheProgress.setVisibility(View.GONE);
 			}
+			
+			if (intent.getAction().equals(ActionNotFoundTrack)) {
+				AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+				builder.setTitle("Ошибка загрузки")
+						.setMessage("Данный трек отсутствует")
+						.setCancelable(false)
+						.setNegativeButton(getResources().getString(R.string.button_ok),
+								new DialogInterface.OnClickListener() {
+									@Override
+									public void onClick(DialogInterface dialogInterface, int i) {
+										dialogInterface.cancel();
+									}
+								});
+				AlertDialog alert = builder.create();
+				alert.show();
+			}
+			
+			if (intent.getAction().equals(ActionAlarm)) {
+				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+				String trackId = prefs.getString(CURRENT_TRACK_ID, "");
+				String trackUrl = prefs.getString(CURRENT_TRACK_URL, "");
+				binder.GetMediaPlayerService().PlayAlarmTrack(trackId, trackUrl);
+			}
+			
 		}
 	};
 	
@@ -899,6 +941,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			
 			SetTrackInfoText();
 			
+			
 			new Utilites().CheckCountTracksAndDownloadIfNotEnought(MainActivity.this, DeviceId);
 			
 			if (((App) getApplicationContext()).getFillingCacheActive()) {
@@ -940,14 +983,80 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			return;
 		}
 		
+		
 	}
 	
+	@Override
+	protected void onNewIntent(Intent intent) {
+		if (intent != null)
+			setIntent(intent);
+	}
+	
+	public String TrackId;
+	public String TrackTitle;
+	public String TrackArtist;
 	
 	@Override
 	public void onResume() {
+		
+		Intent intent = getIntent();
+		Uri uri = intent.getData();
+		if (uri != null) {
+			try {
+				TrackId = uri.getQueryParameter("trackId");
+				TrackTitle = uri.getQueryParameter("title").replace('_', ' ');
+				TrackArtist = uri.getQueryParameter("artist").replace('_', ' ');
+				if (binder != null) {
+					if (binder.GetMediaPlayerService().player != null) {
+						binder.GetMediaPlayerService().Pause();
+					}/*else {
+						binder.GetMediaPlayerService().Play();
+						MediaPlayerService.playbackWithHSisInterrupted = false;
+					}*/
+					
+					
+					if (dialog == null) {
+						dialog = new ProgressDialog(MainActivity.this);
+					}
+					dialog.setTitle(R.string.download_title);
+					dialog.setMessage(getResources().getString(R.string.download_message));
+					dialog.setIndeterminate(true);
+					dialog.setCancelable(true);
+					dialog.show();
+					
+					PlayThread thread = new PlayThread();
+					thread.start();
+				}
+			} catch (Exception ex) {
+				Toast.makeText(this, ex.getMessage(), Toast.LENGTH_SHORT).show();
+			}
+		}
+		
+		intent.setData(null); // clear data
 		super.onResume();
 		networkStateReceiver.addListener(this);
 		this.registerReceiver(networkStateReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
+	}
+	
+	
+	volatile boolean isEnd = false;
+	
+	public void onCopyLink(View view) {
+		ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+		String trackId = binder.GetMediaPlayerService().TrackID;
+		
+		if (trackId != "") {
+			Intent intent = new Intent(Intent.ACTION_SEND);
+			intent.setType("text/plain");
+			intent.putExtra(Intent.EXTRA_SUBJECT, "OwnRadio");
+			String title = txtTrackTitle.getText().toString().replace(' ', '_');
+			String artist = txtTrackArtist.getText().toString().replace(' ', '_');
+			intent.putExtra(Intent.EXTRA_TEXT, "http://ownradio.ru/?trackId=" + trackId + "&title=" + title + "&artist=" + artist);
+			startActivity(Intent.createChooser(intent, "Подделиться"));
+			/*ClipData clip = ClipData.newPlainText("Link", "ownradio.ru/?trackId=" + trackId);
+			clipboard.setPrimaryClip(clip);
+			Toast.makeText(this, "Ссылка на трек успешно скопирована", Toast.LENGTH_SHORT).show();*/
+		}
 	}
 	
 	@Override
@@ -1054,15 +1163,39 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				MediaPlayerService.MediaPlayerServiceBinder binder = (MediaPlayerService.MediaPlayerServiceBinder) service;
 				instance.binder = binder;
 				instance.isBound = true;
-				//предзагрузка трека, на котором остановилось воспроизведение
-				instance.binder.GetMediaPlayerService().PreloadTrack();
-				if (binder.GetMediaPlayerService().track != null) {
-					txtTrackTitle.setText(binder.GetMediaPlayerService().track.getAsString("title"));
-					txtTrackArtist.setText(binder.GetMediaPlayerService().track.getAsString("artist"));
-					if (progressBar == null)
-						progressBar = findViewById(R.id.progressBar);
-					progressBar.setMax(binder.GetMediaPlayerService().track.getAsInteger("length") * 1000);
-					progressBar.setProgress(binder.GetMediaPlayerService().startPosition);
+				
+				if (TrackId != null) {
+					if (binder.GetMediaPlayerService().player != null) {
+						binder.GetMediaPlayerService().Pause();
+					} else {
+						binder.GetMediaPlayerService().InitiMedia();
+						MediaPlayerService.playbackWithHSisInterrupted = false;
+					}
+					
+					
+					if (dialog == null) {
+						dialog = new ProgressDialog(MainActivity.this);
+					}
+					dialog.setTitle(R.string.download_title);
+					dialog.setMessage(getResources().getString(R.string.download_message));
+					dialog.setIndeterminate(true);
+					dialog.setCancelable(true);
+					dialog.show();
+					
+					PlayThread thread = new PlayThread();
+					thread.start();
+					
+				} else {
+					//предзагрузка трека, на котором остановилось воспроизведение
+					instance.binder.GetMediaPlayerService().PreloadTrack();
+					if (binder.GetMediaPlayerService().track != null) {
+						txtTrackTitle.setText(binder.GetMediaPlayerService().track.getAsString("title"));
+						txtTrackArtist.setText(binder.GetMediaPlayerService().track.getAsString("artist"));
+						if (progressBar == null)
+							progressBar = findViewById(R.id.progressBar);
+						progressBar.setMax(binder.GetMediaPlayerService().track.getAsInteger("length") * 1000);
+						progressBar.setProgress(binder.GetMediaPlayerService().startPosition);
+					}
 				}
 			}
 		}
@@ -1071,6 +1204,28 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		public void onServiceDisconnected(ComponentName componentName) {
 			instance.isBound = false;
 		}
+	}
+	
+	private class PlayThread extends Thread {
+		
+		@Override
+		public void run() {
+			if (binder.GetMediaPlayerService().PlayNewTrack(TrackId, TrackTitle, TrackArtist)) {
+				handler.sendEmptyMessage(0);
+			} else {
+				dialog.dismiss();
+			}
+		}
+		
+		private Handler handler = new Handler() {
+			
+			@Override
+			public void handleMessage(Message msg) {
+				binder.GetMediaPlayerService().Play();
+				textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
+				dialog.dismiss();
+			}
+		};
 	}
 	
 }

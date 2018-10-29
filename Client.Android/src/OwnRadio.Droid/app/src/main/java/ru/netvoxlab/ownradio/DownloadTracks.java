@@ -23,23 +23,27 @@ import static ru.netvoxlab.ownradio.Constants.TAG;
  * Created by a.polunina on 13.12.2016.
  */
 
-public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolean> {
+public class DownloadTracks extends AsyncTask<Map<String, String>, Void, Boolean> {
 	Context mContext;
-
+	
 	public DownloadTracks(Context context) {
 		mContext = context;
 	}
-
+	
 	@Override
 	protected Boolean doInBackground(Map<String, String>... trackMap) {
 		
 		Long fileLength;
 		try {
-			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id"), trackMap[0].get("deviceid")).execute();
+			Response<ResponseBody> response;
+			if (trackMap[0].get("deviceid") == null)
+				response = ServiceGenerator.createService(APIService.class).getTrack(trackMap[0].get("id")).execute();
+			else
+			response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id"), trackMap[0].get("deviceid")).execute();
 //			Response<ResponseBody> response = ServiceGenerator.createService(APIService.class).getTrackById(trackMap[0].get("id"), trackMap[0].get("deviceid")).execute();
 			if (response.isSuccessful()) {
 				Log.d(TAG, "server contacted and has file");
-				final String trackURL = ((App)mContext).getMusicDirectory() + File.separator + trackMap[0].get("id") + ".mp3";
+				final String trackURL = ((App) mContext).getMusicDirectory() + File.separator + trackMap[0].get("id") + ".mp3";
 //				final String trackURL = mContext.getExternalFilesDir(Environment.DIRECTORY_MUSIC) + File.separator + trackMap[0].get("id") + ".mp3";
 				boolean writtenToDisk = WriteTrackToDisk2(trackURL, response.body());
 				
@@ -95,7 +99,7 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 //						MediaPlayerService.player.pause();
 //						Intent intent = new Intent(ActionButtonImgUpdate);
 //						mContext.sendBroadcast(intent);
-
+					
 					}
 				}
 			} else {
@@ -106,46 +110,46 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 		}
 		return false;
 	}
-
-
+	
+	
 	@Override
 	protected void onPostExecute(Boolean o) {
 		super.onPostExecute(o);
 	}
-
+	
 	public boolean WriteTrackToDisk2(String trackURL, ResponseBody body) {
-
+		
 		try {
 			File futureMusicFile = new File(trackURL);
-
+			
 			InputStream inputStream = null;
 			OutputStream outputStream = null;
-
+			
 			try {
 				byte[] fileReader = new byte[4096];
-
+				
 				long fileSize = body.contentLength();
 				long fileSizeDownloaded = 0;
-
+				
 				inputStream = body.byteStream();
 				outputStream = new FileOutputStream(futureMusicFile);
-
+				
 				while (true) {
 					int read = inputStream.read(fileReader);
-
+					
 					if (read == -1) {
 						break;
 					}
-
+					
 					outputStream.write(fileReader, 0, read);
-
+					
 					fileSizeDownloaded += read;
 
 //					Log.d(TAG, "file download: " + fileSizeDownloaded + " of " + fileSize);
 				}
-
+				
 				outputStream.flush();
-
+				
 				return true;
 			} catch (IOException e) {
 				return false;
@@ -153,7 +157,7 @@ public class DownloadTracks extends AsyncTask<Map<String, String> , Void, Boolea
 				if (inputStream != null) {
 					inputStream.close();
 				}
-
+				
 				if (outputStream != null) {
 					outputStream.close();
 				}

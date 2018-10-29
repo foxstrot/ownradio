@@ -30,7 +30,11 @@ public interface APIService {
 	@Streaming
 	@GET("v5/tracks/{trackid}/{deviceid}")
 	Call<ResponseBody> getTrackById(@Path("trackid") String trackId, @Path("deviceid") String deviceId);
-
+	
+	@Streaming
+	@GET("v5/tracks/{id}")
+	Call<ResponseBody> getTrack(@Path("id") String trackId);
+	
 	@POST("v5/histories/{deviceid}/{trackid}")
 	@Headers("Content-Type: application/json")
 	Call<Void> sendHistory(@Path("deviceid") String deviceId, @Path("trackid") String trackId, @Body HistoryModel data);
