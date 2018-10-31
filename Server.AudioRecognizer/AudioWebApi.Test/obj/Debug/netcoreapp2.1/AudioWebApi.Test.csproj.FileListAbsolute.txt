@@ -1,0 +1,51 @@
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.Test.deps.json
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.Test.runtimeconfig.json
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.Test.runtimeconfig.dev.json
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.Test.dll
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.dll
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.pdb
+D:\Projects\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.csprojAssemblyReference.cache
+D:\Projects\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.csproj.CoreCompileInputs.cache
+D:\Projects\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.AssemblyInfoInputs.cache
+D:\Projects\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.AssemblyInfo.cs
+D:\Projects\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.csproj.CopyComplete
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.Test.pdb
+D:\Projects\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.dll
+D:\Projects\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.pdb
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\B.I.T - На_сегда  [Hypeology].mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\Crash _ Beatfm - Spot [Hypeology].mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\ISLA DE MUERTA - Спящий режим [Hypeology].mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\KseroN - Нужно подумать [Hypeology].mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\Lawanda - Психи [Hypeology].mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\Papa Roach - Help.mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\Reisig - Я устал [Hypeology].mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\Svyat - Цейтнот [Hypeology].mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\[Amatory] - Дыши со мной.mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\Леша Gs - SuperSonic [Hypeology].mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\ОриГами - Без лишних сло_.mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\Рома Суро_ый - Bank Bank Bank [Hypeology].mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\Тима Белорусских - МОКРЫЕ КРОССЫ  (ft. way).mp3
+D:\Projects\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\TempFile.txt
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Microsoft.VisualStudio.TestPlatform.MSTest.TestAdapter.dll
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.Interface.dll
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Microsoft.VisualStudio.TestPlatform.MSTestAdapter.PlatformServices.dll
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\TempFile.txt
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.Test.deps.json
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.Test.runtimeconfig.json
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.Test.runtimeconfig.dev.json
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.Test.dll
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.Test.pdb
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.dll
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\AudioWebApi.pdb
+D:\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.csprojAssemblyReference.cache
+D:\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.csproj.CoreCompileInputs.cache
+D:\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.AssemblyInfoInputs.cache
+D:\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.AssemblyInfo.cs
+D:\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.csproj.CopyComplete
+D:\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.dll
+D:\AudioWebApi\AudioWebApi.Test\obj\Debug\netcoreapp2.1\AudioWebApi.Test.pdb
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\Found.mp3
+D:\AudioWebApi\AudioWebApi.Test\bin\Debug\netcoreapp2.1\Musics\NotFoud.mp3
