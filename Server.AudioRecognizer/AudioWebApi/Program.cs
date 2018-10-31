@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using System.IO;
+using System.Text;
 
 namespace AudioWebApi
 {
@@ -7,8 +9,8 @@ namespace AudioWebApi
     {
         public static void Main(string[] args)
         {
-            BuildWebHost(args).Run();
-        }
+			BuildWebHost(args).Run();
+		}
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)

@@ -31,7 +31,7 @@ namespace AudioWebApi.Controllers
 
 			if (!file.FileName.EndsWith(".mp3"))
 			{
-				Log.Error("Faild format file, file not mp3");
+				Log.Error("Failed format file, file not mp3");
 				return StatusCode(StatusCodes.Status400BadRequest, music);
 			}
 

@@ -21,3 +21,15 @@ D:\AudioWebApi\AudioWebApi\obj\Debug\netcoreapp2.0\AudioWebApi.AssemblyInfo.cs
 D:\AudioWebApi\AudioWebApi\obj\Debug\netcoreapp2.0\AudioWebApi.dll
 D:\AudioWebApi\AudioWebApi\obj\Debug\netcoreapp2.0\AudioWebApi.pdb
 D:\Projects\AudioWebApi\AudioWebApi\obj\Debug\netcoreapp2.0\UserSecretsAssemblyInfo.cs
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\bin\Debug\netcoreapp2.0\AudioWebApi.deps.json
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\bin\Debug\netcoreapp2.0\AudioWebApi.runtimeconfig.json
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\bin\Debug\netcoreapp2.0\AudioWebApi.runtimeconfig.dev.json
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\bin\Debug\netcoreapp2.0\AudioWebApi.dll
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\bin\Debug\netcoreapp2.0\AudioWebApi.pdb
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\obj\Debug\netcoreapp2.0\AudioWebApi.csprojAssemblyReference.cache
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\obj\Debug\netcoreapp2.0\AudioWebApi.csproj.CoreCompileInputs.cache
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\obj\Debug\netcoreapp2.0\UserSecretsAssemblyInfo.cs
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\obj\Debug\netcoreapp2.0\AudioWebApi.AssemblyInfoInputs.cache
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\obj\Debug\netcoreapp2.0\AudioWebApi.AssemblyInfo.cs
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\obj\Debug\netcoreapp2.0\AudioWebApi.dll
+C:\Users\niQ\Desktop\ownradio\Server.AudioRecognizer\AudioWebApi\obj\Debug\netcoreapp2.0\AudioWebApi.pdb
