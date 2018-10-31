@@ -311,5 +311,11 @@ public class TrackDataAccess {
 		return result;
 	}
 	
-	
+	public void UpdateTrack(ContentValues track)
+	{
+		trackDB.openDatabase();
+		db = trackDB.database();
+		db.update(TrackTableName, track, "id = ?", new String[]{track.getAsString("id")});
+		trackDB.close();
+	}
 }

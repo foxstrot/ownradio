@@ -72,6 +72,7 @@ import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
 import static ru.netvoxlab.ownradio.Constants.EXTRA_FILLCACHE_PROGRESS;
 import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
+import static ru.netvoxlab.ownradio.Constants.IS_TIME_ALARM;
 import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
 import static ru.netvoxlab.ownradio.Constants.TAG;
 
@@ -171,6 +172,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main_new);
+
 //		toolbar = findViewById(R.id.toolbar);
 //		setSupportActionBar(toolbar);
 //		getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -843,15 +845,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 			}
 			
 			if (intent.getAction().equals(ActionAlarm)) {
-				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-				String trackId = prefs.getString(CURRENT_TRACK_ID, "");
-				String trackUrl = prefs.getString(CURRENT_TRACK_URL, "");
-				binder.GetMediaPlayerService().PlayAlarmTrack(trackId, trackUrl);
+				//startPlayAlarm();
 			}
 			
 		}
 	};
 	
+	private void startPlayAlarm() {
+		if (binder != null) {
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+			
+			String trackId = prefs.getString(CURRENT_TRACK_ID, "");
+			String trackUrl = prefs.getString(CURRENT_TRACK_URL, "");
+			
+			binder.GetMediaPlayerService().PlayAlarmTrack(trackId, trackUrl);
+		}
+	}
 	
 	private void InitilizeMedia() {
 		mediaPlayerServiceIntent = new Intent(this, MediaPlayerService.class);
@@ -1000,6 +1009,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	public void onResume() {
 		
 		Intent intent = getIntent();
+		
 		Uri uri = intent.getData();
 		if (uri != null) {
 			try {
@@ -1036,6 +1046,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		super.onResume();
 		networkStateReceiver.addListener(this);
 		this.registerReceiver(networkStateReceiver, new IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
+		
+		
+		String action = intent.getAction();
+		if (action != null && action.equals(ActionAlarm)) {
+			intent.setAction(null);
+			SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+			
+			if (prefs.getBoolean(IS_TIME_ALARM, false)) {
+				startPlayAlarm();
+				Log.d(TAG, "STARTBRAZIL");
+			}
+		}
+		
 	}
 	
 	
@@ -1164,7 +1187,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				instance.binder = binder;
 				instance.isBound = true;
 				
-				if (TrackId != null) {
+				SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+				
+				if (prefs.getBoolean(IS_TIME_ALARM, false)) {
+					String trackId = prefs.getString(CURRENT_TRACK_ID, "");
+					String trackUrl = prefs.getString(CURRENT_TRACK_URL, "");
+					
+					
+					if (binder.GetMediaPlayerService().player != null) {
+						binder.GetMediaPlayerService().Pause();
+					} else {
+						binder.GetMediaPlayerService().InitiMedia();
+						MediaPlayerService.playbackWithHSisInterrupted = false;
+					}
+					binder.GetMediaPlayerService().PlayAlarmTrack(trackId, trackUrl);
+					SharedPreferences.Editor editor = prefs.edit();
+					editor.putBoolean(IS_TIME_ALARM, false);
+					editor.apply();
+					
+				} else if (TrackId != null) {
 					if (binder.GetMediaPlayerService().player != null) {
 						binder.GetMediaPlayerService().Pause();
 					} else {
@@ -1187,6 +1228,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 					
 				} else {
 					//предзагрузка трека, на котором остановилось воспроизведение
+					Log.d(TAG, "ELSE");
 					instance.binder.GetMediaPlayerService().PreloadTrack();
 					if (binder.GetMediaPlayerService().track != null) {
 						txtTrackTitle.setText(binder.GetMediaPlayerService().track.getAsString("title"));
