@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -184,6 +185,8 @@ public class TrackController {
 		return responseHeaders;
 	}
 
+	@Value("${spring.profiles.active}")
+	private String activeProfile;
 
 	private ResponsMusic getMusicInfo(File file) throws IOException {
 		String attachmentName = "file";
@@ -192,60 +195,69 @@ public class TrackController {
 		String twoHyphens = "--";
 		String boundary = "*****";
 
-		HttpURLConnection httpUrlConnection = null;
-		URL url = new URL("http://localhost:12520/api/audio");
-		httpUrlConnection = (HttpURLConnection) url.openConnection();
-		httpUrlConnection.setUseCaches(false);
-		httpUrlConnection.setDoOutput(true);
+		ResponsMusic music;
 
-		httpUrlConnection.setRequestMethod("POST");
-		httpUrlConnection.setRequestProperty("Connection", "Keep-Alive");
-		httpUrlConnection.setRequestProperty("Cache-Control", "no-cache");
-		httpUrlConnection.setRequestProperty(
-				"Content-Type", "multipart/form-data;boundary=" + boundary);
+		try {
+			HttpURLConnection httpUrlConnection = null;
+			Properties property = new Properties();
+			FileInputStream fis = new FileInputStream("src/main/resources/application-" + activeProfile + ".properties");
+			property.load(fis);
+			URL url = new URL(property.getProperty("spring.service"));
+			httpUrlConnection = (HttpURLConnection) url.openConnection();
+			httpUrlConnection.setUseCaches(false);
+			httpUrlConnection.setDoOutput(true);
 
-		DataOutputStream request = new DataOutputStream(
-				httpUrlConnection.getOutputStream());
+			httpUrlConnection.setRequestMethod("POST");
+			httpUrlConnection.setRequestProperty("Connection", "Keep-Alive");
+			httpUrlConnection.setRequestProperty("Cache-Control", "no-cache");
+			httpUrlConnection.setRequestProperty(
+					"Content-Type", "multipart/form-data;boundary=" + boundary);
 
-		request.writeBytes(twoHyphens + boundary + crlf);
-		request.writeBytes("Content-Disposition: form-data; name=\"" +
-				attachmentName + "\";filename=\"" +
-				attachmentFileName + "\"" + crlf);
-		request.writeBytes(crlf);
-		Path path = file.toPath();
-		request.write(Files.readAllBytes(path));
+			DataOutputStream request = new DataOutputStream(
+					httpUrlConnection.getOutputStream());
 
-		request.writeBytes(crlf);
-		request.writeBytes(twoHyphens + boundary +
-				twoHyphens + crlf);
+			request.writeBytes(twoHyphens + boundary + crlf);
+			request.writeBytes("Content-Disposition: form-data; name=\"" +
+					attachmentName + "\";filename=\"" +
+					attachmentFileName + "\"" + crlf);
+			request.writeBytes(crlf);
+			Path path = file.toPath();
+			request.write(Files.readAllBytes(path));
 
-		request.flush();
-		request.close();
+			request.writeBytes(crlf);
+			request.writeBytes(twoHyphens + boundary +
+					twoHyphens + crlf);
+
+			request.flush();
+			request.close();
 
 
-		InputStream responseStream = new
-				BufferedInputStream(httpUrlConnection.getInputStream());
+			InputStream responseStream = new
+					BufferedInputStream(httpUrlConnection.getInputStream());
 
-		BufferedReader responseStreamReader =
-				new BufferedReader(new InputStreamReader(responseStream));
+			BufferedReader responseStreamReader =
+					new BufferedReader(new InputStreamReader(responseStream));
 
-		String reponse = responseStreamReader.readLine();
+			String reponse = responseStreamReader.readLine();
 
-		ObjectMapper mapper = new ObjectMapper();
-		ResponsMusic music = mapper.readValue(reponse, ResponsMusic.class);
+			ObjectMapper mapper = new ObjectMapper();
+			music = mapper.readValue(reponse, ResponsMusic.class);
 
-		responseStream.close();
-		httpUrlConnection.disconnect();
+			responseStream.close();
+			httpUrlConnection.disconnect();
+
+		} catch (Exception ex) {
+			log.info("{}", ex.getMessage());
+			music = new ResponsMusic();
+			music.artist = "Artist";
+			music.title = "Track";
+		}
 
 		return music;
 	}
 
 	@RequestMapping(value = "/{deviceId}/next", method = RequestMethod.GET)
 	public ResponseEntity<?> getNextTrack(@PathVariable UUID deviceId) throws IOException {
-
-
-
-		getMusicInfo(new File("D:\\test.mp3"));
 
 		Map<String, String> trackResponse = new HashMap<>();
 		Log logRec = new Log();
@@ -265,7 +277,7 @@ public class TrackController {
 			return new ResponseEntity<>(trackResponse, HttpStatus.NOT_FOUND);
 		}
 
-			if (nextTrack != null) {
+		if (nextTrack != null) {
 			try {
 				Track track = trackRepository.findOne(nextTrack.getTrackid());
 
@@ -290,26 +302,37 @@ public class TrackController {
 				trackResponse.put("length", String.valueOf(track.getLength()));
 
 				ResponsMusic music = null;
-				if (track.getRecname() != null && !track.getRecname().isEmpty() && !track.getRecname().equals("null"))
+
+				if (track.getRecname() != null && !track.getRecname().isEmpty() && !track.getRecname().equals("null")) {
 					trackResponse.put("name", track.getRecname());
-				else {
+				} else {
 					{
 						music = getMusicInfo(file);
-						if (music != null && music.title != null)
+						if (music != null && music.title != null) {
 							trackResponse.put("name", music.getTitle());
-						else
+							track.setRecname(music.getTitle());
+							track.setIsfilledinfo(1);
+						} else
 							trackResponse.put("name", "Track");
 					}
-
 				}
-				if (track.getArtist() != null && !track.getArtist().isEmpty() && !track.getArtist().equals("null"))
+
+				if (track.getArtist() != null && !track.getArtist().isEmpty() && !track.getArtist().equals("null")) {
 					trackResponse.put("artist", track.getArtist());
-				else {
-					if (music != null && music.artist != null)
+				} else {
+					if (music == null) {
+						music = getMusicInfo(file);
+					}
+					if (music != null && music.artist != null) {
 						trackResponse.put("artist", music.getArtist());
-					else
+						track.setArtist(music.getArtist());
+						track.setIsfilledinfo(1);
+					} else
 						trackResponse.put("artist", "Artist");
 				}
+
+				trackRepository.saveAndFlush(track);
+
 				trackResponse.put("pathupload", track.getLocaldevicepathupload());
 
 				trackResponse.put("timeexecute", nextTrack.getTimeexecute());

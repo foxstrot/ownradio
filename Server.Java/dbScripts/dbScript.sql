@@ -108,6 +108,14 @@ CREATE TABLE public.downloadtracks
   recupdated timestamp without time zone,
   deviceid uuid,
   trackid uuid,
+  methodid integer,
+  txtrecommendinfo character varying(255),
+  userrecommend uuid,
+  userrecommendid uuid,
+  recdescription text,
+  createdby text,
+  updatedby text,
+  state integer DEFAULT 1,
   CONSTRAINT download_tracks_pkey PRIMARY KEY (recid),
   CONSTRAINT fkcsqwol33buwhcijea4w2ty5k2 FOREIGN KEY (trackid)
       REFERENCES public.tracks (recid) MATCH SIMPLE
@@ -130,7 +138,34 @@ ALTER TABLE public.downloadtracks
   OWNER TO postgres;
   
   
-  
+  -- Index: public.idx_deviceid
+
+-- DROP INDEX public.idx_deviceid;
+
+CREATE INDEX idx_deviceid
+  ON public.downloadtracks
+  USING btree
+  (deviceid);
+
+-- Index: public.idx_dtrackid
+
+-- DROP INDEX public.idx_dtrackid;
+
+CREATE INDEX idx_dtrackid
+  ON public.downloadtracks
+  USING btree
+  (trackid);
+
+-- Index: public.idx_reccreated
+
+-- DROP INDEX public.idx_reccreated;
+
+CREATE INDEX idx_reccreated
+  ON public.downloadtracks
+  USING btree
+  (reccreated);
+
+
 -- Table: public.histories
 
    DROP TABLE IF EXISTS public.histories;

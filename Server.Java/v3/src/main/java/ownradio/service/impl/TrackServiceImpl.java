@@ -92,6 +92,8 @@ public class TrackServiceImpl implements TrackService {
 			throw new RuntimeException();
 		}
 
+		trackRepository.saveAndFlush(track);
+
 		Track storeTrack = trackRepository.findOne(track.getRecid());
 
 		String dirName = storeTrack.getDevice().getUser().getRecid().toString();
