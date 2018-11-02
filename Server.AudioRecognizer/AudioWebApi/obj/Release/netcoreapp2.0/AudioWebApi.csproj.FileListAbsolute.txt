@@ -1,0 +1,12 @@
+D:\Projects\AudioWebApi\AudioWebApi\bin\Release\netcoreapp2.0\AudioWebApi.deps.json
+D:\Projects\AudioWebApi\AudioWebApi\bin\Release\netcoreapp2.0\AudioWebApi.runtimeconfig.json
+D:\Projects\AudioWebApi\AudioWebApi\bin\Release\netcoreapp2.0\AudioWebApi.runtimeconfig.dev.json
+D:\Projects\AudioWebApi\AudioWebApi\bin\Release\netcoreapp2.0\AudioWebApi.dll
+D:\Projects\AudioWebApi\AudioWebApi\bin\Release\netcoreapp2.0\AudioWebApi.pdb
+D:\Projects\AudioWebApi\AudioWebApi\obj\Release\netcoreapp2.0\AudioWebApi.csprojAssemblyReference.cache
+D:\Projects\AudioWebApi\AudioWebApi\obj\Release\netcoreapp2.0\AudioWebApi.csproj.CoreCompileInputs.cache
+D:\Projects\AudioWebApi\AudioWebApi\obj\Release\netcoreapp2.0\UserSecretsAssemblyInfo.cs
+D:\Projects\AudioWebApi\AudioWebApi\obj\Release\netcoreapp2.0\AudioWebApi.AssemblyInfoInputs.cache
+D:\Projects\AudioWebApi\AudioWebApi\obj\Release\netcoreapp2.0\AudioWebApi.AssemblyInfo.cs
+D:\Projects\AudioWebApi\AudioWebApi\obj\Release\netcoreapp2.0\AudioWebApi.dll
+D:\Projects\AudioWebApi\AudioWebApi\obj\Release\netcoreapp2.0\AudioWebApi.pdb

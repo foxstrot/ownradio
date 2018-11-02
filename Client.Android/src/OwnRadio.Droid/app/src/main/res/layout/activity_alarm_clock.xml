@@ -290,15 +290,15 @@
 		
 		</android.support.constraint.ConstraintLayout>
 		
-	
-			<CheckBox
-				android:id="@+id/checkVolume"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:layout_marginTop="20dp"
-				android:text="Изменять громкость мультимедия"
-				android:layout_gravity="center_horizontal"
-				android:onClick="OnCheckVolume"/>
+		
+		<CheckBox
+			android:id="@+id/checkVolume"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="center_horizontal"
+			android:layout_marginTop="20dp"
+			android:onClick="OnCheckVolume"
+			android:text="Изменять громкость мультимедиа" />
 			
 			<SeekBar
 				android:id="@+id/seekBarVolume"

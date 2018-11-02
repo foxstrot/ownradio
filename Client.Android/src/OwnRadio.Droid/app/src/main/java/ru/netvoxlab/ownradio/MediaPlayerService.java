@@ -686,8 +686,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public void PlayAlarmTrack(String id, String url) {
 		if (player != null && player.isPlaying()) {
 			player.stop();
-			player = null;
 		}
+		player = null;
 		
 		track = trackDataAccess.GetTrackById(id);
 		if (track == null) {
@@ -719,7 +719,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			
 			if (isDownload) {
 				track = trackDataAccess.GetTrackById(id);
-				track.put("");
+				
+				track.put("title", title);
+				track.put("artist", artist);
+				
+				trackDataAccess.UpdateTrack(track);
+				
 			} else {
 				Intent intent = new Intent(ActionNotFoundTrack);
 				sendBroadcast(intent);
@@ -730,6 +735,12 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			startPosition = 0;
 			TrackID = track.getAsString("id");
 			trackURL = track.getAsString("trackurl");
+			
+			if (track.getAsString("title").equals("Track")) {
+				track.put("title", title);
+				track.put("artist", artist);
+				trackDataAccess.UpdateTrack(track);
+			}
 			
 			File file = new File(trackURL);
 			if (!file.exists()) {

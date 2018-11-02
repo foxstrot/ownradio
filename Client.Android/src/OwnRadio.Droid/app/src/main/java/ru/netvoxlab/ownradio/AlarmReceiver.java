@@ -7,10 +7,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.drm.DrmStore;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.PowerManager;
 import android.preference.Preference;
 import android.preference.PreferenceManager;
@@ -51,7 +53,8 @@ public class AlarmReceiver extends BroadcastReceiver {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
 		
 		Log.d(TAG, "AlarmReceiver action Start");
-		Intent i = new Intent(ActionAlarm);
+		Intent i = new Intent(context, MainActivity.class);
+		i.setAction(ActionAlarm);
 		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
 		PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK | PowerManager.ACQUIRE_CAUSES_WAKEUP //Включает экран, но не снимает блокировку
@@ -94,14 +97,14 @@ public class AlarmReceiver extends BroadcastReceiver {
 		mp.start();*/
 		}
 		
-		if(prefs.getBoolean(IS_ONCE, false))
-		{
-			editor.putBoolean(IS_TIME_ALARM, true); // off work alarm
-			editor.apply();
-		}
 		
-		context.sendBroadcast(i);
+		editor.putBoolean(IS_ALARM_WORK, false);
 		
+		editor.putBoolean(IS_TIME_ALARM, true); // off work alarm
+		editor.apply();
+		
+		//context.sendBroadcast(i);
+		context.startActivity(i);
 		wl.release();
 	}
 	

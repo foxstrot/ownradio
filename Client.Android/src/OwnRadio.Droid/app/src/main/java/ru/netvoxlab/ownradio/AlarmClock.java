@@ -93,7 +93,6 @@ public class AlarmClock extends AppCompatActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		//Меняем тему, используемую при запуске приложения, на основную
 		setTheme(R.style.AppTheme);
-		
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_alarm_clock);
@@ -171,10 +170,14 @@ public class AlarmClock extends AppCompatActivity {
 						if (prefs.getBoolean(IS_ONCE, false)) {
 							setNewDay(time);
 						}
-						restartAlarm(time); // перезапускаем таймеры
+						//restartAlarm(time); // перезапускаем таймеры
 						SharedPreferences.Editor prefEditor = prefs.edit();
 						prefEditor.putString(ALARM_TIME, time); // сохраняем новое время
 						prefEditor.apply();
+						
+						startTimer(prefEditor);
+						prefEditor.apply();
+						
 						Toast.makeText(AlarmClock.this, "Будильник успешно перезапущен", Toast.LENGTH_SHORT).show();
 					}
 				}
@@ -440,6 +443,7 @@ public class AlarmClock extends AppCompatActivity {
 			// если не выбран ни 1 день недели, останавливаем будильник
 			if (isNotSelected()) {
 				stopAlarm();
+				imageView.setImageResource(R.drawable.ic_grey_bud);
 				
 				if (timer != null)
 					timer.cancel();
@@ -493,6 +497,8 @@ public class AlarmClock extends AppCompatActivity {
 			for (int i = 1; i <= 7; i++)
 				setPreference(i, false);
 			stopAlarm();
+			imageView.setImageResource(R.drawable.ic_grey_bud);
+			
 			return;
 		}
 		
@@ -682,6 +688,7 @@ public class AlarmClock extends AppCompatActivity {
 		imageView.setImageResource(R.drawable.ic_blu_bud);
 		prefEditor.putBoolean(IS_ALARM_WORK, true); // устанавливаем флаг, то что будильник запущен
 		prefEditor.putBoolean(IS_TIME_ALARM, false);
+		prefEditor.apply();
 		int hours = TimePreference.getHour(time);
 		int mins = TimePreference.getMinute(time);
 		
@@ -780,11 +787,13 @@ public class AlarmClock extends AppCompatActivity {
 	}
 	
 	private void stopAlarm() {
-		imageView.setImageResource(R.drawable.ic_grey_bud);
-		
-		txtProgress.setText("Будильник остановлен");
-		
 		boolean isTimeAlarm = prefs.getBoolean(IS_TIME_ALARM, false);
+		if(isTimeAlarm)
+		{
+			txtProgress.setText("Будильник остановлен");
+			imageView.setImageResource(R.drawable.ic_grey_bud);
+		}
+		
 		boolean isOnce = prefs.getBoolean(IS_ONCE, false);
 		
 		// если работает Alarm, то останавливаем

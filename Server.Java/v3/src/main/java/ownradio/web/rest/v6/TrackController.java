@@ -97,10 +97,10 @@ public class TrackController {
 			trackService.save(track, trackDTO.getMusicFile());
 			if (track.getIsfilledinfo() != null && track.getIsfilledinfo() != 1)
 				trackService.setTrackInfo(track.getRecid());
-			else {
+			/*else {
 				track = trackRepository.findOne(track.getRecid());
 				trackRepository.saveAndFlush(track);
-			}
+			}*/
 			logRec.setResponse("Http.Status=" + HttpStatus.CREATED);
 			logService.save(logRec);
 			return new ResponseEntity<>(HttpStatus.CREATED);
