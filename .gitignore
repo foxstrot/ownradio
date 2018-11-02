@@ -75,3 +75,6 @@ iOSInjectionProject/
 
 
 Client.Android/src/OwnRadio.Droid/.idea/
+/Server.AudioRecognizer/AudioWebApi.Test/Musics
+/Server.AudioRecognizer/AudioWebApi/logs
+/Server.AudioRecognizer/AudioWebApi/appsettings.Development.json

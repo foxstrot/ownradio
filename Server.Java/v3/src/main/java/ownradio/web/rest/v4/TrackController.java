@@ -1,8 +1,17 @@
 package ownradio.web.rest.v4;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.util.JSONPObject;
+import com.sun.deploy.net.HttpResponse;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +26,15 @@ import ownradio.repository.TrackRepository;
 import ownradio.service.LogService;
 import ownradio.service.TrackService;
 import ownradio.util.ResourceUtil;
+import sun.net.www.http.HttpClient;
 
-import java.io.File;
+
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -66,13 +82,44 @@ public class TrackController {
 		}
 	}
 
+	public static class ResponsMusic {
+		private String title;
+		private String artist;
+
+		@JsonCreator
+		public ResponsMusic(@JsonProperty("title") String title, @JsonProperty("artist") String artist) {
+			this.title = title;
+			this.artist = artist;
+		}
+
+		public ResponsMusic() {
+
+		}
+
+		public String getTitle() {
+			return title;
+		}
+
+		public void setTitle(String value) {
+			title = value;
+		}
+
+		public String getArtist() {
+			return artist;
+		}
+
+		public void setArtist(String value) {
+			artist = value;
+		}
+	}
+
 	@RequestMapping(method = RequestMethod.POST)
 	public ResponseEntity<?> save(TrackDTO trackDTO) {
 		Map<String, String> trackResponse = new HashMap<>();
 		Log logRec = new Log();
 		logRec.setRecname("Upload");
 		logRec.setDeviceid(trackDTO.getDeviceId());
-		logRec.setLogtext("/v4/tracks; Body: TrackidId=" + trackDTO.getFileGuid() +", fileName=" + trackDTO.getFileName() + ", filePath=" + trackDTO.getFilePath() + ", deviceid=" + trackDTO.getDeviceId() + ", musicFile=" + trackDTO.getMusicFile().getOriginalFilename());
+		logRec.setLogtext("/v4/tracks; Body: TrackidId=" + trackDTO.getFileGuid() + ", fileName=" + trackDTO.getFileName() + ", filePath=" + trackDTO.getFilePath() + ", deviceid=" + trackDTO.getDeviceId() + ", musicFile=" + trackDTO.getMusicFile().getOriginalFilename());
 		logService.save(logRec);
 
 		if (trackDTO.getMusicFile().isEmpty()) {
@@ -109,7 +156,7 @@ public class TrackController {
 		return getResponseEntity(id, deviceId);
 	}
 
-	private ResponseEntity getResponseEntity(@PathVariable UUID id, @PathVariable UUID deviceId){
+	private ResponseEntity getResponseEntity(@PathVariable UUID id, @PathVariable UUID deviceId) {
 		Log logRec = new Log();
 		logRec.setRecname("GetTrackdById");
 		logRec.setDeviceid(deviceId);
@@ -138,8 +185,80 @@ public class TrackController {
 		return responseHeaders;
 	}
 
+	@Value("${spring.profiles.active}")
+	private String activeProfile;
+
+	private ResponsMusic getMusicInfo(File file) throws IOException {
+		String attachmentName = "file";
+		String attachmentFileName = file.getName();
+		String crlf = "\r\n";
+		String twoHyphens = "--";
+		String boundary = "*****";
+
+		ResponsMusic music;
+
+		try {
+			HttpURLConnection httpUrlConnection = null;
+			Properties property = new Properties();
+			FileInputStream fis = new FileInputStream("src/main/resources/application-" + activeProfile + ".properties");
+			property.load(fis);
+			URL url = new URL(property.getProperty("spring.service"));
+			httpUrlConnection = (HttpURLConnection) url.openConnection();
+			httpUrlConnection.setUseCaches(false);
+			httpUrlConnection.setDoOutput(true);
+
+			httpUrlConnection.setRequestMethod("POST");
+			httpUrlConnection.setRequestProperty("Connection", "Keep-Alive");
+			httpUrlConnection.setRequestProperty("Cache-Control", "no-cache");
+			httpUrlConnection.setRequestProperty(
+					"Content-Type", "multipart/form-data;boundary=" + boundary);
+
+			DataOutputStream request = new DataOutputStream(
+					httpUrlConnection.getOutputStream());
+
+			request.writeBytes(twoHyphens + boundary + crlf);
+			request.writeBytes("Content-Disposition: form-data; name=\"" +
+					attachmentName + "\";filename=\"" +
+					attachmentFileName + "\"" + crlf);
+			request.writeBytes(crlf);
+			Path path = file.toPath();
+			request.write(Files.readAllBytes(path));
+
+			request.writeBytes(crlf);
+			request.writeBytes(twoHyphens + boundary +
+					twoHyphens + crlf);
+
+			request.flush();
+			request.close();
+
+
+			InputStream responseStream = new
+					BufferedInputStream(httpUrlConnection.getInputStream());
+
+			BufferedReader responseStreamReader =
+					new BufferedReader(new InputStreamReader(responseStream));
+
+			String reponse = responseStreamReader.readLine();
+
+			ObjectMapper mapper = new ObjectMapper();
+			music = mapper.readValue(reponse, ResponsMusic.class);
+
+			responseStream.close();
+			httpUrlConnection.disconnect();
+
+		} catch (Exception ex) {
+			log.info("{}", ex.getMessage());
+			music = new ResponsMusic();
+			music.artist = "Artist";
+			music.title = "Track";
+		}
+
+		return music;
+	}
+
 	@RequestMapping(value = "/{deviceId}/next", method = RequestMethod.GET)
-	public ResponseEntity<?> getNextTrack(@PathVariable UUID deviceId) {
+	public ResponseEntity<?> getNextTrack(@PathVariable UUID deviceId) throws IOException {
+
 		Map<String, String> trackResponse = new HashMap<>();
 		Log logRec = new Log();
 		logRec.setDeviceid(deviceId);
@@ -150,11 +269,11 @@ public class TrackController {
 		NextTrack nextTrack = null;
 		try {
 			nextTrack = trackService.getNextTrackIdV2(deviceId);
-		}catch (Exception ex){
+		} catch (Exception ex) {
 			log.info("{}", ex.getMessage());
-			logRec.setResponse("HttpStatus=" + HttpStatus.NOT_FOUND +"; Error:" + ex.getMessage());
+			logRec.setResponse("HttpStatus=" + HttpStatus.NOT_FOUND + "; Error:" + ex.getMessage());
 			logService.save(logRec);
-			trackResponse.put("result","false");
+			trackResponse.put("result", "false");
 			return new ResponseEntity<>(trackResponse, HttpStatus.NOT_FOUND);
 		}
 
@@ -163,53 +282,78 @@ public class TrackController {
 				Track track = trackRepository.findOne(nextTrack.getTrackid());
 
 				File file = new File(track.getPath());
-				if(!file.exists()){
+				if (!file.exists()) {
 					track.setIsexist(0);
 					trackRepository.saveAndFlush(track);
 					return getNextTrack(deviceId);
 				}
 
-				if(track.getIsfilledinfo() == null || track.getIsfilledinfo() != 1)
+				if (track.getIsfilledinfo() == null || track.getIsfilledinfo() != 1)
 					trackService.setTrackInfo(track.getRecid());
 
-				if(track.getIscorrect() != null && track.getIscorrect() == 0)
+				if (track.getIscorrect() != null && track.getIscorrect() == 0)
 					return getNextTrack(deviceId);
-				if(track.getIscensorial() != null && track.getIscensorial() == 0)
+				if (track.getIscensorial() != null && track.getIscensorial() == 0)
 					return getNextTrack(deviceId);
-				if(track.getLength() != null && track.getLength() <  120)
+				if (track.getLength() != null && track.getLength() < 120)
 					return getNextTrack(deviceId);
 
 				trackResponse.put("id", nextTrack.getTrackid().toString());
 				trackResponse.put("length", String.valueOf(track.getLength()));
-				if(track.getRecname() != null && !track.getRecname().isEmpty() && !track.getRecname().equals("null"))
+
+				ResponsMusic music = null;
+
+				if (track.getRecname() != null && !track.getRecname().isEmpty() && !track.getRecname().equals("null")) {
 					trackResponse.put("name", track.getRecname());
-				else
-					trackResponse.put("name", "Track");
-				if(track.getArtist() != null && !track.getArtist().isEmpty() && !track.getArtist().equals("null"))
+				} else {
+					{
+						music = getMusicInfo(file);
+						if (music != null && music.title != null) {
+							trackResponse.put("name", music.getTitle());
+							track.setRecname(music.getTitle());
+							track.setIsfilledinfo(1);
+						} else
+							trackResponse.put("name", "Track");
+					}
+				}
+
+				if (track.getArtist() != null && !track.getArtist().isEmpty() && !track.getArtist().equals("null")) {
 					trackResponse.put("artist", track.getArtist());
-				else
-					trackResponse.put("artist", "Artist");
+				} else {
+					if (music == null) {
+						music = getMusicInfo(file);
+					}
+					if (music != null && music.artist != null) {
+						trackResponse.put("artist", music.getArtist());
+						track.setArtist(music.getArtist());
+						track.setIsfilledinfo(1);
+					} else
+						trackResponse.put("artist", "Artist");
+				}
+
+				trackRepository.saveAndFlush(track);
+
 				trackResponse.put("pathupload", track.getLocaldevicepathupload());
 
 				trackResponse.put("timeexecute", nextTrack.getTimeexecute());
-				trackResponse.put("result","true");
+				trackResponse.put("result", "true");
 
 				log.info("getNextTrack return {} {}", nextTrack.getMethodid(), trackResponse.get("id"));
 
-				logRec.setResponse("HttpStatus=" + HttpStatus.OK +"; trackid=" + trackResponse.get("id"));
+				logRec.setResponse("HttpStatus=" + HttpStatus.OK + "; trackid=" + trackResponse.get("id"));
 				logService.save(logRec);
 				return new ResponseEntity<>(trackResponse, HttpStatus.OK);
-			}catch (Exception ex){
+			} catch (Exception ex) {
 				log.info("{}", ex.getMessage());
-				logRec.setResponse("HttpStatus=" + HttpStatus.NOT_FOUND +"; Error:" + ex.getMessage());
+				logRec.setResponse("HttpStatus=" + HttpStatus.NOT_FOUND + "; Error:" + ex.getMessage());
 				logService.save(logRec);
-				trackResponse.put("result","false");
+				trackResponse.put("result", "false");
 				return new ResponseEntity<>(trackResponse, HttpStatus.NOT_FOUND);
 			}
 		} else {
-			logRec.setResponse("HttpStatus=" + HttpStatus.NOT_FOUND +"; Error: Track is not found");
+			logRec.setResponse("HttpStatus=" + HttpStatus.NOT_FOUND + "; Error: Track is not found");
 			logService.save(logRec);
-			trackResponse.put("result","false");
+			trackResponse.put("result", "false");
 			return new ResponseEntity<>(trackResponse, HttpStatus.NOT_FOUND);
 		}
 	}

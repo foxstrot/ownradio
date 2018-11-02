@@ -46,9 +46,16 @@ public class Constants {
 	public static final String IS_ALARM_WORK = "isAlarmWork";
 	
 	public static final String IS_ONCE = "isOnce";
+	public static final String IS_TIME_ALARM="isTimeAlarm";
 	
 	public static final String CURRENT_TRACK_TITLE = "currentTrackTitle";
+	public static final String CURRENT_TRACK_ARTIST = "currentTrackArtist";
 	public static final String CURRENT_TRACK_ID = "currentTrackId";
 	public static final String CURRENT_TRACK_URL = "currentTrackUrl";
+	
+	
+	public static final String IS_CHANGE_VOLUME = "isChangeVolume";
+	public static final String CURRENT_VOLUME_PERCENT = "currentVolumePercent";
+	public static final String CURRENT_VOLUME = "currentVolume";
 	
 }

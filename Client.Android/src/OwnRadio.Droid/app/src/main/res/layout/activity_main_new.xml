@@ -46,6 +46,7 @@
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toTopOf="parent"
 			app:srcCompat="@drawable/ic_menu_24dp"/>
+		
 		<TextView
 			android:id="@+id/trackTitle"
 			android:layout_width="0dp"
@@ -65,7 +66,7 @@
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintHorizontal_bias="0.5"
 			app:layout_constraintStart_toStartOf="parent"
-			app:layout_constraintTop_toTopOf="parent"/>
+			app:layout_constraintTop_toTopOf="parent" />
 		
 		<TextView
 			android:id="@+id/trackArtist"
@@ -119,6 +120,18 @@
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toBottomOf="@+id/btnPlayPause"
 			app:srcCompat="@drawable/btn_ic_next"/>
+		
+		<ImageView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="8dp"
+			android:layout_marginEnd="8dp"
+			android:cropToPadding="false"
+			android:onClick="onCopyLink"
+			android:text="Copy"
+			app:layout_constraintBottom_toTopOf="@+id/trackTitle"
+			app:layout_constraintEnd_toEndOf="@+id/trackTitle"
+			app:srcCompat="@drawable/ic_share" />
 		
 		<ImageButton
 			android:id="@+id/btnAlarmClock"
