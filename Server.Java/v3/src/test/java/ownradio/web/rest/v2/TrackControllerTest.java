@@ -67,7 +67,7 @@ public class TrackControllerTest {
 		device.setRecid(DEVICE_UUID);
 		device.setUser(user);
 
-		track = new Track(PATH, device, "---", 0,  "", 0, null, null, null, 1);
+		track = new Track(PATH, device, "---", 0,  "", 0, null, null, null, 1,0);
 
 		String requestParam = "musicFile";
 		String originalFilename = "test.mp3";

@@ -37,9 +37,9 @@ public class TrackRepositoryTest {
 	public void setUp() throws Exception {
 		user = entityManager.persist(new User());
 		device = entityManager.persist(new Device(user, "123"));
-		entityManager.persist(new Track("1", device, "1", 0, "", 0, null, null, null, 1));
-		entityManager.persist(new Track("2", device, "1", 0, "", 0, null, null, null, 1));
-		entityManager.persist(new Track("4", device, "1", 0, "", 0, null, null, null, 1));
+		entityManager.persist(new Track("1", device, "1", 0, "", 0, null, null, null, 1, 0));
+		entityManager.persist(new Track("2", device, "1", 0, "", 0, null, null, null, 1, 0));
+		entityManager.persist(new Track("4", device, "1", 0, "", 0, null, null, null, 1, 0));
 	}
 
 	@Test

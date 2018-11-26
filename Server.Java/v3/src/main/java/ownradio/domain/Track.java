@@ -43,4 +43,6 @@ public class Track extends AbstractEntity {
 
 	private Integer isexist;
 
+	private Integer isaudiorecognised;
+
 }
