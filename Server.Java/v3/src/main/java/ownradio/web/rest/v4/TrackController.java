@@ -311,6 +311,9 @@ public class TrackController {
 
 				ResponsMusic music = null;
 
+				String prevRecName = track.getRecname();
+				String prevArtist = track.getArtist();
+
 				if (track.getRecname() != null && !track.getRecname().isEmpty() && !track.getRecname().equals("null")) {
 					trackResponse.put("name", track.getRecname());
 				} else {
@@ -340,6 +343,17 @@ public class TrackController {
 					} else
 						trackResponse.put("artist", "Artist");
 				}
+
+				if(track.getIsaudiorecognised() == 1)
+				{
+					logRec.setLogtext("Трек распознан, старые Track= "+ prevRecName + ", Artist= " + prevArtist
+							+", новые Track= " + music.title + ", Artist= " + music.artist);
+				}
+				else
+				{
+					logRec.setLogtext("трек не распознан сервисом");
+				}
+
 
 				trackRepository.saveAndFlush(track);
 
