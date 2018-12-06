@@ -35,7 +35,7 @@ public class HistoryRepositoryTest {
 	public void setUp() throws Exception {
 		User user = entityManager.persist(new User());
 		Device device = entityManager.persist(new Device(user, "1"));
-		Track track = entityManager.persist(new Track("1", device, "1", 0, "", 0, null, null, null, 1));
+		Track track = entityManager.persist(new Track("1", device, "1", 0, "", 0, null, null, null, 1,0));
 
 		history = new History(track, Calendar.getInstance(), 0, device, 1, "");
 		entityManager.persist(history);

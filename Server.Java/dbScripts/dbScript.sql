@@ -61,39 +61,34 @@ ALTER TABLE public.devices
 
 DROP TABLE IF EXISTS public.tracks CASCADE;
 
-CREATE TABLE public.tracks 
+CREATE TABLE public.tracks
 (
   recid uuid NOT NULL,
   reccreated timestamp without time zone,
   recname character varying(255),
   recupdated timestamp without time zone,
-  localdevicepathupload character varying(255) NOT NULL,
-  path character varying(255),
-  deviceid uuid,
-  uploaduserid uuid,
   artist character varying(255),
   iscensorial integer,
   iscorrect integer,
+  isexist integer,
   isfilledinfo integer,
   length integer,
+  localdevicepathupload character varying(255) NOT NULL,
+  path character varying(255),
   size integer,
+  deviceid uuid,
+  isaudiorecognised integer DEFAULT 0,
   CONSTRAINT tracks_pkey PRIMARY KEY (recid),
   CONSTRAINT fk4n44h9fs1to11otqj5ek7xtus FOREIGN KEY (deviceid)
       REFERENCES public.devices (recid) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT fk7901v2785f03qrr9ruiwy7nd FOREIGN KEY (deviceid)
-      REFERENCES public.devices (recid) MATCH SIMPLE
-      ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT fkfp7ki0smfcrvbvfjdnddxi1fb FOREIGN KEY (uploaduserid)
-      REFERENCES public.users (recid) MATCH SIMPLE
       ON UPDATE NO ACTION ON DELETE NO ACTION
 )
 WITH (
-  OIDS=FALSE,
-  autovacuum_enabled=true
+  OIDS=FALSE
 );
 ALTER TABLE public.tracks
   OWNER TO postgres;
+
 
  
 -- Table: public.downloadtracks
