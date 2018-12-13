@@ -60,11 +60,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	final static double bytesInMB = 1048576.0d;
 	static boolean isCachingStarted = false;
 //	MyPrefListener  myPrefListener = new MyPrefListener(this);
-	
-	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
-		@Override
-		public boolean onPreferenceChange(Preference preference, Object value) {
-			String stringValue = value.toString();
+
+			private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
+				@Override
+				public boolean onPreferenceChange(Preference preference, Object value) {
+					String stringValue = value.toString();
 			
 			if (preference instanceof ListPreference) {
 				// For list preferences, look up the correct display value in
@@ -261,11 +261,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				freeMemorySize.setTitle(getResources().getString(R.string.pref_free_memory_size) + " " + BigDecimal.valueOf(freeSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
 			
 			Preference allTracksMemorySize = findPreference("all_tracks_size");
+
 			//TODO менять окончания в зависимости от числа. Выводить в Мб/Гб если число небольшое
 			if (tracksSpace / bytesInGB > 0.1d)
 				allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (" + trackInfo.GetExistTracksCount() + " " +  getResources().getString(R.string.tracks) + ")");
 			else
 				allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (" + trackInfo.GetExistTracksCount() + " " +  getResources().getString(R.string.tracks) + ")");
+
 			Preference listeningTracksMemorySize = findPreference("listening_tracks_size");
 			if (listeningTracksSpace / bytesInGB > 0.1d)
 				listeningTracksMemorySize.setTitle(getResources().getString(R.string.pref_listening_tracks_size_size) + " " + BigDecimal.valueOf(listeningTracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (" + trackInfo.GetCountPlayTracks() + " " +  getResources().getString(R.string.tracks) + ")");
@@ -288,12 +290,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			});
 			
 			final NumberPickerPreference maxMemorySize = (NumberPickerPreference) findPreference("key_number");
-			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() + " Gb");
+			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() + "%");
+
+			if(freeSpace / bytesInGB > 0.1d){
+				maxMemorySize.setSummary(getResources().getString(R.string.from_free_device_space) + " " + BigDecimal.valueOf(freeSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
+			}
+			else {
+				maxMemorySize.setSummary(getResources().getString(R.string.from_free_device_space) + " " + BigDecimal.valueOf(freeSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
+			}
+
 			maxMemorySize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 				@Override
 				public boolean onPreferenceChange(Preference preference, Object value) {
 					maxMemorySize.setValue(Integer.valueOf((Integer) value));
-					maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() + " Gb");
+					maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() + "%");
+
 //					int index = maxMemorySize.findIndexOfValue(stringValue);
 //
 //					// Set the summary to reflect the new value.

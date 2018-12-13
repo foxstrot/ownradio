@@ -27,7 +27,7 @@ public class NumberPickerPreference extends DialogPreference {
 	// Default values for defaults
 	private static final int DEFAULT_CURRENT_VALUE = 1;
 	private static final int DEFAULT_MIN_VALUE = 1;
-	private static final int DEFAULT_MAX_VALUE = 64;
+	private static final int DEFAULT_MAX_VALUE = 10;
 	
 	// Real defaults
 	private final int mDefaultValue;
@@ -39,7 +39,8 @@ public class NumberPickerPreference extends DialogPreference {
 	
 	private NumberPicker picker;
 	private int value;
-	
+	private String[] displayedValues = {"10", "20", "30", "40", "50", "60", "70", "80", "90", "100"};
+
 	public NumberPickerPreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		mMinValue = attrs.getAttributeIntValue(PREFERENCE_NS, ATTR_MIN_VALUE, DEFAULT_MIN_VALUE);
@@ -66,17 +67,24 @@ public class NumberPickerPreference extends DialogPreference {
 		
 		FrameLayout dialogView = new FrameLayout(getContext());
 		dialogView.addView(picker);
-		
+//		picker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+//			@Override
+//			public void onValueChange(NumberPicker numberPickerpicker, int oldVal, int newVal) {
+//				numberPickerpicker.setValue((newVal < oldVal)?oldVal-10:oldVal+10);
+//			}
+//		});
 		return dialogView;
 	}
 	
 	@Override
 	protected void onBindDialogView(View view) {
 		super.onBindDialogView(view);
+		picker.setDisplayedValues(displayedValues);
 		picker.setMinValue(mMinValue);
 		picker.setMaxValue(mMaxValue);
 		picker.setWrapSelectorWheel(WRAP_SELECTOR_WHEEL);
-		picker.setValue(getValue());
+		picker.setValue(getValue() / 10);
+
 	}
 	
 	@Override
@@ -99,13 +107,12 @@ public class NumberPickerPreference extends DialogPreference {
 	protected void onSetInitialValue(boolean restorePersistedValue, Object defaultValue) {
 		setValue(restorePersistedValue ? getPersistedInt(mMinValue) : (Integer) defaultValue);
 	}
-	
 	public void setValue(int value) {
 		this.value = value;
 		persistInt(this.value);
 	}
 	
 	public int getValue() {
-		return this.value;
+		return this.value * 10;
 	}
 }
