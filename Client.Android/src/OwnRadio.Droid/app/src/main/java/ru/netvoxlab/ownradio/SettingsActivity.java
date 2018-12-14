@@ -289,7 +289,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
 
 			final NumberPickerPreference maxMemorySize = (NumberPickerPreference) findPreference("key_number");
-			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() + "%");
+			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() * 10 + "%");
 			if(freeSpace / bytesInGB > 0.1d){
 				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf(freeSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
 			}
@@ -300,7 +300,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				@Override
 				public boolean onPreferenceChange(Preference preference, Object value) {
 					maxMemorySize.setValue(Integer.valueOf((Integer) value));
-					maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() + "%");
+					maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() * 10 + "%");
 //					int index = maxMemorySize.findIndexOfValue(stringValue);
 //
 //					// Set the summary to reflect the new value.

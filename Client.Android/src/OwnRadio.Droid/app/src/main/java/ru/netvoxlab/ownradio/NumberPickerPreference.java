@@ -80,7 +80,7 @@ public class NumberPickerPreference extends DialogPreference {
 		picker.setMinValue(mMinValue);
 		picker.setMaxValue(mMaxValue);
 		picker.setWrapSelectorWheel(WRAP_SELECTOR_WHEEL);
-		picker.setValue(getValue() / 10);
+		picker.setValue(getValue());
 	}
 	
 	@Override
@@ -110,6 +110,6 @@ public class NumberPickerPreference extends DialogPreference {
 	}
 	
 	public int getValue() {
-		return this.value * 10;
+		return this.value;
 	}
 }
