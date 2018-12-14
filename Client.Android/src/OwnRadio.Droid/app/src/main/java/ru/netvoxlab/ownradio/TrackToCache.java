@@ -96,11 +96,15 @@ public class TrackToCache {
 					break;
 				}
 				case DELETE_LISTENED_FILES_FROM_CACHE: {
-//					DeleteListenedTracksFromCache();
+					DeleteListenedTracksFromCache();
 
-                    DeleteLastListenedTrackFromCache();
+//                    DeleteLastListenedTrackFromCache();
 					i--;
 					return "Удален прослушанный трек";
+				}
+				case NO_LISTENED_TRACKS:{
+					i--;
+					break;
 				}
 			}
 		}
@@ -191,21 +195,20 @@ public class TrackToCache {
 		if(prefManager.getPrefItemBool("is_subscribed", false)) {
 			//получаем максимальный размер кеша из настроек
 			Double percentageOfSize = Double.valueOf(prefManager.getPrefItemInt("key_number", 0)) / 10;
-			keyMaxMemorySize = (long) (bytesInGB * (percentageOfSize * (double)availableSpace));
+			keyMaxMemorySize = (long) (percentageOfSize * (double)availableSpace);
 		}else{
 			//если нет подписки - ограничиваем размер кэша 1 гигабайтом
-			//Раскомменитить
-//			keyMaxMemorySize = (long) (1 * bytesInGB);
-			Double percentageOfSize = Double.valueOf(prefManager.getPrefItemInt("key_number", 0)) / 10;
-			keyMaxMemorySize = (long) (bytesInGB * (percentageOfSize * (double)availableSpace));
-//			keyMaxMemorySize = (long) (0.1 * bytesInGB);
+			keyMaxMemorySize = (long) (1 * bytesInGB);
+//			Double percentageOfSize = Double.valueOf(prefManager.getPrefItemInt("key_number", 0)) / 10;
+//			keyMaxMemorySize = (long) (percentageOfSize * (double)availableSpace);
+//			keyMaxMemorySize = (long) (0.05 * bytesInGB);
 		}
 
 		if(keyMaxMemorySize == 0)
 			keyMaxMemorySize = Long.MAX_VALUE;
 		//если размер кеша меньше максимально разрещенного и размер кеша меньше размера кеша + доступное место
 
-		if(cacheSize < keyMaxMemorySize && cacheSize < (cacheSize + availableSpace) * 0.3){
+ 		if(cacheSize < keyMaxMemorySize && cacheSize < (cacheSize + availableSpace) * 0.3){
             return DOWNLOAD_FILE_TO_CACHE;
         }
         else{
@@ -306,17 +309,17 @@ public class TrackToCache {
 		}
 	}
 
-	public boolean DeleteLastListenedTrackFromCache(){
-        try{
-            ContentValues lastListenTrack = new TrackDataAccess(mContext).GetMostNewTrack();
-            if(lastListenTrack != null){
-                DeleteTrackFromCache(lastListenTrack);
-            }
-            return true;
-        }catch (Exception e){
-            return false;
-        }
-    }
+//	public boolean DeleteLastListenedTrackFromCache(){
+//        try{
+//            ContentValues lastListenTrack = new TrackDataAccess(mContext).GetMostNewTrack();
+//            if(lastListenTrack != null){
+//                DeleteTrackFromCache(lastListenTrack);
+//            }
+//            return true;
+//        }catch (Exception e){
+//            return false;
+//        }
+//    }
 	
 	//Заполняет доступную приложению свободную память (определяется настройками) треками
 	public void FillCache(){

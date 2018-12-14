@@ -10,6 +10,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StatFs;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
@@ -28,6 +29,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -59,6 +61,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	final static double bytesInGB = 1073741824.0d;
 	final static double bytesInMB = 1048576.0d;
 	static boolean isCachingStarted = false;
+
 //	MyPrefListener  myPrefListener = new MyPrefListener(this);
 	
 	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
@@ -225,7 +228,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 //				|| NotificationPreferenceFragment.class.getName().equals(fragmentName)
 				;
 	}
-	
+
+
 	
 	/**
 	 * This fragment shows general preferences only. It is used when the
@@ -233,6 +237,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class GeneralPreferenceFragment extends PreferenceFragment {
+
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
@@ -286,6 +291,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 					return true;
 				}
 			});
+
 
 
 			final NumberPickerPreference maxMemorySize = (NumberPickerPreference) findPreference("key_number");
