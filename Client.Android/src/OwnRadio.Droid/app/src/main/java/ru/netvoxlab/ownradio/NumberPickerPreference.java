@@ -14,6 +14,8 @@ import android.widget.NumberPicker;
  * Created by a.polunina on 25.07.2017.
  */
 
+//Значение пикера возвращается в диапазоне от 5 до 5
+
 public class NumberPickerPreference extends DialogPreference {
 	// Namespaces to read attributes
 	private static final String PREFERENCE_NS = "http://schemas.android.com/apk/res/ru.netvoxlab.ownradio";
@@ -23,11 +25,12 @@ public class NumberPickerPreference extends DialogPreference {
 	private static final String ATTR_DEFAULT_VALUE = "defaultValue";
 	private static final String ATTR_MIN_VALUE = "minValue";
 	private static final String ATTR_MAX_VALUE = "maxValue";
-	
+
+	private static String[] displayedValues = {"50", "60", "70", "80", "90"};
 	// Default values for defaults
-	private static final int DEFAULT_CURRENT_VALUE = 1;
-	private static final int DEFAULT_MIN_VALUE = 1;
-	private static final int DEFAULT_MAX_VALUE = 10;
+	private static final int DEFAULT_CURRENT_VALUE = 5;
+	private static final int DEFAULT_MIN_VALUE = 5;
+	private static final int DEFAULT_MAX_VALUE = 9;
 	
 	// Real defaults
 	private final int mDefaultValue;
@@ -39,8 +42,7 @@ public class NumberPickerPreference extends DialogPreference {
 	
 	private NumberPicker picker;
 	private int value;
-	private String[] displayedValues = {"10", "20", "30", "40", "50", "60", "70", "80", "90", "100"};
-
+	
 	public NumberPickerPreference(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		mMinValue = attrs.getAttributeIntValue(PREFERENCE_NS, ATTR_MIN_VALUE, DEFAULT_MIN_VALUE);
@@ -67,12 +69,7 @@ public class NumberPickerPreference extends DialogPreference {
 		
 		FrameLayout dialogView = new FrameLayout(getContext());
 		dialogView.addView(picker);
-//		picker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
-//			@Override
-//			public void onValueChange(NumberPicker numberPickerpicker, int oldVal, int newVal) {
-//				numberPickerpicker.setValue((newVal < oldVal)?oldVal-10:oldVal+10);
-//			}
-//		});
+		
 		return dialogView;
 	}
 	
@@ -84,7 +81,6 @@ public class NumberPickerPreference extends DialogPreference {
 		picker.setMaxValue(mMaxValue);
 		picker.setWrapSelectorWheel(WRAP_SELECTOR_WHEEL);
 		picker.setValue(getValue() / 10);
-
 	}
 	
 	@Override
@@ -107,6 +103,7 @@ public class NumberPickerPreference extends DialogPreference {
 	protected void onSetInitialValue(boolean restorePersistedValue, Object defaultValue) {
 		setValue(restorePersistedValue ? getPersistedInt(mMinValue) : (Integer) defaultValue);
 	}
+	
 	public void setValue(int value) {
 		this.value = value;
 		persistInt(this.value);
