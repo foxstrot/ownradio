@@ -63,7 +63,7 @@
 		</activity>
 		
 		<service
-			android:name=".MediaPlayerService"
+			android:name=".MediaPlayerService" android:permission="" 
 			android:enabled="true"
 			android:exported="true">
 			<intent-filter>

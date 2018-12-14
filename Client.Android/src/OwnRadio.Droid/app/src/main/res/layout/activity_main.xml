@@ -13,7 +13,7 @@
 		android:layout_height="match_parent"
 		android:layout_width="match_parent"
 		android:src="@drawable/background"
-		android:scaleType="centerCrop"/>
+		android:contentDescription="TODO" android:scaleType="centerCrop"/>
 	<include
 		layout="@layout/app_bar_main"
 		android:layout_width="match_parent"
@@ -79,7 +79,7 @@
 				android:background="?selectableItemBackgroundBorderless"
 				android:src="@drawable/btn_play"
 				android:tint="@color/colorPrimary"
-				android:elevation="10dp"
+				android:contentDescription="TODO" android:elevation="10dp"
 				android:layout_marginTop="5dp"
 				android:layout_marginBottom="5dp"
 				android:tintMode="src_in"
@@ -93,7 +93,7 @@
 				android:src="@drawable/btn_next"
 				android:tintMode="src_in"
 				android:tint="@color/colorPrimary"
-				android:elevation="10dp"
+				android:contentDescription="TODO" android:elevation="10dp"
 				android:layout_marginTop="5dp"
 				android:layout_marginBottom="5dp"
 				android:layout_centerVertical="true"
@@ -118,7 +118,7 @@
 					android:textColor="#FF000000"
 					android:text=""
 					android:layout_centerHorizontal="true"
-					android:fontFamily="sans-serif"/>
+					android:focusable="true" android:fontFamily="sans-serif"/>
 				
 				<TextView
 					android:id="@+id/trackArtist"
@@ -134,7 +134,7 @@
 					android:layout_below="@+id/trackTitle"
 					
 					android:layout_centerHorizontal="true"
-					android:fontFamily="sans-serif-light"/>
+					android:focusable="true" android:fontFamily="sans-serif-light"/>
 			</RelativeLayout>
 		</RelativeLayout>
 	

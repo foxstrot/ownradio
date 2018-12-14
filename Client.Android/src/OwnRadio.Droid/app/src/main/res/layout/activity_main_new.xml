@@ -41,7 +41,7 @@
 			android:layout_marginStart="16dp"
 			android:layout_marginTop="16dp"
 			android:background="?selectableItemBackgroundBorderless"
-			android:elevation="10dp"
+			android:contentDescription="TODO" android:elevation="10dp"
 			android:tintMode="src_in"
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toTopOf="parent"
@@ -58,7 +58,7 @@
 			android:clickable="true"
 			android:contentDescription="@string/currently_playing_artist"
 			android:ellipsize="end"
-			android:fontFamily="sans-serif"
+			android:focusable="true" android:fontFamily="sans-serif"
 			android:maxLines="1"
 			android:textAlignment="center"
 			android:textAppearance="?android:attr/textAppearanceMedium"
@@ -81,7 +81,7 @@
 			android:contentDescription="@string/currently_playing_song"
 			android:ellipsize="end"
 			
-			android:fontFamily="sans-serif-light"
+			android:focusable="true" android:fontFamily="sans-serif-light"
 			android:maxLines="1"
 			android:textAlignment="center"
 			android:textAppearance="?android:attr/textAppearanceSmall"
@@ -98,7 +98,7 @@
 			android:layout_centerVertical="true"
 			android:layout_marginTop="56dp"
 			android:background="?selectableItemBackgroundBorderless"
-			android:elevation="10dp"
+			android:contentDescription="TODO" android:elevation="10dp"
 			android:tintMode="src_in"
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintStart_toStartOf="parent"
@@ -113,7 +113,7 @@
 			android:layout_centerVertical="true"
 			android:layout_marginTop="40dp"
 			android:background="?selectableItemBackgroundBorderless"
-			android:elevation="10dp"
+			android:contentDescription="TODO" android:elevation="10dp"
 			android:tintMode="src_in"
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintHorizontal_bias="0.5"
@@ -126,7 +126,7 @@
 			android:layout_height="wrap_content"
 			android:layout_marginBottom="8dp"
 			android:layout_marginEnd="8dp"
-			android:cropToPadding="false"
+			android:contentDescription="TODO" android:cropToPadding="false"
 			android:onClick="onCopyLink"
 			android:text="Copy"
 			app:layout_constraintBottom_toTopOf="@+id/trackTitle"
@@ -142,7 +142,7 @@
 			android:background="@android:color/white"
 			app:layout_constraintStart_toStartOf="@+id/btnPlayPause"
 			app:layout_constraintTop_toBottomOf="@+id/tProgressLeft"
-			app:srcCompat="@drawable/ic_bud"/>
+			android:contentDescription="TODO" app:srcCompat="@drawable/ic_bud"/>
 		
 		
 		<ImageButton
@@ -154,7 +154,7 @@
 			android:background="@android:color/white"
 			app:layout_constraintEnd_toEndOf="@+id/btnPlayPause"
 			app:layout_constraintTop_toBottomOf="@+id/tProgressRight"
-			app:srcCompat="@drawable/ic_tim"/>
+			android:contentDescription="TODO" app:srcCompat="@drawable/ic_tim"/>
 		
 		
 		<TextView

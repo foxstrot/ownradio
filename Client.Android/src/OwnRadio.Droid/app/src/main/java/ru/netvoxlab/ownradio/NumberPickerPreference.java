@@ -14,7 +14,7 @@ import android.widget.NumberPicker;
  * Created by a.polunina on 25.07.2017.
  */
 
-//Значение пикера возвращается в диапазоне от 5 до 5
+//Значение пикера возвращается в диапазоне от 1 до 5
 
 public class NumberPickerPreference extends DialogPreference {
 	// Namespaces to read attributes
@@ -26,11 +26,11 @@ public class NumberPickerPreference extends DialogPreference {
 	private static final String ATTR_MIN_VALUE = "minValue";
 	private static final String ATTR_MAX_VALUE = "maxValue";
 
-	private static String[] displayedValues = {"50", "60", "70", "80", "90"};
+	private static String[] displayedValues = {"10", "20", "30", "40", "50"};
 	// Default values for defaults
-	private static final int DEFAULT_CURRENT_VALUE = 5;
-	private static final int DEFAULT_MIN_VALUE = 5;
-	private static final int DEFAULT_MAX_VALUE = 9;
+	private static final int DEFAULT_CURRENT_VALUE = 1;
+	private static final int DEFAULT_MIN_VALUE = 1;
+	private static final int DEFAULT_MAX_VALUE = 5;
 	
 	// Real defaults
 	private final int mDefaultValue;
