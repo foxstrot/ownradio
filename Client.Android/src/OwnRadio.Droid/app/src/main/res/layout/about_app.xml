@@ -30,7 +30,7 @@
 		android:layout_height="200dp"
 		android:layout_width="200dp"
 		android:src="@drawable/ic_default_art2"
-		android:scaleType="centerCrop"
+		android:contentDescription="TODO" android:scaleType="centerCrop"
 		android:layout_gravity="center_horizontal"
 		android:layout_margin="20dp"
 		app:layout_constraintLeft_toLeftOf="parent"

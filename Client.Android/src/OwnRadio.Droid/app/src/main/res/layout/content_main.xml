@@ -29,7 +29,7 @@
 			android:id="@+id/btnSkipTrack"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:src="@android:drawable/ic_media_ff"
+			android:contentDescription="TODO" android:src="@android:drawable/ic_media_ff"
 			android:layout_gravity="left"
 			/>
 	</LinearLayout>
@@ -59,7 +59,7 @@
 	android:layout_height="wrap_content"
 	android:clickable="true"
 	android:textColor="#000000"
-	android:text="User ID:" />
+	android:focusable="true" android:text="User ID:" />
 
 <TextView
 	android:id="@+id/trackID"
@@ -68,7 +68,7 @@
 	android:layout_height="wrap_content"
 	android:clickable="true"
 	android:textColor="#000000"
-	android:text="Track ID:" />
+	android:focusable="true" android:text="Track ID:" />
 
 <TextView
 	android:id="@+id/textViewInfo"
@@ -79,7 +79,7 @@
 	android:textColor="#000000"
 	android:layout_width="wrap_content"
 	android:layout_height="wrap_content"
-	android:gravity="bottom"/>
+	android:focusable="true" android:gravity="bottom"/>
 
 <TextView
 	android:id="@+id/txtTrackCount"

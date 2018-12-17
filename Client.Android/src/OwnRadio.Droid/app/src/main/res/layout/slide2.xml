@@ -34,7 +34,7 @@
 		android:layout_marginTop="92dp"
 		app:layout_constraintStart_toStartOf="@+id/imageIconPlay"
 		app:layout_constraintTop_toTopOf="@+id/imageIconPlay"
-		app:srcCompat="@drawable/ic_kr3"/>
+		android:contentDescription="TODO" app:srcCompat="@drawable/ic_kr3"/>
 	<ImageView
 		android:id="@+id/imageIconPlay"
 		android:layout_width="wrap_content"
@@ -43,5 +43,5 @@
 		app:layout_constraintEnd_toEndOf="parent"
 		app:layout_constraintStart_toStartOf="parent"
 		app:layout_constraintTop_toTopOf="parent"
-		app:srcCompat="@drawable/ic_but3"/>
+		android:contentDescription="TODO" app:srcCompat="@drawable/ic_but3"/>
 </android.support.constraint.ConstraintLayout>

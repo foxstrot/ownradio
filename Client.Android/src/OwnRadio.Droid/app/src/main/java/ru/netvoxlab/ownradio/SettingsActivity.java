@@ -10,6 +10,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.StatFs;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
@@ -28,6 +29,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -225,7 +227,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 //				|| NotificationPreferenceFragment.class.getName().equals(fragmentName)
 				;
 	}
-	
+
+
 	
 	/**
 	 * This fragment shows general preferences only. It is used when the
@@ -233,17 +236,25 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	 */
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class GeneralPreferenceFragment extends PreferenceFragment {
+
+		private File pathToCache;
+
+
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
 			final Context context = getActivity().getApplicationContext();
+			pathToCache = ((App)context.getApplicationContext()).getMusicDirectory();
+
 			final PrefManager prefManager = new PrefManager(context);
 			addPreferencesFromResource(R.xml.pref_general);
 			setHasOptionsMenu(true);
 			final TrackToCache memoryUtil = new TrackToCache(getActivity().getApplicationContext());
 			final TrackDataAccess trackInfo = new TrackDataAccess(getActivity().getApplicationContext());
+
 			double freeSpace = memoryUtil.FreeSpace();
 			double tracksSpace = memoryUtil.FolderSize(((App) getActivity().getApplicationContext()).getMusicDirectory());
+
 			double listeningTracksSpace = memoryUtil.ListeningTracksSize();
 			//TODO удаляем раздел настроек "Слушать только свои треки". Вернуть, когда будет готова эта фича и ее описание: preferenceScreen.addPreference(somePreference);
 			Preference listenOwnTracks = findPreference("pref_key_listen_own_tracks");
@@ -286,14 +297,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 					return true;
 				}
 			});
-			
+
+
+
 			final NumberPickerPreference maxMemorySize = (NumberPickerPreference) findPreference("key_number");
-			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() + " Gb");
+			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() * 10 + "%");
+			if(freeSpace / bytesInGB > 0.1d){
+				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf((freeSpace + tracksSpace + listeningTracksSpace) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
+			}
+			else{
+				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf((freeSpace + tracksSpace + listeningTracksSpace) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
+			}
 			maxMemorySize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 				@Override
 				public boolean onPreferenceChange(Preference preference, Object value) {
 					maxMemorySize.setValue(Integer.valueOf((Integer) value));
-					maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() + " Gb");
+					maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() * 10 + "%");
 //					int index = maxMemorySize.findIndexOfValue(stringValue);
 //
 //					// Set the summary to reflect the new value.
@@ -409,7 +428,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 					return true;
 				}
 			});
-			
+
 			//Пункт меню "Заполнить кэш" - забивает доступный для приложения объем памяти треками (ограничения задаются настройками)
 			final Preference fillCache = findPreference("fill_cache");
 			fillCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {

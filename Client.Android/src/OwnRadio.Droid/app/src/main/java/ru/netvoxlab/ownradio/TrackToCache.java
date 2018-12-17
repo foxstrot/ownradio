@@ -3,6 +3,7 @@ package ru.netvoxlab.ownradio;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.StatFs;
 import android.util.Log;
@@ -28,9 +29,12 @@ public class TrackToCache {
 	private Context mContext;
 	private File pathToCache;
 	private String deviceId;
+	private final int NO_LISTENED_TRACKS = -2;
 	private final int EXTERNAL_STORAGE_NOT_AVAILABLE = -1;
 	private final int DOWNLOAD_FILE_TO_CACHE = 1;
 	private final int DELETE_FILE_FROM_CACHE = 2;
+	private final int DELETE_LISTENED_FILES_FROM_CACHE = 3;
+
 	final static double bytesInGB = 1073741824.0d;
 	final static double bytesInMB = 1048576.0d;
 	final String TAG = "ownRadio";
@@ -61,31 +65,22 @@ public class TrackToCache {
 
 				case DOWNLOAD_FILE_TO_CACHE: {
 					try {
-						((App)mContext).setCountDownloadTrying((((App)mContext).getCountDownloadTrying()+1));
-						Log.d(TAG, "Попытка " +(((App)mContext).getCountDownloadTrying()+1) );
-						final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
-						trackId = trackMap.get("id");
-						trackMap.put("deviceid", deviceId);
-						if (trackDataAccess.CheckTrackExistInDB(trackId)) {
-							Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
-							break;
-						}
-						new Utilites().SendInformationTxt(mContext, "Download track " + trackId + " is started");
-//						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
-						do{
-							res = new DownloadTracks(mContext).execute(trackMap).get();
-							numAttempts ++;
-						}while (!res && numAttempts<3);
-						numAttempts = 0;
-						
-						if(new TrackDataAccess(mContext).GetExistTracksCount() >=1){
-							Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
-							progressIntent.putExtra("ProgressOn", false);
-							mContext.sendBroadcast(progressIntent);
-						} else if(((App)mContext).getCountDownloadTrying()<10){
-							//если ни один трек не кеширован за 10 попыток - запуск загрузки трека
-							SaveTrackToCache(deviceId, 1);
-						}
+					    ((App) mContext).setCountDownloadTrying((((App) mContext).getCountDownloadTrying() + 1));
+					    Log.d(TAG, "Попытка " + (((App) mContext).getCountDownloadTrying() + 1));
+					    final Map<String, String> trackMap = apiCalls.GetNextTrackID(deviceId);
+					    trackId = trackMap.get("id");
+					    trackMap.put("deviceid", deviceId);
+					    if (trackDataAccess.CheckTrackExistInDB(trackId)) {
+					        Log.d(TAG, "Трек был загружен ранее. TrackID" + trackId);
+					        break; }new Utilites().SendInformationTxt(mContext, "Download track " + trackId + " is started");
+					    //						boolean res = new DownloadTracks(mContext).execute(trackMap).get();
+                        do {
+                            res = new DownloadTracks(mContext).execute(trackMap).get();
+                            numAttempts++; } while (!res && numAttempts < 3);
+                         numAttempts = 0;if (new TrackDataAccess(mContext).GetExistTracksCount() >= 1) { Intent progressIntent = new Intent(ActionProgressBarFirstTracksLoad);
+                         progressIntent.putExtra("ProgressOn", false);
+                         mContext.sendBroadcast(progressIntent); } else if (((App) mContext).getCountDownloadTrying() < 10) {//если ни один трек не кеширован за 10 попыток - запуск загрузки трекаSaveTrackToCache(deviceId, 1);
+                         }
 					} catch (Exception ex) {
 						Log.d(TAG, "Error in SaveTrackToCache at file download. Ex.mess:" + ex.getLocalizedMessage());
 						return " " + ex.getLocalizedMessage();
@@ -98,6 +93,17 @@ public class TrackToCache {
 					if(track == null)
 						return "Отсутствуют файлы для удаления";
 					DeleteTrackFromCache(track);
+					i--;
+					break;
+				}
+				case DELETE_LISTENED_FILES_FROM_CACHE: {
+					DeleteListenedTracksFromCache();
+
+//                    DeleteLastListenedTrackFromCache();
+					i--;
+					return "Удален прослушанный трек";
+				}
+				case NO_LISTENED_TRACKS:{
 					i--;
 					break;
 				}
@@ -189,17 +195,32 @@ public class TrackToCache {
 		//Если подписка оформлена - считываем размер кэша, заданный пользователем
 		if(prefManager.getPrefItemBool("is_subscribed", false)) {
 			//получаем максимальный размер кеша из настроек
-			keyMaxMemorySize = (long) (bytesInGB * Double.valueOf(prefManager.getPrefItem("max_memory_size", "0.0d")));
+			Double percentageOfSize = Double.valueOf(prefManager.getPrefItemInt("key_number", 0)) / 10;
+			keyMaxMemorySize = (long) (percentageOfSize * (double)availableSpace);
 		}else{
 			//если нет подписки - ограничиваем размер кэша 1 гигабайтом
 			keyMaxMemorySize = (long) (1 * bytesInGB);
 		}
+
 		if(keyMaxMemorySize == 0)
 			keyMaxMemorySize = Long.MAX_VALUE;
-		if(cacheSize < keyMaxMemorySize && cacheSize < (cacheSize + availableSpace) * 0.3)
-				return DOWNLOAD_FILE_TO_CACHE;
-			else
-				return DELETE_FILE_FROM_CACHE;
+		//если размер кеша меньше максимально разрещенного и размер кеша меньше размера кеша + доступное место
+
+ 		if(cacheSize < keyMaxMemorySize && cacheSize < (cacheSize + availableSpace) * 0.3){
+            return DOWNLOAD_FILE_TO_CACHE;
+        }
+        else{
+            int listenedTracksCount = (int) (new TrackDataAccess(mContext).GetCountPlayTracks());
+            if(listenedTracksCount > 0){
+                return DELETE_LISTENED_FILES_FROM_CACHE;
+            }
+            else {
+                return NO_LISTENED_TRACKS;
+            }
+        }
+
+
+
 	}
 
 	public boolean DeleteTrackFromCache(ContentValues track){
@@ -285,6 +306,7 @@ public class TrackToCache {
 			return false;
 		}
 	}
+
 	
 	//Заполняет доступную приложению свободную память (определяется настройками) треками
 	public void FillCache(){

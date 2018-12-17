@@ -3,19 +3,17 @@ package ownradio.web.rest.v4;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.util.JSONPObject;
-import com.sun.deploy.net.HttpResponse;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.http.fileupload.FileUtils;
-import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import ownradio.domain.Device;
 import ownradio.domain.Log;
@@ -26,17 +24,16 @@ import ownradio.repository.TrackRepository;
 import ownradio.service.LogService;
 import ownradio.service.TrackService;
 import ownradio.util.ResourceUtil;
-import sun.net.www.http.HttpClient;
-
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.UUID;
 
 /**
  * Created by a.polunina on 14.03.2017.
@@ -188,7 +185,8 @@ public class TrackController {
 	@Value("${spring.profiles.active}")
 	private String activeProfile;
 
-	private ResponsMusic getMusicInfo(File file) throws IOException {
+	private ResponsMusic getMusicInfo(File file, UUID deviceId) throws IOException {
+
 		String attachmentName = "file";
 		String attachmentFileName = file.getName();
 		String crlf = "\r\n";
@@ -196,6 +194,10 @@ public class TrackController {
 		String boundary = "*****";
 
 		ResponsMusic music;
+
+		Log logRec = new Log();
+		logRec.setDeviceid(deviceId);
+		logRec.setRecname("getMusicInfo");
 
 		try {
 			HttpURLConnection httpUrlConnection = null;
@@ -238,20 +240,26 @@ public class TrackController {
 			BufferedReader responseStreamReader =
 					new BufferedReader(new InputStreamReader(responseStream));
 
-			String reponse = responseStreamReader.readLine();
+			String response = responseStreamReader.readLine();
 
 			ObjectMapper mapper = new ObjectMapper();
-			music = mapper.readValue(reponse, ResponsMusic.class);
+			music = mapper.readValue(response, ResponsMusic.class);
 
 			responseStream.close();
 			httpUrlConnection.disconnect();
 
+			logRec.setResponse(response);
+
+			logRec.setLogtext("Get Response by service");
 		} catch (Exception ex) {
+			logRec.setLogtext("Exception: " + ex.getMessage());
 			log.info("{}", ex.getMessage());
 			music = new ResponsMusic();
 			music.artist = "Artist";
 			music.title = "Track";
 		}
+
+		logService.save(logRec);
 
 		return music;
 	}
@@ -303,15 +311,19 @@ public class TrackController {
 
 				ResponsMusic music = null;
 
+				String prevRecName = track.getRecname();
+				String prevArtist = track.getArtist();
+
 				if (track.getRecname() != null && !track.getRecname().isEmpty() && !track.getRecname().equals("null")) {
 					trackResponse.put("name", track.getRecname());
 				} else {
 					{
-						music = getMusicInfo(file);
+						music = getMusicInfo(file, deviceId);
 						if (music != null && music.title != null) {
 							trackResponse.put("name", music.getTitle());
 							track.setRecname(music.getTitle());
 							track.setIsfilledinfo(1);
+							track.setIsaudiorecognised(1); // устанавливаем флаг, то что файл распознан
 						} else
 							trackResponse.put("name", "Track");
 					}
@@ -321,15 +333,27 @@ public class TrackController {
 					trackResponse.put("artist", track.getArtist());
 				} else {
 					if (music == null) {
-						music = getMusicInfo(file);
+						music = getMusicInfo(file, deviceId);
 					}
 					if (music != null && music.artist != null) {
 						trackResponse.put("artist", music.getArtist());
 						track.setArtist(music.getArtist());
 						track.setIsfilledinfo(1);
+						track.setIsaudiorecognised(1); // устанавливаем флаг, то что файл распознан
 					} else
 						trackResponse.put("artist", "Artist");
 				}
+
+				if(track.getIsaudiorecognised() == 1)
+				{
+					logRec.setLogtext("Трек распознан, старые Track= "+ prevRecName + ", Artist= " + prevArtist
+							+", новые Track= " + music.title + ", Artist= " + music.artist);
+				}
+				else
+				{
+					logRec.setLogtext("трек не распознан сервисом");
+				}
+
 
 				trackRepository.saveAndFlush(track);
 
