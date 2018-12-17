@@ -950,8 +950,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 					.setContentTitle(trackTitle)
 					.setContentText(trackArtist)
 					.setShowWhen(false)
-					.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-					.setAutoCancel(true);
+					.setVisibility(Notification.VISIBILITY_PUBLIC)
+					.setAutoCancel(false);
 //					.setChannelId("ownradio_channel");
 			if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
 				builder.setOngoing(true);
@@ -993,15 +993,16 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			
 			// create android channel
 			NotificationChannel androidChannel = new NotificationChannel("ownradio_channel",
-					"ownradio_channel", NotificationManager.IMPORTANCE_DEFAULT);
+					"Воспроизведение", NotificationManager.IMPORTANCE_DEFAULT);
 			// Sets whether notifications posted to this channel should display notification lights
-			androidChannel.enableLights(true);
+			androidChannel.enableLights(false);
 			// Sets whether notification posted to this channel should vibrate.
-			androidChannel.enableVibration(true);
+			androidChannel.enableVibration(false);
 			// Sets the notification light color for notifications posted to this channel
-			androidChannel.setLightColor(Color.GREEN);
+			androidChannel.setSound(null, null);
+			androidChannel.setLightColor(Color.BLUE);
 			// Sets whether notifications posted to this channel appear on the lockscreen or not
-			androidChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+			androidChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
 			
 			NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			notificationManager.createNotificationChannel(androidChannel);
