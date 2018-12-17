@@ -102,6 +102,8 @@ public class TrackDataAccess {
 		trackDB.close();
 		return result;
 	}
+
+
 	
 	public ContentValues GetTrackWithMaxCountPlay() {
 		ContentValues result = new ContentValues();
@@ -229,6 +231,8 @@ public class TrackDataAccess {
 		return rows;
 		//db.close();
 	}
+
+
 	
 	//Функция удаляет записи обо всех треках
 	public int DeleteAllTracksFromCache() {

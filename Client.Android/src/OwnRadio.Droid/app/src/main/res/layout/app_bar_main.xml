@@ -18,7 +18,7 @@
 			android:layout_width="match_parent"
 			android:layout_height="?attr/actionBarSize"
 			android:background="@color/colorPrimaryToolbar"
-			app:popupTheme="@style/AppTheme.PopupOverlay">
+			android:focusable="true" app:popupTheme="@style/AppTheme.PopupOverlay">
 			<TextView
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
@@ -26,7 +26,7 @@
 				android:textStyle="bold"
 				android:textColor="@color/textColorPrimary"
 				android:textAppearance="?android:attr/textAppearanceLarge"
-				android:fontFamily="sans-serif"
+				android:focusable="true" android:fontFamily="sans-serif"
 				android:layout_gravity="center"
 				android:clickable="true"
 				android:id="@+id/toolbar_title1" />
@@ -36,7 +36,7 @@
 				android:text="Radio"
 				android:textColor="@color/textColorPrimary"
 				android:textAppearance="?android:attr/textAppearanceLarge"
-				android:fontFamily="sans-serif-light"
+				android:focusable="true" android:fontFamily="sans-serif-light"
 				android:layout_gravity="center"
 				android:clickable="true"
 				android:id="@+id/toolbar_title2"

@@ -15,6 +15,8 @@
 	<uses-permission android:name="android.permission.REORDER_TASKS" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 	<uses-permission android:name="android.permission.QUICKBOOT_POWERON" />
+	<!--<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />-->
+
 	
 	<application
 		android:name=".App"
@@ -63,7 +65,7 @@
 		</activity>
 		
 		<service
-			android:name=".MediaPlayerService"
+			android:name=".MediaPlayerService" android:permission="" 
 			android:enabled="true"
 			android:exported="true">
 			<intent-filter>

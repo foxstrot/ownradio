@@ -136,8 +136,16 @@
 		<item>32</item>
 		<item>64</item>
 	</string-array>
+	<string-array name="pref_max_memory_size_values_new">
+		<item>5</item>
+		<item>6</item>
+		<item>7</item>
+		<item>8</item>
+		<item>9</item>
+	</string-array>
 	<string name="pref_percent_of_free_memory1">А также не более 30%% от свободной памяти</string>
 	<string name="pref_percent_of_free_memory">А также не более 30% от свободной памяти</string>
+	<string name="from_free_memory">*от свободной памяти</string>
 	<string name="pref_free_memory_size">Свободно</string>
 	<string name="pref_all_tracks_size">Занято</string>
 	<string name="pref_listening_tracks_size_size">Из них уже прослушанных</string>

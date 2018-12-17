@@ -11,7 +11,7 @@
 	<ImageView
 		android:layout_height="70dp"
 		android:layout_width="70dp"
-		android:src="@drawable/ic_default_art"
+		android:contentDescription="TODO" android:src="@drawable/ic_default_art"
 		android:layout_marginLeft="20dp"
 		android:layout_marginRight="25dp"
 		android:layout_gravity="center_vertical"/>
@@ -57,7 +57,7 @@
 		android:src="@drawable/btn_play"
 		android:tint="@color/ColorPrimaryBtnPlay"
 		android:background="@drawable/circular_button_selector_notification"
-		android:padding="20dp"
+		android:contentDescription="TODO" android:padding="20dp"
 		android:layout_margin="10dp"
 		android:layout_gravity="center_vertical"
 		/>
@@ -70,7 +70,7 @@
 		android:tintMode="src_in"
 		android:background="@drawable/circular_button_selector_notification"
 		android:tint="@color/colorPrimary"
-		android:padding="20dp"
+		android:contentDescription="TODO" android:padding="20dp"
 		android:layout_margin="10dp"
 		android:layout_gravity="center_vertical"
 		/>

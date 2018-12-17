@@ -43,7 +43,7 @@
 			android:defaultValue="1"
 			android:key="key_number"
 			android:title="@string/pref_max_memory_size"
-			android:summary="@string/pref_percent_of_free_memory"
+            android:summary="@string/from_free_memory"
 			android:persistent="true"/>
 
 		<Preference
