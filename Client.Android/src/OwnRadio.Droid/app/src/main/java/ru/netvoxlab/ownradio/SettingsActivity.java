@@ -61,7 +61,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	final static double bytesInGB = 1073741824.0d;
 	final static double bytesInMB = 1048576.0d;
 	static boolean isCachingStarted = false;
-
 //	MyPrefListener  myPrefListener = new MyPrefListener(this);
 	
 	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
@@ -238,17 +237,24 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 	public static class GeneralPreferenceFragment extends PreferenceFragment {
 
+		private File pathToCache;
+
+
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
 			super.onCreate(savedInstanceState);
 			final Context context = getActivity().getApplicationContext();
+			pathToCache = ((App)context.getApplicationContext()).getMusicDirectory();
+
 			final PrefManager prefManager = new PrefManager(context);
 			addPreferencesFromResource(R.xml.pref_general);
 			setHasOptionsMenu(true);
 			final TrackToCache memoryUtil = new TrackToCache(getActivity().getApplicationContext());
 			final TrackDataAccess trackInfo = new TrackDataAccess(getActivity().getApplicationContext());
+
 			double freeSpace = memoryUtil.FreeSpace();
 			double tracksSpace = memoryUtil.FolderSize(((App) getActivity().getApplicationContext()).getMusicDirectory());
+
 			double listeningTracksSpace = memoryUtil.ListeningTracksSize();
 			//TODO удаляем раздел настроек "Слушать только свои треки". Вернуть, когда будет готова эта фича и ее описание: preferenceScreen.addPreference(somePreference);
 			Preference listenOwnTracks = findPreference("pref_key_listen_own_tracks");
@@ -297,10 +303,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			final NumberPickerPreference maxMemorySize = (NumberPickerPreference) findPreference("key_number");
 			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() * 10 + "%");
 			if(freeSpace / bytesInGB > 0.1d){
-				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf(freeSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
+				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf((freeSpace + tracksSpace + listeningTracksSpace) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
 			}
 			else{
-				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf(freeSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
+				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf((freeSpace + tracksSpace + listeningTracksSpace) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
 			}
 			maxMemorySize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 				@Override
@@ -422,7 +428,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 					return true;
 				}
 			});
-			
+
 			//Пункт меню "Заполнить кэш" - забивает доступный для приложения объем памяти треками (ограничения задаются настройками)
 			final Preference fillCache = findPreference("fill_cache");
 			fillCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {

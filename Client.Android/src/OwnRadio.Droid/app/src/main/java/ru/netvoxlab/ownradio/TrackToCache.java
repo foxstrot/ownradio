@@ -29,11 +29,12 @@ public class TrackToCache {
 	private Context mContext;
 	private File pathToCache;
 	private String deviceId;
+	private final int NO_LISTENED_TRACKS = -2;
 	private final int EXTERNAL_STORAGE_NOT_AVAILABLE = -1;
 	private final int DOWNLOAD_FILE_TO_CACHE = 1;
 	private final int DELETE_FILE_FROM_CACHE = 2;
 	private final int DELETE_LISTENED_FILES_FROM_CACHE = 3;
-	private final int NO_LISTENED_TRACKS = 4;
+
 	final static double bytesInGB = 1073741824.0d;
 	final static double bytesInMB = 1048576.0d;
 	final String TAG = "ownRadio";
@@ -199,9 +200,6 @@ public class TrackToCache {
 		}else{
 			//если нет подписки - ограничиваем размер кэша 1 гигабайтом
 			keyMaxMemorySize = (long) (1 * bytesInGB);
-//			Double percentageOfSize = Double.valueOf(prefManager.getPrefItemInt("key_number", 0)) / 10;
-//			keyMaxMemorySize = (long) (percentageOfSize * (double)availableSpace);
-//			keyMaxMemorySize = (long) (0.05 * bytesInGB);
 		}
 
 		if(keyMaxMemorySize == 0)
@@ -309,17 +307,6 @@ public class TrackToCache {
 		}
 	}
 
-//	public boolean DeleteLastListenedTrackFromCache(){
-//        try{
-//            ContentValues lastListenTrack = new TrackDataAccess(mContext).GetMostNewTrack();
-//            if(lastListenTrack != null){
-//                DeleteTrackFromCache(lastListenTrack);
-//            }
-//            return true;
-//        }catch (Exception e){
-//            return false;
-//        }
-//    }
 	
 	//Заполняет доступную приложению свободную память (определяется настройками) треками
 	public void FillCache(){
