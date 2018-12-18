@@ -1,6 +1,8 @@
 package ru.netvoxlab.ownradio;
 
 import android.app.ProgressDialog;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -263,8 +265,16 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		filter.addAction(ActionNotFoundTrack);
 		filter.addAction(ActionAlarm);
 		registerReceiver(myReceiver, filter);
-		
-		this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
+
+		IntentFilter headsetFilters = new IntentFilter();
+		headsetFilters.addAction(Intent.ACTION_HEADSET_PLUG);
+		headsetFilters.addAction(BluetoothAdapter.ACTION_CONNECTION_STATE_CHANGED);
+		headsetFilters.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
+		headsetFilters.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
+
+//		this.registerReceiver(headSetReceiver, new IntentFilter(Intent.ACTION_HEADSET_PLUG));
+		this.registerReceiver(headSetReceiver, headsetFilters);
+
 		this.registerReceiver(remoteControlReceiver, new IntentFilter(Intent.ACTION_MEDIA_BUTTON));
 		
 		networkStateReceiver = new NetworkStateReceiver();

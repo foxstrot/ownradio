@@ -90,6 +90,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public static boolean playbackWithHSisInterrupted = false; //флаг было ли прервано проигрывание при подключенной гарнитуре
 	public static boolean isAutoplay = false; //флаг начинать ли проигрывание автоматически
 	public static boolean isHSConnected = false;
+	public static boolean isBTHSConnected = false;
 	String trackURL;
 	TrackDataAccess trackDataAccess;
 	Utilites utilites;
@@ -147,7 +148,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			InitializePlayer();
 		switch (focusChange) {
 			case AudioManager.AUDIOFOCUS_GAIN:
-				if (playbackWithHSisInterrupted && !isHSConnected)
+				if ((playbackWithHSisInterrupted && !isHSConnected) ||(playbackWithHSisInterrupted && !isBTHSConnected))
 					return;
 
 //				if (player == null)
@@ -163,14 +164,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS:
 				Pause();
-				if (isHSConnected && player.isPlaying())
+				if ((isHSConnected && player.isPlaying()) ||  (isBTHSConnected && player.isPlaying()))
 					playbackWithHSisInterrupted = true;
 //				Stop();
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
 				//We have lost focus for a short time, but likely to resume so pause
 				Pause();
-				if (isHSConnected && player.isPlaying())
+				if ((isHSConnected && player.isPlaying()) ||  (isBTHSConnected && player.isPlaying()))
 					playbackWithHSisInterrupted = true;
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
