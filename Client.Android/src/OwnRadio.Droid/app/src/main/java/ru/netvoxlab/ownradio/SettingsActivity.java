@@ -1,15 +1,23 @@
 package ru.netvoxlab.ownradio;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.annotation.TargetApi;
+import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentSender;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.os.StatFs;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -22,16 +30,22 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Base64;
 import android.util.Log;
+import android.util.Patterns;
 import android.util.TypedValue;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.android.vending.billing.IInAppBillingService;
+
 import java.io.File;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import static ru.netvoxlab.ownradio.Constants.ACTION_UPDATE_FILLCACHE_PROGRESS;
 import static ru.netvoxlab.ownradio.Constants.EXTRA_COUNT;
@@ -61,8 +75,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	final static double bytesInGB = 1073741824.0d;
 	final static double bytesInMB = 1048576.0d;
 	static boolean isCachingStarted = false;
-//	MyPrefListener  myPrefListener = new MyPrefListener(this);
-	
+	static IInAppBillingService mBillingService;
+	static boolean subscribeStatus = false;
+
+	ServiceConnection mBillingServiceConn = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mBillingService = IInAppBillingService.Stub.asInterface(service);
+			subscribeStatus = SubscribeManager.CheckSubscribeStatus(getApplicationContext(), mBillingService, true);
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mBillingService = null;
+		}
+	};
+
 	private static Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
 		@Override
 		public boolean onPreferenceChange(Preference preference, Object value) {
@@ -101,7 +129,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 						preference.setSummary(name);
 					}
 				}
-				
 			} else {
 				// For all other preferences, set the summary to the value's
 				// simple string representation.
@@ -142,6 +169,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+
+
+
+		Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
+		serviceIntent.setPackage("com.android.vending");
+		bindService(serviceIntent, mBillingServiceConn, Context.BIND_AUTO_CREATE);
+
+
 		//Меняем тему, используемую при запуске приложения, на основную
 		setTheme(R.style.AppTheme);
 		super.onCreate(savedInstanceState);
@@ -163,7 +198,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				onBackPressed();
 			}
 		});
+
 	}
+
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		if (mBillingService != null) {
+			unbindService(mBillingServiceConn	);
+		}
+	}
+
 	
 	/**
 	 * Set up the {@link android.app.ActionBar}, if the API is available.
@@ -239,9 +284,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
 		private File pathToCache;
 
-
 		@Override
 		public void onCreate(Bundle savedInstanceState) {
+
 			super.onCreate(savedInstanceState);
 			final Context context = getActivity().getApplicationContext();
 			pathToCache = ((App)context.getApplicationContext()).getMusicDirectory();
@@ -298,8 +343,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				}
 			});
 
-
-
 			final NumberPickerPreference maxMemorySize = (NumberPickerPreference) findPreference("key_number");
 			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() * 10 + "%");
 			if(freeSpace / bytesInGB > 0.1d){
@@ -323,6 +366,14 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 					return true;
 				}
 			});
+
+			Preference storageSettings = findPreference("key_number");
+			if(prefManager.getPrefItemBool("is_subscribed", false) || subscribeStatus){
+				storageSettings.setEnabled(true);
+			}
+			else {
+				storageSettings.setEnabled(false);
+			}
 
 			Preference sysInfo = findPreference("sys_info");
 			sysInfo.setTitle("Version: " + prefManager.getPrefItem(version) + "\nDeviceID: " + prefManager.getDeviceId());// + "\nTrackID:" + MediaPlayerService.player.get);
@@ -429,59 +480,102 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 				}
 			});
 
+			//Пункт меню "Купить подписку"
+			Preference buySubscription = findPreference("buy_subscription");
+			if(!prefManager.getPrefItemBool("is_subscribed", false) || !subscribeStatus){
+				buySubscription.setEnabled(true);
+				buySubscription.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+					@Override
+					public boolean onPreferenceClick(Preference preference) {
+						try{
+
+							byte[] packageNameBytes = context.getPackageName().getBytes();
+							String packageNameBase64 = Base64.encodeToString(packageNameBytes, Base64.DEFAULT);
+
+							Bundle buyIntentBundle = mBillingService.getBuyIntent(3, context.getPackageName(),
+									"test_subscribe_1", "subs", packageNameBase64);
+							PendingIntent pendingIntent = buyIntentBundle.getParcelable("BUY_INTENT");
+							try{
+								startIntentSenderForResult(pendingIntent.getIntentSender(),
+										1001, new Intent(), Integer.valueOf(0), Integer.valueOf(0),
+										Integer.valueOf(0), buyIntentBundle);
+
+
+							}
+							catch (IntentSender.SendIntentException ex){
+								Log.d(TAG, " " + ex.getLocalizedMessage());
+							}
+
+						}
+						catch (RemoteException e){
+							Log.d(TAG, " " + e.getLocalizedMessage());
+						}
+						return true;
+					}
+				});
+			}else {
+				buySubscription.setEnabled(false);
+			}
+
 			//Пункт меню "Заполнить кэш" - забивает доступный для приложения объем памяти треками (ограничения задаются настройками)
 			final Preference fillCache = findPreference("fill_cache");
-			fillCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-				@Override
-				public boolean onPreferenceClick(Preference preference) {
-					final CheckConnection checkConnection = new CheckConnection();
-					if (!checkConnection.CheckInetConnection(context)) {
-						Toast.makeText(context.getApplicationContext(), "Подключение к интернету отсутствует", Toast.LENGTH_LONG).show();
-						return true;
-					}
-					if(isCachingStarted) {
-						Toast.makeText(context, "Заполнение кэша уже началось", Toast.LENGTH_LONG).show();
-						return true;
-					}
-					if(memoryUtil.CheckCacheDoing() == 0 && trackInfo.GetCountPlayTracks() <= 0)
-						return true;
-					((App)context.getApplicationContext()).setCountDownloadTrying(0);
-					final LongRequestAPIService longRequestAPIService = new LongRequestAPIService();
-					isCachingStarted = true;
-					((App)context.getApplicationContext()).setFillingCacheActive(true);
-					Toast.makeText(context, "Заполнение кэша началось", Toast.LENGTH_LONG).show();
-					
-					try{
-						
-						new Thread(new Runnable() {
-							@Override
-							public void run() {
-								while (memoryUtil.CheckCacheDoing() == 1 && checkConnection.CheckInetConnection(context)) {
-									Log.d(TAG, "waitingIntentCount" + longRequestAPIService.getWaitingIntentCount());
-									Intent downloaderIntent = new Intent(context.getApplicationContext(), LongRequestAPIService.class);
-									downloaderIntent.setAction(ACTION_GETNEXTTRACK);
-									downloaderIntent.putExtra(EXTRA_DEVICEID, prefManager.getDeviceId());
-									downloaderIntent.putExtra(EXTRA_COUNT, 3);
-									context.getApplicationContext().startService(downloaderIntent);
-									try {
-										Thread.sleep(30000);
-									} catch (Exception ex) {
-										
-									}
-								}
-								Intent progressIntent = new Intent(ACTION_UPDATE_FILLCACHE_PROGRESS);
-								progressIntent.putExtra(EXTRA_FILLCACHE_PROGRESS, 0);
-								context.sendBroadcast(progressIntent);
-								isCachingStarted = false;
-								((App)context.getApplicationContext()).setFillingCacheActive(false);
-							}
-						}).start();
-					}catch (Exception ex){
+			if(prefManager.getPrefItemBool("is_subscribed", false) || subscribeStatus){
+				fillCache.setEnabled(true);
+				fillCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+					@Override
+					public boolean onPreferenceClick(Preference preference) {
+						final CheckConnection checkConnection = new CheckConnection();
+						if (!checkConnection.CheckInetConnection(context)) {
+							Toast.makeText(context.getApplicationContext(), "Подключение к интернету отсутствует", Toast.LENGTH_LONG).show();
+							return true;
+						}
+						if(isCachingStarted) {
+							Toast.makeText(context, "Заполнение кэша уже началось", Toast.LENGTH_LONG).show();
+							return true;
+						}
+						if(memoryUtil.CheckCacheDoing() == 0 && trackInfo.GetCountPlayTracks() <= 0)
+							return true;
+						((App)context.getApplicationContext()).setCountDownloadTrying(0);
+						final LongRequestAPIService longRequestAPIService = new LongRequestAPIService();
+						isCachingStarted = true;
+						((App)context.getApplicationContext()).setFillingCacheActive(true);
+						Toast.makeText(context, "Заполнение кэша началось", Toast.LENGTH_LONG).show();
 
-				}
-					return true;
-				}
-			});
+						try{
+							new Thread(new Runnable() {
+								@Override
+								public void run() {
+									while (memoryUtil.CheckCacheDoing() == 1 && checkConnection.CheckInetConnection(context)) {
+										Log.d(TAG, "waitingIntentCount" + longRequestAPIService.getWaitingIntentCount());
+										Intent downloaderIntent = new Intent(context.getApplicationContext(), LongRequestAPIService.class);
+										downloaderIntent.setAction(ACTION_GETNEXTTRACK);
+										downloaderIntent.putExtra(EXTRA_DEVICEID, prefManager.getDeviceId());
+										downloaderIntent.putExtra(EXTRA_COUNT, 3);
+										context.getApplicationContext().startService(downloaderIntent);
+										try {
+											Thread.sleep(30000);
+										} catch (Exception ex) {
+
+										}
+									}
+									Intent progressIntent = new Intent(ACTION_UPDATE_FILLCACHE_PROGRESS);
+									progressIntent.putExtra(EXTRA_FILLCACHE_PROGRESS, 0);
+									context.sendBroadcast(progressIntent);
+									isCachingStarted = false;
+									((App)context.getApplicationContext()).setFillingCacheActive(false);
+								}
+							}).start();
+						}catch (Exception ex){
+
+						}
+						return true;
+					}
+				});
+			}
+			else {
+				fillCache.setEnabled(false);
+			}
+
 		}
 		
 		@Override
@@ -494,7 +588,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			return super.onOptionsItemSelected(item);
 		}
 	}
-	
+
+
+
 	public static class MyPrefListener implements Preference.OnPreferenceClickListener {
 		private Context mContext;
 		

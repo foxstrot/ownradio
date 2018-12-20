@@ -21,6 +21,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.RemoteException;
 import android.os.SystemClock;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
@@ -54,15 +55,18 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.vending.billing.IInAppBillingService;
 import com.google.gson.Gson;
 
 import org.apache.commons.io.FileUtils;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -147,7 +151,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	public static final String ActionShowRateRequest = "ru.netvoxlab.ownradio.SHOW_RATING_REQUEST";
 	public static final String ActionNotFoundTrack = "ru.netvoxlab.ownradio.NOT_FOUND_TRACK";
 	public static final String ActionAlarm = "ru.netvoxlab.ownradio.ACTION_ALARM";
-	
+
+//	private static final Bundle mQuerySkus = new Bundle();
+//	private static Bundle mSkuDetails;
+//	private static final ArrayList<String> _skuList = new ArrayList<> ();
 	
 	public static final String NumListenedTracks = "NUM_TRACKS_LISTENED_IN_VERSION";
 	public static final String version = "VERSION";
@@ -163,30 +170,74 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	public String GetTrackId() {
 		return binder.GetMediaPlayerService().TrackID;
 	}
-	
+
+	private IInAppBillingService mService;
+
 	Intent intent;
-	
+
+	ServiceConnection mServiceConn = new ServiceConnection() {
+		@Override
+		public void onServiceConnected(ComponentName name, IBinder service) {
+			mService = IInAppBillingService.Stub.asInterface(service);
+			SubscribeManager.CheckSubscribeStatus(getApplicationContext(), mService);
+
+//			mService = IInAppBillingService.Stub.asInterface(service);
+//			try{
+//				Bundle ownedItems = mService.getPurchases(3, getPackageName(), "subs", null);
+//				int response = ownedItems.getInt("RESPONSE_CODE");
+//				if (response == 0) {
+//					ArrayList<String> purchase_item_list = ownedItems.getStringArrayList("INAPP_PURCHASE_ITEM_LIST");
+//					int purchaseIndex = purchase_item_list.indexOf("test_subscribe_1");
+//					if(purchaseIndex != -1){
+//						prefManager.setPrefItemBool("is_subscribed", true);
+//					}
+//					else{
+//						prefManager.setPrefItemBool("is_subscribed", false);
+//					}
+//				}
+//
+//			}catch (RemoteException e){
+//				Log.d(TAG, " " + e.getLocalizedMessage());
+//			}
+		}
+
+		@Override
+		public void onServiceDisconnected(ComponentName name) {
+			mService = null;
+		}
+	};
+
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		//Меняем тему, используемую при запуске приложения, на основную
 		setTheme(R.style.AppTheme);
-		
+
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main_new);
 
+
+
 //		toolbar = findViewById(R.id.toolbar);
 //		setSupportActionBar(toolbar);
 //		getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+//		_skuList.add("subscribe");
+//		mQuerySkus.putStringArrayList("ITEM_ID_LIST", _skuList);
+
+
 		prefManager = new PrefManager(getApplicationContext());
 
+		Intent serviceIntent = new Intent("com.android.vending.billing.InAppBillingService.BIND");
+		serviceIntent.setPackage("com.android.vending");
+		bindService(serviceIntent, mServiceConn, Context.BIND_AUTO_CREATE);
 
 //		if (prefManager.isFirstTimeLaunch()) {
 //			startActivity(new Intent(MainActivity.this, WelcomeActivity.class));
 //			finish();
 //		}
-		
-		
+
 		final DrawerLayout drawer = findViewById(R.id.drawer_layout);
 		ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
 				this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close) {
@@ -353,6 +404,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 					textTrackID.setText("Track ID: " + binder.GetMediaPlayerService().TrackID);
 					Log.e(TAG, "Next");
 				}
+				SubscribeManager.CheckSubscribeStatus(getApplicationContext(), mService);
 			}
 		});
 		
@@ -1138,6 +1190,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 //                intent.setAction("ru.netvoxlab.ownradio.action.SAVE_CURRENT_POSITION");
 //                startService(intent);
 		android.os.Process.killProcess(android.os.Process.myPid());
+		if(mService != null){
+			unbindService(mServiceConn);
+		}
+
 		super.onDestroy();
 	}
 	

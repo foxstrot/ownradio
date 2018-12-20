@@ -11,7 +11,7 @@ import android.media.AudioManager;
 import java.util.Set;
 
 import static ru.netvoxlab.ownradio.MediaPlayerService.isHSConnected;
-import static ru.netvoxlab.ownradio.MediaPlayerService.isBTHSConnected;
+
 
 import static ru.netvoxlab.ownradio.MediaPlayerService.playbackWithHSisInterrupted;
 import static ru.netvoxlab.ownradio.MediaPlayerService.player;

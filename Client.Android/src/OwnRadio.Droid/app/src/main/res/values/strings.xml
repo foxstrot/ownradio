@@ -13,7 +13,7 @@
 	<string name="label_play">Play</string>
 	<string name="label_next">Next</string>
 	<string name="title_activity_settings">Настройки</string>
-	
+	<!--<string name="subscribe_not_found">Подписка не оформлена, максимально используемая память составляет 1Gb</string>-->
 	<!-- Strings related to Settings -->
 	
 	<!-- Example General settings -->
@@ -108,6 +108,7 @@
 	<string name="pref_header_app">Приложение</string>
 	<string name="pref_about_app">Подробнее о приложении</string>
 	<string name="pref_header_about_app">О приложении</string>
+	<string name="buy_sub">Купить подписку</string>
 	<string name="pref_write_to_the_developers">Написать разработчикам</string>
 	<string name="pref_rate_app">Оценить приложение</string>
 	<string name="pref_header_system_info">Системная информация для отладки</string>

@@ -90,7 +90,6 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 	public static boolean playbackWithHSisInterrupted = false; //флаг было ли прервано проигрывание при подключенной гарнитуре
 	public static boolean isAutoplay = false; //флаг начинать ли проигрывание автоматически
 	public static boolean isHSConnected = false;
-	public static boolean isBTHSConnected = false;
 	String trackURL;
 	TrackDataAccess trackDataAccess;
 	Utilites utilites;
@@ -148,7 +147,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			InitializePlayer();
 		switch (focusChange) {
 			case AudioManager.AUDIOFOCUS_GAIN:
-				if ((playbackWithHSisInterrupted && !isHSConnected) ||(playbackWithHSisInterrupted && !isBTHSConnected))
+				if (playbackWithHSisInterrupted && !isHSConnected)
 					return;
 
 //				if (player == null)
@@ -164,14 +163,14 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS:
 				Pause();
-				if ((isHSConnected && player.isPlaying()) ||  (isBTHSConnected && player.isPlaying()))
+				if (isHSConnected && player.isPlaying())
 					playbackWithHSisInterrupted = true;
 //				Stop();
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
 				//We have lost focus for a short time, but likely to resume so pause
 				Pause();
-				if ((isHSConnected && player.isPlaying()) ||  (isBTHSConnected && player.isPlaying()))
+				if (isHSConnected && player.isPlaying())
 					playbackWithHSisInterrupted = true;
 				break;
 			case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
@@ -951,8 +950,8 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 					.setContentTitle(trackTitle)
 					.setContentText(trackArtist)
 					.setShowWhen(false)
-					.setVisibility(Notification.VISIBILITY_PUBLIC)
-					.setAutoCancel(false);
+					.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+					.setAutoCancel(true);
 //					.setChannelId("ownradio_channel");
 			if (GetMediaPlayerState() == PlaybackStateCompat.STATE_PLAYING)
 				builder.setOngoing(true);
@@ -994,16 +993,15 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			
 			// create android channel
 			NotificationChannel androidChannel = new NotificationChannel("ownradio_channel",
-					"Воспроизведение", NotificationManager.IMPORTANCE_DEFAULT);
+					"ownradio_channel", NotificationManager.IMPORTANCE_DEFAULT);
 			// Sets whether notifications posted to this channel should display notification lights
-			androidChannel.enableLights(false);
+			androidChannel.enableLights(true);
 			// Sets whether notification posted to this channel should vibrate.
-			androidChannel.enableVibration(false);
+			androidChannel.enableVibration(true);
 			// Sets the notification light color for notifications posted to this channel
-			androidChannel.setSound(null, null);
-			androidChannel.setLightColor(Color.BLUE);
+			androidChannel.setLightColor(Color.GREEN);
 			// Sets whether notifications posted to this channel appear on the lockscreen or not
-			androidChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+			androidChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
 			
 			NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 			notificationManager.createNotificationChannel(androidChannel);

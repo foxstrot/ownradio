@@ -93,6 +93,9 @@
 			<intent android:action="android.intent.action.VIEW"
 					android:data="https://play.google.com/store/apps/details?id=ru.netvoxlab.ownradio" />
 		</Preference>
+		<Preference android:title="@string/buy_sub"
+					android:key="buy_subscription">
+		</Preference>
 	</PreferenceCategory>
 	<PreferenceCategory
 		android:title="@string/pref_header_system_info"
