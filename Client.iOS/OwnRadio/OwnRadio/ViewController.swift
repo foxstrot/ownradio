@@ -14,7 +14,6 @@ import Alamofire
 class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 	
 	// MARK:  Outlets
-	@IBOutlet weak var backgroundImageView: UIImageView!
 	
 	@IBOutlet weak var infoView: UIView!
 	@IBOutlet weak var circleViewConteiner: UIView!
@@ -80,11 +79,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		self.navigationController?.isNavigationBarHidden = false
 		
 		//задаем цвет навигационного бара
-		self.navigationController?.navigationBar.barTintColor = UIColor(red: 3.0/255.0, green: 169.0/255.0, blue: 244.0/255.0, alpha: 1.0)
+//		self.navigationController?.navigationBar.barTintColor = UIColor(red: 3.0/255.0, green: 169.0/255.0, blue: 244.0/255.0, alpha: 1.0)
 		//цвет кнопки и иконки
-		self.navigationController?.navigationBar.tintColor = UIColor.white
+		self.navigationController?.navigationBar.tintColor = UIColor.darkGray
 		//цвет заголовка
-		self.navigationController?.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName : UIColor.white]
+		self.navigationController?.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName : UIColor.darkGray]
 		
 //        if isStartListening == false {
 //            self.authorNameLbl.text = "ownRadio"
@@ -286,7 +285,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	}
 	
 	func crashNetwork(_ notification: Notification) {
-		self.playPauseBtn.setImage(UIImage(named: "playImg"), for: UIControlState.normal)
+		self.playPauseBtn.setImage(UIImage(named: "playImage"), for: UIControlState.normal)
 		self.leftPlayBtnConstraint.constant = pauseBtnConstraintConstant
 		self.trackIDLbl.text = ""
 		self.infoLabel10.text = self.infoLabel9.text
@@ -424,10 +423,10 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		//обновление кнопки playPause
 		if self.player.isPlaying == false {
-			self.playPauseBtn.setImage(UIImage(named: "playImg"), for: UIControlState.normal)
+			self.playPauseBtn.setImage(UIImage(named: "playImage"), for: UIControlState.normal)
 			//self.leftPlayBtnConstraint.constant = self.playBtnConstraintConstant
 		} else {
-			self.playPauseBtn.setImage(UIImage(named: "pauseImg"), for: UIControlState.normal)
+			self.playPauseBtn.setImage(UIImage(named: "pauseImage"), for: UIControlState.normal)
 			//self.leftPlayBtnConstraint.constant = self.pauseBtnConstraintConstant
 		}
 		

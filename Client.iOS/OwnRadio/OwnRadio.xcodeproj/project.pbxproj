@@ -37,6 +37,7 @@
 		4E09FC7C1F3325C40055CD84 /* StartVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E09FC7B1F3325C40055CD84 /* StartVideoViewController.swift */; };
 		4E09FC7F1F344DC00055CD84 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E09FC7E1F344DC00055CD84 /* Assets.xcassets */; };
 		4E09FC801F3453FD0055CD84 /* video.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 4E09FC7D1F344D760055CD84 /* video.mp4 */; };
+		4E3821F921C785B70096B26C /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E3821F821C785B60096B26C /* MainViewController.swift */; };
 		4E8D43571F2B778B00D77C87 /* AboutAppViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E8D43561F2B778B00D77C87 /* AboutAppViewController.swift */; };
 		4ED299581F28977A00E2616F /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4ED299571F28977A00E2616F /* SettingsViewController.swift */; };
 		50D8269A1DE74B0800238F96 /* Fabric.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 50D826981DE74B0800238F96 /* Fabric.framework */; };
@@ -111,6 +112,7 @@
 		4E09FC7B1F3325C40055CD84 /* StartVideoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StartVideoViewController.swift; sourceTree = "<group>"; };
 		4E09FC7D1F344D760055CD84 /* video.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = video.mp4; path = ../video.mp4; sourceTree = "<group>"; };
 		4E09FC7E1F344DC00055CD84 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		4E3821F821C785B60096B26C /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
 		4E8D43561F2B778B00D77C87 /* AboutAppViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutAppViewController.swift; sourceTree = "<group>"; };
 		4ED299571F28977A00E2616F /* SettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; usesTabs = 1; };
 		50D826981DE74B0800238F96 /* Fabric.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Fabric.framework; sourceTree = "<group>"; };
@@ -195,6 +197,7 @@
 				4ED299571F28977A00E2616F /* SettingsViewController.swift */,
 				4E8D43561F2B778B00D77C87 /* AboutAppViewController.swift */,
 				4E09FC791F331E810055CD84 /* ItemViewController.swift */,
+				4E3821F821C785B60096B26C /* MainViewController.swift */,
 				09D52F8A1E3F36BA006B66E6 /* View */,
 				091679581DE451CF00619B3F /* Main.storyboard */,
 				4E09FC7E1F344DC00055CD84 /* Assets.xcassets */,
@@ -275,7 +278,7 @@
 				0916794E1DE451CF00619B3F /* Frameworks */,
 				0916794F1DE451CF00619B3F /* Resources */,
 				50D826971DE747C900238F96 /* Fabric */,
-				0979B1B21DF008A5003C01C7 /* ShellScript */,
+				0979B1B21DF008A5003C01C7 /* Run Script */,
 				0949CA2B1E3100010066F5A9 /* Embed Frameworks */,
 			);
 			buildRules = (
@@ -402,18 +405,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		0979B1B21DF008A5003C01C7 /* ShellScript */ = {
+		0979B1B21DF008A5003C01C7 /* Run Script */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
 			);
+			name = "Run Script";
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "buildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nbuildNumber=$(($buildNumber + 1))\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\n\nAPP_PATH=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\"\n\n# This script loops through the frameworks embedded in the application and\n# removes unused architectures.\nfind \"/Users/a.polunina/GitHub/Client.iOS/OwnRadio/Carthage/Build/iOS\" -name '*.framework' -type d | while read -r FRAMEWORK\ndo\nFRAMEWORK_EXECUTABLE_NAME=$(defaults read \"$FRAMEWORK/Info.plist\" CFBundleExecutable)\nFRAMEWORK_EXECUTABLE_PATH=\"$FRAMEWORK/$FRAMEWORK_EXECUTABLE_NAME\"\necho \"Executable is $FRAMEWORK_EXECUTABLE_PATH\"\n\nEXTRACTED_ARCHS=()\n\nfor ARCH in $ARCHS\ndo\necho \"Extracting $ARCH from $FRAMEWORK_EXECUTABLE_NAME\"\nlipo -extract \"$ARCH\" \"$FRAMEWORK_EXECUTABLE_PATH\" -o \"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\"\nEXTRACTED_ARCHS+=(\"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\")\ndone\n\necho \"Merging extracted architectures: ${ARCHS}\"\nlipo -o \"$FRAMEWORK_EXECUTABLE_PATH-merged\" -create \"${EXTRACTED_ARCHS[@]}\"\nrm \"${EXTRACTED_ARCHS[@]}\"\n\necho \"Replacing original executable with thinned version\"\nrm \"$FRAMEWORK_EXECUTABLE_PATH\"\nmv \"$FRAMEWORK_EXECUTABLE_PATH-merged\" \"$FRAMEWORK_EXECUTABLE_PATH\"\n\ndone\n";
+			shellScript = "buildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nbuildNumber=$(($buildNumber + 1))\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\n\nAPP_PATH=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\"\n\n# This script loops through the frameworks embedded in the application and\n# removes unused architectures.\nfind \"/Users/a.polunina/GitHub/ownradio/Client.iOS/OwnRadio/Carthage/Build/iOS\" -name '*.framework' -type d | while read -r FRAMEWORK\ndo\nFRAMEWORK_EXECUTABLE_NAME=$(defaults read \"$FRAMEWORK/Info.plist\" CFBundleExecutable)\nFRAMEWORK_EXECUTABLE_PATH=\"$FRAMEWORK/$FRAMEWORK_EXECUTABLE_NAME\"\necho \"Executable is $FRAMEWORK_EXECUTABLE_PATH\"\n\nEXTRACTED_ARCHS=()\n\nfor ARCH in $ARCHS\ndo\necho \"Extracting $ARCH from $FRAMEWORK_EXECUTABLE_NAME\"\nlipo -extract \"$ARCH\" \"$FRAMEWORK_EXECUTABLE_PATH\" -o \"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\"\nEXTRACTED_ARCHS+=(\"$FRAMEWORK_EXECUTABLE_PATH-$ARCH\")\ndone\n\necho \"Merging extracted architectures: ${ARCHS}\"\nlipo -o \"$FRAMEWORK_EXECUTABLE_PATH-merged\" -create \"${EXTRACTED_ARCHS[@]}\"\nrm \"${EXTRACTED_ARCHS[@]}\"\n\necho \"Replacing original executable with thinned version\"\nrm \"$FRAMEWORK_EXECUTABLE_PATH\"\nmv \"$FRAMEWORK_EXECUTABLE_PATH-merged\" \"$FRAMEWORK_EXECUTABLE_PATH\"\n\ndone\n";
 		};
 		50D826971DE747C900238F96 /* Fabric */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -436,6 +440,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E3821F921C785B70096B26C /* MainViewController.swift in Sources */,
 				4E09FC7C1F3325C40055CD84 /* StartVideoViewController.swift in Sources */,
 				09B953A11DFEBED70098417C /* CircularView.swift in Sources */,
 				0979B1B91DF01085003C01C7 /* CoreDataManager.swift in Sources */,
