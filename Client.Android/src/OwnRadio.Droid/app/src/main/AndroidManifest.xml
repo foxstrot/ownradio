@@ -150,25 +150,24 @@
 			android:label="@string/subscribe_title"
 			android:screenOrientation="portrait">
 			<intent-filter>
-				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.DEFAULT"/>
 				
-				<action android:name="android.intent.action.VIEW" />
+				<action android:name="android.intent.action.VIEW"/>
 				
-				<data android:scheme="iabilling_activity" />
+				<data android:scheme="iabilling_activity"/>
 			</intent-filter>
 		</activity>
 		<activity
 			android:name=".TimerSleep"
 			android:label="Таймер сна"></activity>
-		<activity android:name=".AlarmClock"></activity>
-		
-		
+		<activity android:name=".AlarmClock" android:label="@string/alarm_clock_header"></activity>
+
 		<receiver android:name=".AlarmReceiver">
 			<intent-filter>
-				<action android:name="android.intent.action.BOOT_COMPLETED" />
-				<action android:name="android.intent.action.QUICKBOOT_POWERON" />
-				<action android:name="ru.netvoxlab.mfc.iasmkgu.action.ACTION_ALARM" />
-				<action android:name="ru.netvoxlab.mfc.iasmkgu.action.ACTION_START_APP" />
+				<action android:name="android.intent.action.BOOT_COMPLETED"/>
+				<action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+				<action android:name="ru.netvoxlab.mfc.iasmkgu.action.ACTION_ALARM"/>
+				<action android:name="ru.netvoxlab.mfc.iasmkgu.action.ACTION_START_APP"/>
 				<action android:name="ru.netvoxlab.mfc.iasmkgu.action.ACTION_CLOSE_APP" />
 			</intent-filter>
 		</receiver>
