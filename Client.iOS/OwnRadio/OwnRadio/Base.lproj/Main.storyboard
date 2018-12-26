@@ -601,35 +601,67 @@
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="А также не более 30% от свободной памяти" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nfk-MC-zBT">
-                                                    <rect key="frame" x="10" y="32" width="354" height="39"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="*от свободной" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nfk-MC-zBT" userLabel="From Free Space">
+                                                    <rect key="frame" x="20" y="30" width="354" height="39"/>
                                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                                    <accessibility key="accessibilityConfiguration">
+                                                        <accessibilityTraits key="traits" button="YES" staticText="YES"/>
+                                                    </accessibility>
                                                     <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                                     <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
-                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="0" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="v2M-8V-EQ3" userLabel="MaxMemory Lbl">
-                                                    <rect key="frame" x="270" y="14" width="11" height="23"/>
+                                                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="40%" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="v2M-8V-EQ3" userLabel="MaxMemory Lbl">
+                                                    <rect key="frame" x="233" y="16" width="53" height="21"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <nil key="textColor"/>
                                                     <nil key="highlightedColor"/>
                                                 </label>
                                                 <stepper opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" maximumValue="100" translatesAutoresizingMaskIntoConstraints="NO" id="CRv-cC-Qp5">
-                                                    <rect key="frame" x="286" y="14" width="94" height="29"/>
+                                                    <rect key="frame" x="295.5" y="11" width="94" height="29"/>
+                                                    <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
+                                                    <constraints>
+                                                        <constraint firstAttribute="width" constant="60" id="no5-qb-Rln"/>
+                                                    </constraints>
+                                                    <color key="tintColor" red="0.21216781539999999" green="0.48632187630000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                     <connections>
                                                         <action selector="stepperValueChanged:" destination="d65-A4-a0S" eventType="valueChanged" id="aqk-OC-Ol8"/>
                                                     </connections>
                                                 </stepper>
                                             </subviews>
                                             <constraints>
-                                                <constraint firstItem="v2M-8V-EQ3" firstAttribute="baseline" secondItem="VNW-2R-20P" secondAttribute="baseline" id="5dC-X9-4F3"/>
-                                                <constraint firstItem="v2M-8V-EQ3" firstAttribute="top" secondItem="YOT-S3-28g" secondAttribute="topMargin" constant="3" id="CZe-HO-L1p"/>
-                                                <constraint firstAttribute="trailingMargin" secondItem="CRv-cC-Qp5" secondAttribute="trailing" id="Ddd-Gu-bGl"/>
-                                                <constraint firstItem="CRv-cC-Qp5" firstAttribute="top" secondItem="YOT-S3-28g" secondAttribute="topMargin" constant="3" id="P0J-Pi-gcK"/>
+                                                <constraint firstItem="v2M-8V-EQ3" firstAttribute="leading" secondItem="VNW-2R-20P" secondAttribute="trailing" constant="26" id="0YN-PT-baT"/>
+                                                <constraint firstItem="CRv-cC-Qp5" firstAttribute="leading" secondItem="v2M-8V-EQ3" secondAttribute="trailing" constant="59" id="Ao2-J3-AKa"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="CRv-cC-Qp5" secondAttribute="trailing" constant="6" id="BhO-NX-2GD"/>
+                                                <constraint firstItem="v2M-8V-EQ3" firstAttribute="leading" secondItem="YOT-S3-28g" secondAttribute="leadingMargin" constant="213" id="BpN-4l-bmW"/>
+                                                <constraint firstItem="CRv-cC-Qp5" firstAttribute="top" secondItem="YOT-S3-28g" secondAttribute="topMargin" constant="5" id="EKr-Jj-zUg"/>
+                                                <constraint firstAttribute="bottomMargin" secondItem="CRv-cC-Qp5" secondAttribute="bottom" constant="14" id="Mym-8T-xQL"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="v2M-8V-EQ3" secondAttribute="trailing" constant="94" id="Qci-7s-5gC"/>
                                                 <constraint firstAttribute="leadingMargin" secondItem="VNW-2R-20P" secondAttribute="leading" id="Wvj-AZ-yfD"/>
-                                                <constraint firstItem="CRv-cC-Qp5" firstAttribute="leading" secondItem="v2M-8V-EQ3" secondAttribute="trailing" constant="5" id="mEd-mf-owl"/>
+                                                <constraint firstItem="v2M-8V-EQ3" firstAttribute="leading" secondItem="VNW-2R-20P" secondAttribute="trailing" constant="37" id="XG1-eA-XCU"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="CRv-cC-Qp5" secondAttribute="trailing" constant="20" id="cFr-Wb-tdF"/>
+                                                <constraint firstAttribute="bottomMargin" secondItem="v2M-8V-EQ3" secondAttribute="bottom" constant="22.5" id="ljj-bw-0iT"/>
                                                 <constraint firstItem="VNW-2R-20P" firstAttribute="top" secondItem="YOT-S3-28g" secondAttribute="topMargin" constant="5" id="poq-bE-tcg"/>
+                                                <constraint firstItem="CRv-cC-Qp5" firstAttribute="leading" secondItem="v2M-8V-EQ3" secondAttribute="trailing" constant="1" id="qQc-kh-1b0"/>
+                                                <constraint firstItem="v2M-8V-EQ3" firstAttribute="top" secondItem="YOT-S3-28g" secondAttribute="topMargin" constant="5" id="rnd-0t-kdi"/>
+                                                <constraint firstItem="CRv-cC-Qp5" firstAttribute="leading" secondItem="v2M-8V-EQ3" secondAttribute="trailing" constant="64" id="waK-TV-grd"/>
+                                                <constraint firstItem="CRv-cC-Qp5" firstAttribute="top" secondItem="YOT-S3-28g" secondAttribute="topMargin" id="xgd-1H-6hk"/>
+                                                <constraint firstAttribute="trailingMargin" secondItem="CRv-cC-Qp5" secondAttribute="trailing" constant="24.5" id="zEQ-PP-7bK"/>
                                             </constraints>
+                                            <variation key="default">
+                                                <mask key="constraints">
+                                                    <exclude reference="0YN-PT-baT"/>
+                                                    <exclude reference="XG1-eA-XCU"/>
+                                                    <exclude reference="ljj-bw-0iT"/>
+                                                    <exclude reference="Ao2-J3-AKa"/>
+                                                    <exclude reference="BhO-NX-2GD"/>
+                                                    <exclude reference="EKr-Jj-zUg"/>
+                                                    <exclude reference="Mym-8T-xQL"/>
+                                                    <exclude reference="cFr-Wb-tdF"/>
+                                                    <exclude reference="qQc-kh-1b0"/>
+                                                    <exclude reference="waK-TV-grd"/>
+                                                </mask>
+                                            </variation>
                                         </tableViewCellContentView>
                                     </tableViewCell>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="LLk-v7-8nC">
@@ -813,7 +845,7 @@
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
                                                 <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Xwe-3J-FQU">
-                                                    <rect key="frame" x="8" y="5.5" width="384" height="33"/>
+                                                    <rect key="frame" x="20" y="5.5" width="360" height="33"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <state key="normal" title="Написать разработчикам">
                                                         <color key="titleColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
@@ -1001,6 +1033,7 @@
                         <outlet property="delAllTracksLbl" destination="7Sd-4R-1Nr" id="I8R-gR-WP7"/>
                         <outlet property="deviceIdLbl" destination="XlQ-qB-8ZM" id="FCx-cZ-scd"/>
                         <outlet property="freeSpaceLbl" destination="n8y-69-XN8" id="d1x-bN-86F"/>
+                        <outlet property="fromFreeSpace" destination="nfk-MC-zBT" id="KnV-Rw-oiv"/>
                         <outlet property="listenTracksSize" destination="llY-KR-mWa" id="cJi-hH-D9d"/>
                         <outlet property="maxMemoryLbl" destination="v2M-8V-EQ3" id="imC-sc-VjT"/>
                         <outlet property="onlyWiFiSwitch" destination="pU4-dy-kii" id="taH-wq-PQn"/>

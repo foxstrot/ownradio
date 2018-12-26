@@ -19,7 +19,7 @@ class Downloader: NSObject {
 	let tracksPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!.appendingPathComponent("Tracks/")
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
 	
-	let limitMemory =  UInt64(DiskStatus.freeDiskSpaceInBytes / 2)
+//	let limitMemory =  UInt64(DiskStatus.freeDiskSpaceInBytes / 3)
 	var maxMemory = UInt64(1000000000)
 	var memoryBuffer = UInt()
 	
@@ -31,11 +31,20 @@ class Downloader: NSObject {
 	func load(isSelfFlag: Bool, complition: @escaping (() -> Void)) {
 		print("call load")
 		
-		if limitMemory < 1000000000 * (UserDefaults.standard.object(forKey: "maxMemorySize") as? UInt64)! {
-			maxMemory = limitMemory
-		} else {
-			maxMemory = 1000000000 * (UserDefaults.standard.object(forKey: "maxMemorySize") as? UInt64)!
-		}
+		
+		let memoryAvailable = UInt64(DiskStatus.folderSize(folderPath: tracksUrlString)) + UInt64(DiskStatus.freeDiskSpaceInBytes)
+		let percentage = Double((UserDefaults.standard.object(forKey: "maxMemorySize") as? Double)! / 100)
+		maxMemory = UInt64(Double(memoryAvailable) * percentage)
+		
+//		if limitMemory < 1000000000 * ((UserDefaults.standard.object(forKey: "maxMemorySize") as? UInt64)! / 10) {
+//			maxMemory = limitMemory
+//		} else {
+//			let memoryAvailable = UInt64(DiskStatus.folderSize(folderPath: tracksUrlString)) + UInt64(DiskStatus.freeDiskSpaceInBytes)
+//			let percentage = Double((UserDefaults.standard.object(forKey: "maxMemorySize") as? Double)! / 100)
+//			maxMemory = UInt64(Double(memoryAvailable) * percentage)
+//		}
+//		+ DiskStatus.folderSize(folderPath: tracksUrlString)))
+//		* (DiskStatus.freeDiskSpaceInBytes)
 		
 		//если треки занимают больше места, чем максимально допустимо -
 		//удаляем "лишние" треки - в первую очередь прослушанные, затем, если необходимо - самые старые из загруженных
@@ -241,11 +250,14 @@ class Downloader: NSObject {
 	}
 	
 	func fillCache () {
-		let limitMemory =  UInt64(DiskStatus.freeDiskSpaceInBytes / 2)
-		let maxMemory = 1000000000 * (UserDefaults.standard.object(forKey: "maxMemorySize") as? UInt64)!
+//		let limitMemory =  UInt64(DiskStatus.freeDiskSpaceInBytes / 2)
+//		let maxMemory = 1000000000 * (UserDefaults.standard.object(forKey: "maxMemorySize") as? UInt64)!
+		let memoryAvailable = UInt64(DiskStatus.folderSize(folderPath: tracksUrlString)) + UInt64(DiskStatus.freeDiskSpaceInBytes)
+		let percentage = Double((UserDefaults.standard.object(forKey: "maxMemorySize") as? Double)! / 100)
+		maxMemory = UInt64(Double(memoryAvailable) * percentage)
 		let folderSize = DiskStatus.folderSize(folderPath: tracksUrlString)
 		
-		if folderSize < limitMemory && folderSize < maxMemory  {
+		if folderSize < maxMemory  {
 			self.load (isSelfFlag: true){
 				
 				self.fillCache()
