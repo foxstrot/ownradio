@@ -33,6 +33,9 @@
 		09D52F8C1E3F36EF006B66E6 /* CachingView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 09D52F8B1E3F36EF006B66E6 /* CachingView.xib */; };
 		09D52F8E1E3F3F37006B66E6 /* CachingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09D52F8D1E3F3F37006B66E6 /* CachingView.swift */; };
 		09EA799B1DE57D040034B8DF /* AudioPlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09EA799A1DE57D040034B8DF /* AudioPlayerManager.swift */; };
+		28DE353C21D4EE0600B41A5D /* AlertClockViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DE353B21D4EE0600B41A5D /* AlertClockViewController.swift */; };
+		28DE354121D5FDAC00B41A5D /* TimerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DE354021D5FDAC00B41A5D /* TimerViewController.swift */; };
+		28DE355521D77EC800B41A5D /* HGCircularSlider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 28DE355421D77EC800B41A5D /* HGCircularSlider.framework */; };
 		4E09FC7A1F331E810055CD84 /* ItemViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E09FC791F331E810055CD84 /* ItemViewController.swift */; };
 		4E09FC7C1F3325C40055CD84 /* StartVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E09FC7B1F3325C40055CD84 /* StartVideoViewController.swift */; };
 		4E09FC7F1F344DC00055CD84 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E09FC7E1F344DC00055CD84 /* Assets.xcassets */; };
@@ -72,6 +75,16 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		28DE354721D6115A00B41A5D /* Copy Files */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Copy Files";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -107,6 +120,9 @@
 		09D52F8B1E3F36EF006B66E6 /* CachingView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CachingView.xib; sourceTree = "<group>"; };
 		09D52F8D1E3F3F37006B66E6 /* CachingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CachingView.swift; sourceTree = "<group>"; };
 		09EA799A1DE57D040034B8DF /* AudioPlayerManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioPlayerManager.swift; sourceTree = "<group>"; usesTabs = 1; };
+		28DE353B21D4EE0600B41A5D /* AlertClockViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertClockViewController.swift; sourceTree = "<group>"; };
+		28DE354021D5FDAC00B41A5D /* TimerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerViewController.swift; sourceTree = "<group>"; };
+		28DE355421D77EC800B41A5D /* HGCircularSlider.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HGCircularSlider.framework; path = Carthage/Build/iOS/HGCircularSlider.framework; sourceTree = "<group>"; };
 		4E09FC791F331E810055CD84 /* ItemViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ItemViewController.swift; sourceTree = "<group>"; };
 		4E09FC7B1F3325C40055CD84 /* StartVideoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StartVideoViewController.swift; sourceTree = "<group>"; };
 		4E09FC7D1F344D760055CD84 /* video.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = video.mp4; path = ../video.mp4; sourceTree = "<group>"; };
@@ -122,8 +138,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0979B1B41DF00FCE003C01C7 /* CoreData.framework in Frameworks */,
+				28DE355521D77EC800B41A5D /* HGCircularSlider.framework in Frameworks */,
 				099EAE511E30FC0B005478F2 /* Alamofire.framework in Frameworks */,
+				0979B1B41DF00FCE003C01C7 /* CoreData.framework in Frameworks */,
 				50D8269B1DE74B0800238F96 /* Crashlytics.framework in Frameworks */,
 				50D8269A1DE74B0800238F96 /* Fabric.framework in Frameworks */,
 			);
@@ -185,9 +202,11 @@
 				091679541DE451CF00619B3F /* AppDelegate.swift */,
 				09B953A01DFEBED70098417C /* CircularView.swift */,
 				09A054141DF168170008ACE7 /* Utilities.swift */,
+				28DE354021D5FDAC00B41A5D /* TimerViewController.swift */,
 				0971662E1DF84A7F005AB0CE /* DiskStatus.swift */,
 				093FBD0B1DEEFEB800038EF0 /* SongObject.swift */,
 				0989BD761DF5B01C005FE001 /* Downloader.swift */,
+				28DE353B21D4EE0600B41A5D /* AlertClockViewController.swift */,
 				4E09FC7B1F3325C40055CD84 /* StartVideoViewController.swift */,
 				091679C61DE47D4400619B3F /* ApiService.swift */,
 				09EA799A1DE57D040034B8DF /* AudioPlayerManager.swift */,
@@ -227,6 +246,7 @@
 		091679C81DE47D9900619B3F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				28DE355421D77EC800B41A5D /* HGCircularSlider.framework */,
 				0979B1B31DF00FCE003C01C7 /* CoreData.framework */,
 				50D826981DE74B0800238F96 /* Fabric.framework */,
 				50D826991DE74B0800238F96 /* Crashlytics.framework */,
@@ -277,6 +297,7 @@
 				50D826971DE747C900238F96 /* Fabric */,
 				0979B1B21DF008A5003C01C7 /* Run Script */,
 				0949CA2B1E3100010066F5A9 /* Embed Frameworks */,
+				28DE354721D6115A00B41A5D /* Copy Files */,
 			);
 			buildRules = (
 			);
@@ -335,7 +356,8 @@
 				TargetAttributes = {
 					091679501DE451CF00619B3F = {
 						CreatedOnToolsVersion = 8.0;
-						ProvisioningStyle = Automatic;
+						DevelopmentTeam = V37A835M4B;
+						ProvisioningStyle = Manual;
 					};
 					091679641DE451CF00619B3F = {
 						CreatedOnToolsVersion = 8.0;
@@ -407,13 +429,15 @@
 			files = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/Carthage/Build/iOS/HGCircularSlider.framework",
 			);
 			name = "Run Script";
 			outputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/$(FRAMEWORKS_FOLDER_PATH)/HGCircularSlider.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "buildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nbuildNumber=$(($buildNumber + 1))\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\n\nAPP_PATH=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\"\n\n#\n";
+			shellScript = "buildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nbuildNumber=$(($buildNumber + 1))\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\n/usr/local/bin/carthage copy-frameworks\n\nAPP_PATH=\"${TARGET_BUILD_DIR}/${WRAPPER_NAME}\"\n\n\n";
 		};
 		50D826971DE747C900238F96 /* Fabric */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -427,7 +451,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "./Fabric.framework/run 4f387d4a5ac1a6e637ca2612469b2b3e73907300 38045f3dcae2e3516adb4ab559ad717d3aee5bac901419478df668dfa222ab37";
+			shellScript = "./Fabric.framework/run 4f387d4a5ac1a6e637ca2612469b2b3e73907300 38045f3dcae2e3516adb4ab559ad717d3aee5bac901419478df668dfa222ab37\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -436,6 +460,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				28DE353C21D4EE0600B41A5D /* AlertClockViewController.swift in Sources */,
 				4E09FC7C1F3325C40055CD84 /* StartVideoViewController.swift in Sources */,
 				09B953A11DFEBED70098417C /* CircularView.swift in Sources */,
 				0979B1B91DF01085003C01C7 /* CoreDataManager.swift in Sources */,
@@ -455,6 +480,7 @@
 				098B515C1DF9623A00293DE5 /* HistoryEntity+CoreDataProperties.swift in Sources */,
 				4E09FC7A1F331E810055CD84 /* ItemViewController.swift in Sources */,
 				098B51561DF95E5000293DE5 /* HistoryEntity+CoreDataClass.swift in Sources */,
+				28DE354121D5FDAC00B41A5D /* TimerViewController.swift in Sources */,
 				09EA799B1DE57D040034B8DF /* AudioPlayerManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -627,8 +653,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = V37A835M4B;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
@@ -637,10 +663,14 @@
 				INFOPLIST_FILE = OwnRadio/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS/HGCircularSlider.framework",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.netvoxlab.ownradio;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "913f502d-226d-4b28-ad2b-91e33e2ab83d";
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = dev.serov;
 				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
@@ -651,8 +681,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Distribution";
-				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = "";
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = V37A835M4B;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Carthage/Build/iOS",
@@ -661,10 +691,14 @@
 				INFOPLIST_FILE = OwnRadio/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Carthage/Build/iOS/HGCircularSlider.framework",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.netvoxlab.ownradio;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "94e173a1-66a5-4589-bb8b-2e5a1105db71";
-				PROVISIONING_PROFILE_SPECIFIER = "";
+				PROVISIONING_PROFILE_SPECIFIER = "imac:comnetvoxlab.ownradio";
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;

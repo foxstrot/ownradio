@@ -184,6 +184,10 @@ class SettingsViewController: UITableViewController {
 		UIApplication.shared.openURL(NSURL(string: "http://www.vk.me/write-87060547")! as URL)
 	}
 	
+	@IBAction func tapAction(_ sender: Any) {
+		UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+	}
+	
 	@IBAction func rateAppBtn(_ sender: UIButton) {
 		UIApplication.shared.openURL(NSURL(string: "itms://itunes.apple.com/ru/app/ownradio/id1179868370")! as URL)
 	}
