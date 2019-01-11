@@ -89,7 +89,7 @@
 			app:layout_constraintEnd_toEndOf="@+id/trackTitle"
 			app:layout_constraintStart_toStartOf="@+id/trackTitle"
 			app:layout_constraintTop_toBottomOf="@+id/trackTitle"/>
-		
+
 		<ImageButton
 			android:id="@+id/btnPlayPause"
 			android:layout_width="wrap_content"
@@ -120,13 +120,14 @@
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toBottomOf="@+id/btnPlayPause"
 			app:srcCompat="@drawable/btn_ic_next"/>
-		
+
 		<ImageView
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginBottom="8dp"
-			android:layout_marginEnd="8dp"
-			android:contentDescription="TODO" android:cropToPadding="false"
+			android:layout_width="36dp"
+			android:layout_height="35dp"
+			android:layout_marginEnd="12dp"
+			android:layout_marginBottom="48dp"
+			android:contentDescription="TODO"
+			android:cropToPadding="false"
 			android:onClick="onCopyLink"
 			android:text="Copy"
 			app:layout_constraintBottom_toTopOf="@+id/trackTitle"
@@ -143,8 +144,8 @@
 			app:layout_constraintStart_toStartOf="@+id/btnPlayPause"
 			app:layout_constraintTop_toBottomOf="@+id/tProgressLeft"
 			android:contentDescription="TODO" app:srcCompat="@drawable/ic_bud"/>
-		
-		
+
+
 		<ImageButton
 			android:id="@+id/btnTimer"
 			android:layout_width="wrap_content"
@@ -165,7 +166,7 @@
 			android:visibility="gone"
 			app:layout_constraintStart_toStartOf="@+id/tProgressLeft"
 			app:layout_constraintTop_toBottomOf="@+id/tProgressLeft"/>
-		
+
 		<ProgressBar
 			android:id="@+id/progressBar"
 			style="?android:attr/progressBarStyleHorizontal"

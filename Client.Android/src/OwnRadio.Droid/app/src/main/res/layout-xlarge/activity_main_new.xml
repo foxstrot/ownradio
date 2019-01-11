@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.DrawerLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/drawer_layout"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:fitsSystemWindows="true"
+	>
+
+	<android.support.design.widget.NavigationView
+		android:id="@+id/nav_view"
+		android:layout_width="wrap_content"
+		android:layout_height="match_parent"
+		android:layout_gravity="start"
+		android:fitsSystemWindows="true"
+		app:itemIconTint="@color/menu_icon_color"
+		app:itemTextColor="@color/menu_text_color"
+		app:headerLayout="@layout/nav_header_main"
+		app:menu="@menu/activity_main_drawer"
+		/>
+
+	<android.support.constraint.ConstraintLayout
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="@android:color/white">
+
+		<ViewStub
+			android:id="@+id/viewStubRate"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_gravity="bottom"
+			android:inflatedId="@+id/rateRequestLayout"
+			android:layout="@layout/feedback_request_1"/>
+
+		<ImageButton
+			android:id="@+id/btnMenu"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="16dp"
+			android:layout_marginTop="16dp"
+			android:background="?selectableItemBackgroundBorderless"
+			android:contentDescription="TODO" android:elevation="10dp"
+			android:tintMode="src_in"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent"
+			app:srcCompat="@drawable/ic_menu_24dp"/>
+
+		<TextView
+			android:id="@+id/trackTitle"
+			android:layout_width="0dp"
+			android:layout_height="56dp"
+			android:layout_centerHorizontal="true"
+			android:layout_marginLeft="8dp"
+			android:layout_marginTop="104dp"
+			android:layout_marginRight="8dp"
+			android:clickable="true"
+			android:contentDescription="@string/currently_playing_artist"
+			android:ellipsize="end"
+			android:focusable="true"
+			android:fontFamily="sans-serif"
+			android:maxLines="1"
+			android:textAlignment="center"
+			android:textAppearance="?android:attr/textAppearanceMedium"
+			android:textColor="#FF000000"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.5"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent" />
+
+		<TextView
+			android:id="@+id/trackArtist"
+			android:layout_width="0dp"
+			android:layout_height="26dp"
+			android:layout_below="@+id/trackTitle"
+			android:layout_centerHorizontal="true"
+			android:layout_marginLeft="8dp"
+			android:layout_marginTop="8dp"
+			android:layout_marginRight="8dp"
+			android:clickable="true"
+			android:contentDescription="@string/currently_playing_song"
+			android:ellipsize="end"
+
+			android:focusable="true"
+			android:fontFamily="sans-serif-light"
+			android:maxLines="1"
+			android:textAlignment="center"
+			android:textAppearance="?android:attr/textAppearanceSmall"
+			android:textColor="@color/textColorPrimaryDark"
+			app:layout_constraintEnd_toEndOf="@+id/trackTitle"
+			app:layout_constraintStart_toStartOf="@+id/trackTitle"
+			app:layout_constraintTop_toBottomOf="@+id/trackTitle" />
+
+		<ImageButton
+			android:id="@+id/btnPlayPause"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentStart="true"
+			android:layout_centerVertical="true"
+			android:layout_marginTop="148dp"
+			android:background="?selectableItemBackgroundBorderless"
+			android:contentDescription="TODO"
+			android:elevation="10dp"
+			android:tintMode="src_in"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.501"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/trackArtist"
+			app:srcCompat="@drawable/btn_ic_play" />
+
+		<ImageButton
+			android:id="@+id/btnNext"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentEnd="true"
+			android:layout_centerVertical="true"
+			android:layout_marginTop="40dp"
+			android:background="?selectableItemBackgroundBorderless"
+			android:contentDescription="TODO" android:elevation="10dp"
+			android:tintMode="src_in"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.5"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/btnPlayPause"
+			app:srcCompat="@drawable/btn_ic_next"/>
+
+		<ImageView
+			android:layout_width="36dp"
+			android:layout_height="35dp"
+			android:layout_marginEnd="12dp"
+			android:layout_marginBottom="48dp"
+			android:contentDescription="TODO"
+			android:cropToPadding="false"
+			android:onClick="onCopyLink"
+			android:text="Copy"
+			app:layout_constraintBottom_toTopOf="@+id/trackTitle"
+			app:layout_constraintEnd_toEndOf="@+id/trackTitle"
+			app:srcCompat="@drawable/ic_share" />
+
+		<ImageButton
+			android:id="@+id/btnAlarmClock"
+			android:layout_width="55dp"
+			android:layout_height="45dp"
+			android:layout_marginTop="8dp"
+			android:background="@android:color/white"
+			android:contentDescription="TODO"
+			app:layout_constraintStart_toStartOf="@+id/btnPlayPause"
+			app:layout_constraintTop_toBottomOf="@+id/tProgressLeft"
+			app:srcCompat="@drawable/ic_bud" />
+
+
+		<ImageButton
+			android:id="@+id/btnTimer"
+			android:layout_width="57dp"
+			android:layout_height="46dp"
+			android:layout_marginTop="8dp"
+			android:background="@android:color/white"
+			android:contentDescription="TODO"
+			app:layout_constraintEnd_toEndOf="@+id/btnPlayPause"
+			app:layout_constraintTop_toBottomOf="@+id/tProgressRight"
+			app:srcCompat="@drawable/ic_tim" />
+
+
+		<TextView
+			android:id="@+id/fill_cache_progress"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="Наполнение кеша:"
+			android:visibility="gone"
+			app:layout_constraintStart_toStartOf="@+id/tProgressLeft"
+			app:layout_constraintTop_toBottomOf="@+id/tProgressLeft"/>
+
+		<ProgressBar
+			android:id="@+id/progressBar"
+			style="?android:attr/progressBarStyleHorizontal"
+			android:layout_width="0dp"
+			android:layout_height="12dp"
+			android:layout_marginStart="24dp"
+			android:layout_marginEnd="24dp"
+			android:layout_marginBottom="8dp"
+			android:indeterminate="false"
+			android:progressDrawable="@drawable/progress_bar"
+			app:layout_constraintBottom_toBottomOf="parent"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="1.0"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/btnNext"
+			app:layout_constraintVertical_bias="0.662" />
+
+		<TextView
+			android:id="@+id/tProgressLeft"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			app:layout_constraintStart_toStartOf="@+id/progressBar"
+			app:layout_constraintTop_toBottomOf="@+id/progressBar"/>
+
+		<TextView
+			android:id="@+id/tProgressRight"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			app:layout_constraintEnd_toEndOf="@+id/progressBar"
+			app:layout_constraintTop_toBottomOf="@+id/progressBar"/>
+
+		<include
+			android:id="@+id/devInfo"
+			layout="@layout/content_main"
+			android:layout_width="match_parent"
+			android:layout_height="0dp"
+			android:layout_marginBottom="8dp"
+			android:layout_marginTop="8dp"
+			android:visibility="gone"
+			app:layout_constraintBottom_toBottomOf="parent"
+			app:layout_constraintTop_toBottomOf="@+id/trackArtist"/>
+	</android.support.constraint.ConstraintLayout>
+
+</android.support.v4.widget.DrawerLayout>

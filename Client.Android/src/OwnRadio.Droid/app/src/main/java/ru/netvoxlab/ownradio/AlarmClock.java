@@ -149,7 +149,6 @@ public class AlarmClock extends AppCompatActivity {
 		
 		txtVolumePercent.setText(volumePercent + " %");
 		
-		
 		initialNumbers(); // загружаем цифры для часов, минут.
 		
 		initialComponents(); // загружаем все настройки

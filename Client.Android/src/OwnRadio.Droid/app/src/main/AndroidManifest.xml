@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	package="ru.netvoxlab.ownradio"
-	android:installLocation="auto">
+	android:installLocation="preferExternal">
 	
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -9,14 +9,15 @@
 	<uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
 	<uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
 	<uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-	<uses-permission android:name="com.android.vending.BILLING" />
+	<!--<uses-permission android:name="com.android.vending.BILLING" />-->
 	<uses-permission android:name="android.permission.INTERNET" />
 	<uses-permission android:name="android.permission.WAKE_LOCK" />
 	<uses-permission android:name="android.permission.REORDER_TASKS" />
 	<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 	<uses-permission android:name="android.permission.QUICKBOOT_POWERON" />
-	<!--<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />-->
-
+	<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.BLUETOOTH" />
+	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 	
 	<application
 		android:name=".App"
@@ -104,6 +105,10 @@
 			android:exported="true">
 			<intent-filter>
 				<action android:name="android.intent.action.HEADSET_PLUG" />
+				<action android:name="android.bluetooth.adapter.action.CONNECTION_STATE_CHANGED" />
+				<action android:name="android.bluetooth.device.action.ACL_CONNECTED" />
+				<action android:name="android.bluetooth.device.action.ACL_DISCONNECTED" />
+				<!--<action android:name="android.bluetooth.device.action.BOND_STATE_CHANGED"/>-->
 			</intent-filter>
 		</receiver>
 		
@@ -129,7 +134,6 @@
 			android:screenOrientation="portrait">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
-				
 				<category android:name="android.intent.category.LAUNCHER" />
 			</intent-filter>
 		</activity>
@@ -146,29 +150,28 @@
 			android:label="@string/subscribe_title"
 			android:screenOrientation="portrait">
 			<intent-filter>
-				<category android:name="android.intent.category.DEFAULT" />
+				<category android:name="android.intent.category.DEFAULT"/>
 				
-				<action android:name="android.intent.action.VIEW" />
+				<action android:name="android.intent.action.VIEW"/>
 				
-				<data android:scheme="iabilling_activity" />
+				<data android:scheme="iabilling_activity"/>
 			</intent-filter>
 		</activity>
 		<activity
 			android:name=".TimerSleep"
 			android:label="Таймер сна"></activity>
-		<activity android:name=".AlarmClock"></activity>
-		
-		
+		<activity android:name=".AlarmClock" android:label="@string/alarm_clock_header"></activity>
+
 		<receiver android:name=".AlarmReceiver">
 			<intent-filter>
-				<action android:name="android.intent.action.BOOT_COMPLETED" />
-				<action android:name="android.intent.action.QUICKBOOT_POWERON" />
-				<action android:name="ru.netvoxlab.mfc.iasmkgu.action.ACTION_ALARM" />
-				<action android:name="ru.netvoxlab.mfc.iasmkgu.action.ACTION_START_APP" />
+				<action android:name="android.intent.action.BOOT_COMPLETED"/>
+				<action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+				<action android:name="ru.netvoxlab.mfc.iasmkgu.action.ACTION_ALARM"/>
+				<action android:name="ru.netvoxlab.mfc.iasmkgu.action.ACTION_START_APP"/>
 				<action android:name="ru.netvoxlab.mfc.iasmkgu.action.ACTION_CLOSE_APP" />
 			</intent-filter>
 		</receiver>
 	
 	</application>
-
+	<!--<uses-sdk android:minSdkVersion="3" />-->
 </manifest>

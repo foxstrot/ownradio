@@ -58,14 +58,17 @@
 						android:layout="@layout/about_app">
 			</Preference>
 		</PreferenceScreen>
-
 		<Preference android:title="@string/pref_write_to_the_developers">
 			<intent android:action="android.intent.action.VIEW"
+
 					android:data="https://vk.com/ownradio" />
 		</Preference>
 		<Preference android:title="@string/pref_rate_app" >
 			<intent android:action="android.intent.action.VIEW"
 					android:data="https://play.google.com/store/apps/details?id=ru.netvoxlab.ownradio" />
+		</Preference>
+		<Preference android:title="@string/buy_sub"
+					android:key="buy_subscription">
 		</Preference>
 	</PreferenceCategory>
 	<PreferenceCategory
@@ -74,7 +77,6 @@
 		android:layout="@layout/pref_header_title">
 		<Preference
 			android:title="@string/pref_header_system_info"
-			android:key="sys_info"
-			/>
+			android:key="sys_info"/>
 	</PreferenceCategory>
 </PreferenceScreen>
