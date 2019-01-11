@@ -193,6 +193,8 @@ public class TrackToCache {
 		
 		//TODO размер кэша в зависимости от подписки
 		//Если подписка оформлена - считываем размер кэша, заданный пользователем
+
+
 		if(prefManager.getPrefItemBool("is_subscribed", false)) {
 			//получаем максимальный размер кеша из настроек
 			Double percentageOfSize = Double.valueOf(prefManager.getPrefItemInt("key_number", 0)) / 10;
@@ -201,6 +203,8 @@ public class TrackToCache {
 			//если нет подписки - ограничиваем размер кэша 1 гигабайтом
 			keyMaxMemorySize = (long) (1 * bytesInGB);
 		}
+
+		keyMaxMemorySize = (long) (1 * bytesInGB);
 
 		if(keyMaxMemorySize == 0)
 			keyMaxMemorySize = Long.MAX_VALUE;

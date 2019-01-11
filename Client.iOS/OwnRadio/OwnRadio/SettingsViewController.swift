@@ -20,6 +20,8 @@ class SettingsViewController: UITableViewController {
 	@IBOutlet weak var delAllTracksLbl: UILabel!
 	@IBOutlet weak var versionLbl: UILabel!
 	@IBOutlet weak var deviceIdLbl: UILabel!
+    
+	@IBOutlet weak var fromFreeSpace: UILabel!
 
 	@IBOutlet weak var delAllTracksCell: UITableViewCell!
 	@IBOutlet weak var countPlayingTracksTable: UILabel!
@@ -38,10 +40,11 @@ class SettingsViewController: UITableViewController {
 		stepper.autorepeat = true
 		stepper.value = (userDefaults.object(forKey: "maxMemorySize") as? Double)!
 		
-		stepper.minimumValue = 1.0
-		stepper.maximumValue = 64.0
-		maxMemoryLbl.text = (userDefaults.object(forKey: "maxMemorySize") as? Int)!.description  + " Gb"
-		
+		stepper.minimumValue = 10.0
+		stepper.maximumValue = 50.0
+		stepper.stepValue = 10.0
+		maxMemoryLbl.text = (userDefaults.object(forKey: "maxMemorySize") as? Int)!.description  + "%"
+        fromFreeSpace.text = "*от свободной памяти " + DiskStatus.GBFormatter(Int64(DiskStatus.freeDiskSpaceInBytes) + Int64(DiskStatus.folderSize(folderPath: tracksUrlString))) + " Gb"
 		freeSpaceLbl.text = "Свободно " + DiskStatus.GBFormatter(Int64(DiskStatus.freeDiskSpaceInBytes)) + " Gb"
 		
 		cacheFolderSize.text = "Занято всего " + DiskStatus.GBFormatter(Int64(DiskStatus.folderSize(folderPath: tracksUrlString))) + " Gb (" + CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity").description + " треков)"
@@ -86,7 +89,7 @@ class SettingsViewController: UITableViewController {
 	
 	//Сохраняем настроки "занимать не более" и выводим актуальное значение при его изменении
 	@IBAction func stepperValueChanged(_ sender: UIStepper) {
-		maxMemoryLbl.text = Int(stepper.value).description + " Gb"
+		maxMemoryLbl.text = Int(stepper.value).description + "%"
 		UserDefaults.standard.set(stepper.value, forKey: "maxMemorySize")
 		UserDefaults.standard.synchronize()
 	}
@@ -179,6 +182,10 @@ class SettingsViewController: UITableViewController {
 	
 	@IBAction func writeToDevelopers(_ sender: UIButton) {
 		UIApplication.shared.openURL(NSURL(string: "http://www.vk.me/write-87060547")! as URL)
+	}
+	
+	@IBAction func tapAction(_ sender: Any) {
+		UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
 	}
 	
 	@IBAction func rateAppBtn(_ sender: UIButton) {

@@ -999,8 +999,7 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 			// Sets whether notification posted to this channel should vibrate.
 			androidChannel.enableVibration(false);
 			// Sets the notification light color for notifications posted to this channel
-			androidChannel.setSound(null, null);
-			androidChannel.setLightColor(Color.BLUE);
+			androidChannel.setLightColor(Color.GREEN);
 			// Sets whether notifications posted to this channel appear on the lockscreen or not
 			androidChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
 			

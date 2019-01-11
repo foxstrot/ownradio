@@ -44,6 +44,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	@IBOutlet weak var playPauseBtn: UIButton!
 	@IBOutlet weak var nextButton: UIButton!
+	@IBOutlet weak var timerButton: UIButton!
+	
 	
 	@IBOutlet weak var leftPlayBtnConstraint: NSLayoutConstraint!
 	
@@ -133,7 +135,12 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		NotificationCenter.default.addObserver(self, selector: #selector(songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
 		//обновление системной информации
 //		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
-
+		if UserDefaults.standard.bool(forKey: "timerState"){
+			timerButton.setImage(UIImage(named: "timBlueImage"), for: .normal)
+		}
+		else{
+			timerButton.setImage(UIImage(named: "timGrayImage"), for: .normal)
+		}
 	}
 	
 	func checkMemoryWarning() {
@@ -169,6 +176,12 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
 		//обновление системной информации
 		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
+		if UserDefaults.standard.bool(forKey: "timerState"){
+			timerButton.setImage(UIImage(named: "timBlueImage"), for: .normal)
+		}
+		else{
+			timerButton.setImage(UIImage(named: "timGrayImage"), for: .normal)
+		}
 	}
 	
 	//когда приложение скрыто - отписываемся от уведомлений
@@ -442,6 +455,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 	}
 	
+
+	
 	// MARK: UITableViewDataSource
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
 		return self.playedTracks.count
@@ -505,6 +520,10 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 
 	@IBAction func refreshPressed() {
 		updateUI()
+	}
+	
+	@IBAction func tapAction(_ sender: Any) {
+		UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
 	}
 	
 	@IBAction func skipTrackToEnd(_ sender: UIButton) {
