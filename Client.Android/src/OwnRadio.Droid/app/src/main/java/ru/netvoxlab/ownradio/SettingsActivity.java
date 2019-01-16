@@ -368,7 +368,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			});
 
 			Preference storageSettings = findPreference("key_number");
-			if(prefManager.getPrefItemBool("is_subscribed", false) || subscribeStatus){
+			if(prefManager.getPrefItemBool("is_subscribed", false) || subscribeStatus  || (android.os.Build.VERSION.SDK_INT < 24 && android.os.Build.VERSION.SDK_INT >= 19)){
 				storageSettings.setEnabled(true);
 			}
 			else {
@@ -482,44 +482,47 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
 			//Пункт меню "Купить подписку"
 			Preference buySubscription = findPreference("buy_subscription");
-			if(!prefManager.getPrefItemBool("is_subscribed", false) || !subscribeStatus){
-				buySubscription.setEnabled(true);
-				buySubscription.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-					@Override
-					public boolean onPreferenceClick(Preference preference) {
-						try{
+			if(android.os.Build.VERSION.SDK_INT >= 24) {
+				if (!prefManager.getPrefItemBool("is_subscribed", false) || !subscribeStatus) {
+					buySubscription.setEnabled(true);
+					buySubscription.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+						@Override
+						public boolean onPreferenceClick(Preference preference) {
+							try {
 
-							byte[] packageNameBytes = context.getPackageName().getBytes();
-							String packageNameBase64 = Base64.encodeToString(packageNameBytes, Base64.DEFAULT);
-
-							Bundle buyIntentBundle = mBillingService.getBuyIntent(3, context.getPackageName(),
-									"test_subscribe_1", "subs", packageNameBase64);
-							PendingIntent pendingIntent = buyIntentBundle.getParcelable("BUY_INTENT");
-							try{
-								startIntentSenderForResult(pendingIntent.getIntentSender(),
-										1001, new Intent(), Integer.valueOf(0), Integer.valueOf(0),
-										Integer.valueOf(0), buyIntentBundle);
+								byte[] packageNameBytes = context.getPackageName().getBytes();
+								String packageNameBase64 = Base64.encodeToString(packageNameBytes, Base64.DEFAULT);
 
 
+								Bundle buyIntentBundle = mBillingService.getBuyIntent(3, context.getPackageName(),
+										"test_subscribe_1", "subs", packageNameBase64);
+								PendingIntent pendingIntent = buyIntentBundle.getParcelable("BUY_INTENT");
+								try {
+									startIntentSenderForResult(pendingIntent.getIntentSender(),
+											1001, new Intent(), Integer.valueOf(0), Integer.valueOf(0),
+											Integer.valueOf(0), buyIntentBundle);
+
+
+								} catch (IntentSender.SendIntentException ex) {
+									Log.d(TAG, " " + ex.getLocalizedMessage());
+								}
+							} catch (RemoteException e) {
+								Log.d(TAG, " " + e.getLocalizedMessage());
 							}
-							catch (IntentSender.SendIntentException ex){
-								Log.d(TAG, " " + ex.getLocalizedMessage());
-							}
-
+							return true;
 						}
-						catch (RemoteException e){
-							Log.d(TAG, " " + e.getLocalizedMessage());
-						}
-						return true;
-					}
-				});
-			}else {
+					});
+				} else {
+					buySubscription.setEnabled(false);
+				}
+			}
+			else{
 				buySubscription.setEnabled(false);
 			}
 
 			//Пункт меню "Заполнить кэш" - забивает доступный для приложения объем памяти треками (ограничения задаются настройками)
 			final Preference fillCache = findPreference("fill_cache");
-			if(prefManager.getPrefItemBool("is_subscribed", false) || subscribeStatus){
+			if(prefManager.getPrefItemBool("is_subscribed", false) || subscribeStatus || (android.os.Build.VERSION.SDK_INT < 24 && android.os.Build.VERSION.SDK_INT >= 19)){
 				fillCache.setEnabled(true);
 				fillCache.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
 					@Override
