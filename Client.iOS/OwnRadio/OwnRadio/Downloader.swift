@@ -256,7 +256,6 @@ class Downloader: NSObject {
 		let percentage = Double((UserDefaults.standard.object(forKey: "maxMemorySize") as? Double)! / 100)
 		maxMemory = UInt64(Double(memoryAvailable) * percentage)
 		let folderSize = DiskStatus.folderSize(folderPath: tracksUrlString)
-		
 		if folderSize < maxMemory  {
 			self.load (isSelfFlag: true){
 				

@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import HGCircularSlider
 import Foundation
 
 class TimerViewController: UIViewController {
@@ -43,6 +42,7 @@ class TimerViewController: UIViewController {
 		}else{
 			setTimerBtn.setImage(UIImage(named: "grayTimer"), for: .normal)
 		}
+		backgroundWorker = createTimerDispatchWorkItem()
         // Do any additional setup after loading the view.
     }
 	
@@ -69,42 +69,16 @@ class TimerViewController: UIViewController {
 		return formattedString ?? "0"
 	}
 	
-	//Процесс проверки таймера
-	var backgroundWorker = DispatchWorkItem{
-		while UserDefaults.standard.bool(forKey: "timerState"){
-			let currentDate = Date()
-			let setTimerDate = UserDefaults.standard.integer(forKey: "setTimerDate")
-			let timerDuration = UserDefaults.standard.integer(forKey: "timerDurationSeconds")
-			let remainingTimerDuration = Double(setTimerDate + timerDuration) - currentDate.timeIntervalSince1970
-			if remainingTimerDuration <= 0{
-				UserDefaults.standard.set(false, forKey: "timerState")
-				UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
-				exit(0)
-			}
-			else{
-				sleep(1)
-			}
-		}
-	}
+	
+
+	var backgroundWorker = createTimerDispatchWorkItem()
 	
 	//Экшен нажатия на кнопку установки будильника
 	@IBAction func btnSetTimerClick(_ sender: UIButton) {
 		
 		//Если таймер был остановлен пользователем, пересоздаем его
 		if backgroundWorker.isCancelled{
-			backgroundWorker = DispatchWorkItem{
-				while UserDefaults.standard.bool(forKey: "timerState"){
-					let currentDate = Date()
-					let setTimerDate = UserDefaults.standard.integer(forKey: "setTimerDate")
-					let timerDuration = UserDefaults.standard.integer(forKey: "timerDurationSeconds")
-					let remainingTimerDuration = Double(setTimerDate + timerDuration) - currentDate.timeIntervalSince1970
-					if remainingTimerDuration <= 0{
-						UserDefaults.standard.set(false, forKey: "timerState")
-						UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
-						exit(0)
-					}
-				}
-			}
+			backgroundWorker = createTimerDispatchWorkItem()
 		}
 		
 		//Если таймер не установлен, устанавливаем его
@@ -128,7 +102,6 @@ class TimerViewController: UIViewController {
 		else{
 			setTimerBtn.setImage(UIImage(named: "grayTimer"), for: .normal)
 			defaults.set(false, forKey: "timerState")
-			//defaults.set(0, forKey:  "timerDurationSeconds")
 			DispatchQueue.global(qos: .background).async{
 				self.backgroundWorker.cancel()
 			}
@@ -146,8 +119,6 @@ class TimerViewController: UIViewController {
 		return formattedString ?? "0"
 	}
 	
-
-	
 	//Перевод значения слайдера в формат hh:mm
 	func sliderValueToTime() -> String{
 		let formatter = DateComponentsFormatter()
@@ -162,6 +133,8 @@ class TimerViewController: UIViewController {
 		UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
 	}
 	
+	//Процесс проверки таймера
+	
     /*
     // MARK: - Navigation
 
@@ -174,3 +147,19 @@ class TimerViewController: UIViewController {
 
 }
 
+func createTimerDispatchWorkItem() -> DispatchWorkItem{
+	let workItem = DispatchWorkItem{
+		while UserDefaults.standard.bool(forKey: "timerState"){
+			let currentDate = Date()
+			let setTimerDate = UserDefaults.standard.integer(forKey: "setTimerDate")
+			let timerDuration = UserDefaults.standard.integer(forKey: "timerDurationSeconds")
+			let remainingTimerDuration = Double(setTimerDate + timerDuration) - currentDate.timeIntervalSince1970
+			if remainingTimerDuration <= 0{
+				UserDefaults.standard.set(false, forKey: "timerState")
+				UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
+				exit(0)
+			}
+		}
+	}
+	return workItem
+}

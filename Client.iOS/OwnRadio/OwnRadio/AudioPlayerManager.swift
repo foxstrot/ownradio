@@ -37,7 +37,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	var wasInterreption = false
     
     let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
-	
+	let budTracksUrlString = FileManager.applicationSupportDir().appending("/AlarmTracks/")
 	var isSkipped = false
 	
 	// MARK: Overrides
@@ -263,6 +263,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		songInfo[MPMediaItemPropertyPlaybackDuration] = song.trackLength //NSNumber.init(value: song.trackLength)
 		
 		MPNowPlayingInfoCenter.default().nowPlayingInfo = songInfo
+		UserDefaults.standard.set(song.name, forKey:"PlayingSongInfo")
+
 	}
 	
 	// MARK: Cotrol functions
@@ -271,7 +273,6 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		isPlaying = true
 		if self.playerItem != nil {
 			self.player.play()
-			
 			complition()
 		} else {
 			self.nextTrack(complition: complition)
@@ -282,7 +283,6 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	func pauseSong(complition: (() -> Void)) {
 		isPlaying = false
 		self.player.pause()
-		
 		complition()
 	}
 	
@@ -315,9 +315,9 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		nextTrack(complition: complition)
 	}
 	
+	
 	// проигрываем трек по URL
 	func playAudioWith(trackURL:URL) {
-		
 		if playerItem != nil {
 			self.removeObserver(self, forKeyPath: #keyPath(AudioPlayerManager.playerItem.status))
 		}
@@ -402,6 +402,12 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	}
 	*/
 	
+	func playAlertClockTrack(trackURL: URL, song: SongObject){
+		self.playingSong = song
+	    playAudioWith(trackURL: trackURL)
+		self.player.play()
+	}
+	
 	// проигрываем трек из кеша
 	func playFromCache(complition: (() -> Void)?) {
 		
@@ -430,6 +436,15 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		let str = FileManager.applicationSupportDir().addingPercentEncoding(withAllowedCharacters:.urlHostAllowed)
 		let docUrl = NSURL(string:str!)?.appendingPathComponent("Tracks")
 		let resUrl = docUrl?.absoluteURL.appendingPathComponent(playingSong.path!)
+		var playingTrackUrlString = resUrl?.absoluteURL.absoluteString.replacingOccurrences(of: "%2F", with: "/")
+		playingTrackUrlString = playingTrackUrlString?.replacingOccurrences(of: "%20", with: " ")
+		//сохранение пути и объекта трека в userDefaults для использования с будильником
+//		UserDefaults.standard.set(playingSong.path, forKey:"PlayingSongPath")
+		if !UserDefaults.standard.bool(forKey: "budState"){
+			try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"PlayingSongObject")
+			UserDefaults.standard.synchronize()
+		}
+		
 		guard let url = resUrl else {
 			return
 		}

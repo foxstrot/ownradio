@@ -14,6 +14,7 @@ import Crashlytics
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 	
+	
 	var window: UIWindow?
 	//Задаём ориентацию экрана по умолчанию
 	var orientationLock = UIInterfaceOrientationMask.portrait
@@ -73,6 +74,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 				}
 			}
 		}
+		
+
 		return true
 	}
 	
