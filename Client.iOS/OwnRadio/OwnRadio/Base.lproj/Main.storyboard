@@ -472,7 +472,7 @@
                                 </constraints>
                                 <state key="normal" title="Button" image="budGrayImage"/>
                                 <connections>
-                                    <segue destination="u1V-M8-lST" kind="push" identifier="alertClockSegue" id="gIL-Lm-Ur2"/>
+                                    <segue destination="u1V-M8-lST" kind="show" identifier="alertClockSegue" id="gIL-Lm-Ur2"/>
                                 </connections>
                             </button>
                         </subviews>
@@ -528,6 +528,7 @@
                         <connections>
                             <outletCollection property="gestureRecognizers" destination="1ac-vt-IJJ" appends="YES" id="bng-nU-YI4"/>
                             <outletCollection property="gestureRecognizers" destination="PT9-wb-C5T" appends="YES" id="AlY-xc-oNx"/>
+                            <outletCollection property="gestureRecognizers" destination="QU3-DD-5A1" appends="YES" id="dac-cP-2y8"/>
                         </connections>
                     </view>
                     <navigationItem key="navigationItem" title="ownRadio" id="4cP-dV-rqv">
@@ -581,12 +582,17 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer cancelsTouchesInView="NO" id="QU3-DD-5A1">
+                    <connections>
+                        <action selector="oneTapAction:" destination="BYZ-38-t0r" id="nTI-EE-8Kw"/>
+                    </connections>
+                </tapGestureRecognizer>
                 <swipeGestureRecognizer direction="right" id="1ac-vt-IJJ">
                     <connections>
                         <segue destination="d65-A4-a0S" kind="show" id="pLa-VH-WHm"/>
                     </connections>
                 </swipeGestureRecognizer>
-                <tapGestureRecognizer delaysTouchesEnded="NO" numberOfTapsRequired="3" id="PT9-wb-C5T">
+                <tapGestureRecognizer numberOfTapsRequired="3" id="PT9-wb-C5T">
                     <connections>
                         <action selector="tripleTapAction:" destination="BYZ-38-t0r" id="BOz-lZ-Tc9"/>
                     </connections>
@@ -1035,6 +1041,7 @@
                         <connections>
                             <outlet property="dataSource" destination="d65-A4-a0S" id="XMO-Fd-ifG"/>
                             <outlet property="delegate" destination="d65-A4-a0S" id="zQh-FN-Fe3"/>
+                            <outletCollection property="gestureRecognizers" destination="8DF-Z2-h3o" appends="YES" id="I5X-Ux-70O"/>
                         </connections>
                     </tableView>
                     <toolbarItems/>
@@ -1060,6 +1067,11 @@
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="1mR-cN-z50" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer cancelsTouchesInView="NO" id="8DF-Z2-h3o">
+                    <connections>
+                        <action selector="oneTapAction:" destination="d65-A4-a0S" id="fwi-5S-MZ3"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="917" y="-45"/>
         </scene>
@@ -1199,6 +1211,9 @@
                             </label>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <connections>
+                            <outletCollection property="gestureRecognizers" destination="5K5-kn-1J7" appends="YES" id="pkh-Tf-34e"/>
+                        </connections>
                     </view>
                     <navigationItem key="navigationItem" title="Будильник" id="Bqz-Gx-ecQ"/>
                     <connections>
@@ -1216,6 +1231,11 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="BAF-Za-jyb" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer cancelsTouchesInView="NO" id="5K5-kn-1J7">
+                    <connections>
+                        <action selector="oneTapAction:" destination="u1V-M8-lST" id="pek-Gb-5KA"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="1168.8" y="777.66116941529242"/>
         </scene>
@@ -1273,6 +1293,7 @@
                             <slider opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" minValue="0.0" maxValue="240" continuous="NO" translatesAutoresizingMaskIntoConstraints="NO" id="n4w-Hd-qba">
                                 <rect key="frame" x="11" y="163" width="297" height="30"/>
                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES" flexibleMaxY="YES"/>
+                                <color key="minimumTrackTintColor" red="0.21216781539999999" green="0.48632187630000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                 <connections>
                                     <action selector="sliderValueChanged:" destination="teJ-CS-BXL" eventType="valueChanged" id="lUd-pg-kCY"/>
                                 </connections>
@@ -1287,6 +1308,9 @@
                             </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <connections>
+                            <outletCollection property="gestureRecognizers" destination="YHy-DA-PTM" appends="YES" id="6i2-Uk-t3I"/>
+                        </connections>
                     </view>
                     <navigationItem key="navigationItem" title="Таймер сна" id="RHy-v5-tiP"/>
                     <connections>
@@ -1297,6 +1321,11 @@
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="mnc-PW-dzo" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <tapGestureRecognizer id="YHy-DA-PTM">
+                    <connections>
+                        <action selector="oneTapAction:" destination="teJ-CS-BXL" id="3a2-pT-icR"/>
+                    </connections>
+                </tapGestureRecognizer>
             </objects>
             <point key="canvasLocation" x="562.5" y="1419.7183098591549"/>
         </scene>
@@ -1550,7 +1579,7 @@
         <image name="timGrayImage" width="54" height="69"/>
     </resources>
     <inferredMetricsTieBreakers>
-        <segue reference="pLa-VH-WHm"/>
+        <segue reference="P6y-p0-VaX"/>
     </inferredMetricsTieBreakers>
     <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
 </document>

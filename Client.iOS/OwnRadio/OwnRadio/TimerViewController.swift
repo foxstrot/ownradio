@@ -129,8 +129,11 @@ class TimerViewController: UIViewController {
 		return formattedString ?? "0"
 	}
 
-	@IBAction func tapAction(_ sender: Any) {
-		UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+	@IBAction func oneTapAction(_ sender: Any) {
+		//Обновление состояния таймера по нажатию на экран
+		if UserDefaults.standard.bool(forKey: "timerState"){
+			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+		}
 	}
 	
 	//Процесс проверки таймера

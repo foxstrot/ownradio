@@ -184,8 +184,11 @@ class SettingsViewController: UITableViewController {
 		UIApplication.shared.openURL(NSURL(string: "http://www.vk.me/write-87060547")! as URL)
 	}
 	
-	@IBAction func tapAction(_ sender: Any) {
-		UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+	@IBAction func oneTapAction(_ sender: Any) {
+		//Обновление состояния таймера по нажатию на экран
+		if UserDefaults.standard.bool(forKey: "timerState"){
+			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+		}
 	}
 	
 	@IBAction func rateAppBtn(_ sender: UIButton) {

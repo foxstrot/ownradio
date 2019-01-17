@@ -172,8 +172,11 @@ class AlertClockViewController: UIViewController {
 		budSchedule.append(budDate)
 	}
 
-	@IBAction func tapEvent(_ sender: Any) {
-		//userDefaults.set(timePicker.date, forKey: "alarmClockTime")
+	@IBAction func oneTapAction(_ sender: Any) {
+		//Обновление состояния таймера по нажатию на экран
+		if UserDefaults.standard.bool(forKey: "timerState"){
+			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+		}
 	}
 	
     

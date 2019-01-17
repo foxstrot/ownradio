@@ -516,11 +516,16 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		return cell
 	}
 	
-
+	@IBAction func oneTapAction(_ sender: Any) {
+		//Обновление состояния таймера по нажатию на экран
+		if UserDefaults.standard.bool(forKey: "timerState"){
+			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+		}
+	}
+	
     // MARK: Actions
 	@IBAction func tripleTapAction(_ sender: AnyObject) {
 		if self.infoView.isHidden == true {
-			
 			self.infoView.isHidden = false
 			self.visibleInfoView = false
 		}else {
@@ -568,4 +573,5 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	@IBAction func skipTrackToEnd(_ sender: UIButton) {
 		self.player.fwdTrackToEnd()
 	}
+
 }
