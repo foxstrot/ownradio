@@ -100,6 +100,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	ImageButton btnSkipTrack;
 	ImageButton btnTimer;
 	ImageButton btnAlarmClock;
+	ImageButton buttonShare;
 	//	TrackDB trackDB;
 	private Handler handler = new Handler();
 	private Handler handlerEvent = new Handler();
@@ -416,7 +417,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 					binder.GetMediaPlayerService().onCompletion(binder.GetMediaPlayerService().player);
 			}
 		});
-		
+
+		buttonShare = findViewById(R.id.buttonShareTrack);
+		buttonShare.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				onCopyLink(v);
+			}
+		});
+
 		Button btnTest = findViewById(R.id.btnTest);
 		btnTest.setOnClickListener(new View.OnClickListener() {
 			@Override

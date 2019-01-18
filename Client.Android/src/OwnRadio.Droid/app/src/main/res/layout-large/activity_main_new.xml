@@ -36,16 +36,17 @@
 
 		<ImageButton
 			android:id="@+id/btnMenu"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_marginStart="16dp"
+			android:layout_width="35dp"
+			android:layout_height="38dp"
+			android:layout_marginStart="24dp"
 			android:layout_marginTop="16dp"
 			android:background="?selectableItemBackgroundBorderless"
-			android:contentDescription="TODO" android:elevation="10dp"
+			android:contentDescription="TODO"
+			android:elevation="10dp"
 			android:tintMode="src_in"
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toTopOf="parent"
-			app:srcCompat="@drawable/ic_menu_24dp"/>
+			app:srcCompat="@drawable/ic_menu_24dp" />
 
 		<TextView
 			android:id="@+id/trackTitle"
@@ -126,16 +127,19 @@
 			tools:layout_editor_absoluteY="484dp" />
 
 		<ImageView
-			android:layout_width="36dp"
-			android:layout_height="35dp"
-			android:layout_marginEnd="12dp"
-			android:layout_marginBottom="48dp"
+			android:layout_width="24dp"
+			android:layout_height="24dp"
+			android:layout_marginTop="21dp"
+			android:layout_marginEnd="4dp"
+			android:layout_marginBottom="40dp"
 			android:contentDescription="TODO"
 			android:cropToPadding="false"
 			android:onClick="onCopyLink"
 			android:text="Copy"
 			app:layout_constraintBottom_toTopOf="@+id/trackTitle"
 			app:layout_constraintEnd_toEndOf="@+id/trackTitle"
+			app:layout_constraintTop_toTopOf="parent"
+			app:layout_constraintVertical_bias="0.0"
 			app:srcCompat="@drawable/ic_share" />
 
 		<ImageButton

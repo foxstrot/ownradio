@@ -11,8 +11,8 @@ android {
         applicationId "ru.netvoxlab.ownradio"
         minSdkVersion 19
         targetSdkVersion 26
-        versionCode 102
-        versionName 'v2019.01.16'
+        versionCode 105
+        versionName 'v2019.01.18'
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
 
