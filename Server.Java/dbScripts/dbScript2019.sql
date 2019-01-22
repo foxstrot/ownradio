@@ -12,7 +12,7 @@ BEGIN
 	PERFORM registerdevice(i_deviceid, 'New device');
 
 
---если пользователь alexv_test то пускаем выполнение в getuserrecommended, иначе идем по старому
+--если пользователь alexv2test то пускаем выполнение в getuserrecommended, иначе идем по старому
 
 select userid into i_userid from devices where recid = i_deviceid; --получаем id пользователя по id_device
 select recname into user_name from users where recid = i_userid; --получаем имя пользователя по его id
@@ -29,7 +29,7 @@ useridrecommended = cast('11111111-0000-0888-0000-000000000000' as UUID); --вы
 					 nexttrack.useridrecommended,
 					 nexttrack.txtrecommendedinfo,
 					 CAST((clock_timestamp() - t ) AS CHARACTER VARYING) -- возвращаем время выполнения процедуры
-				 FROM getuserrecommended(i_userid, useridrecommended) AS nexttrack;
+				 FROM getuserrecommended(i_userid, useridrecommended, i_deviceid) AS nexttrack;
 
 return;
 end if;
@@ -48,68 +48,44 @@ $function$
 
 
 
-CREATE OR REPLACE FUNCTION public.getuserrecommended(i_userid uuid, i_useridrecommended uuid)
+CREATE OR REPLACE FUNCTION public.getuserrecommended(i_userid uuid, i_useridrecommended uuid, i_deviceid UUID)
  RETURNS TABLE(track character varying, methodid integer, useridrecommended character varying, txtrecommendedinfo character varying)
  LANGUAGE plpgsql
 AS $function$ 	
---declare methodid integer;
---methodid = 10;
---declare return_val UUID;
-declare --temp_track record;
-		 end_trackid UUID;
-		i_deviceid UUID;
-	deviceid_recommended UUID;
-		--useridrecommended UUID;
+
+declare 
+		--id конечного трэка
+		end_trackid UUID= cast('10000000-0000-0000-0000-000000000001' as UUID);
+	
 begin
 
 	--АВ устройства
 -- 57128f7c-307c-47d1-9e6e-e5f8d40a86d6
 -- ff87a125-71cd-4d4e-809d-a1216cc45bd1
 	
-		DROP TABLE IF EXISTS temp_track; 
-	CREATE TEMP TABLE temp_track(trackid character varying, meth integer, useridrecommended character varying, txtrecommeninfo character varying);
-	
-	end_trackid = cast('10000000-0000-0000-0000-000000000001' as UUID);
-select recid into  i_deviceid from devices where userid = i_userid;
-select recid into  deviceid_recommended from devices where userid = i_useridrecommended;
+DROP TABLE IF EXISTS temp_track; 
+CREATE TEMP TABLE temp_track(trackid character varying, meth integer, useridrecommended character varying, txtrecommeninfo character varying);
 
 
---useridrecommended = cast('11111111-0000-0888-0000-000000000000' as UUID);
-	
-	
 
-	
 --выбираем произвольный трэк из невыданных данному пользователю
---select cast(tracks.recid as character varying) as trackid , 10 as methodid , '11111111-0000-0888-0000-000000000000' as useridrecommended, 'выдан по тестовой рекомендации'  as txtrecommendedinfo
--- into temp_track 
---	from tracks
---	left join downloadtracks
---		on tracks.recid = downloadtracks.trackid
---		where downloadtracks.trackid is null and tracks.deviceid = cast ('11111111-0000-0888-0000-000000000000' as UUID) and tracks.recid<>end_trackid -- =i_userid
---		order by random()
---		fetch first 1 rows only;
 	
 	insert into temp_track
 	select cast(tracks.recid as character varying) as trackid , 10 , i_useridrecommended, 'выдан по тестовой рекомендации'  as txtrecommendedinfo
  	 from tracks 
-	where deviceid = deviceid_recommended 
+	where deviceid in (select recid from devices where userid = i_useridrecommended) 
 						and recid<> end_trackid 
 						and recid not in 
 								(
-									select trackid from downloadtracks where deviceid = i_deviceid
+									select trackid from downloadtracks where deviceid in (select recid from devices where userid = i_userid) 
 								)
 		order by random()
 		fetch first 1 rows only;
 	
 	
---	select count(*) from tracks where deviceid = cast ('11111111-0000-0888-0000-000000000000' as UUID) and recid<> cast('10000000-0000-0000-0000-000000000001' as UUID) and recid not in 
---(
---	select trackid from downloadtracks where deviceid = cast ('11111111-0000-0888-0000-111111111111' as UUID)
---)
-	
 	
 	--если нашли трэк на выдачу то записываем в downloadtracks что выдали
-if (select count(*) from temp_track)>0 --is not null 
+if (select count(*) from temp_track)>0 
 then 
 		INSERT INTO downloadtracks 
 				(
@@ -133,18 +109,13 @@ then
 				return query select * from temp_track;
 			
 				
-else
+else -- иначе возвращаем "конечный" трэк
 		return query
 		select cast(end_trackid as character varying) as trackid , 
 		10 as methodid ,
 		cast(i_useridrecommended as character varying), 
 		cast ('конец' as character varying ) as txtrecommendedinfo;
 end if;
-	
-
-	
-
-	
 
 	return ;
 end;
