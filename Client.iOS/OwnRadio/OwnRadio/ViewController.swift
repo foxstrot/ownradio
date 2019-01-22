@@ -95,6 +95,14 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		//включаем отображение навигационной панели
 		self.navigationController?.isNavigationBarHidden = false
 		
+		//TEST
+//		var iCloudStore = NSUbiquitousKeyValueStore()
+//		var a = "aaa"
+//		a = iCloudStore.string(forKey: "test1") ?? ""
+//		iCloudStore.set("TESTtest", forKey: "test1")
+//		iCloudStore.synchronize()
+		//TEST
+		
 		//задаем цвет навигационного бара
 //		self.navigationController?.navigationBar.barTintColor = UIColor(red: 3.0/255.0, green: 169.0/255.0, blue: 244.0/255.0, alpha: 1.0)
 		//цвет кнопки и иконки
@@ -429,7 +437,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
             self.authorNameLbl.text = self.player.playingSong.artistName
         }
 		self.trackIDLbl.text = self.player.playingSong.trackID
-		self.isNowPlaying.text = String(self.player.isPlaying)
+		//self.isNowPlaying.text = String(self.player.isPlaying)
 		
 		if UserDefaults.standard.bool(forKey: "timerState"){
 			self.timerButton.setImage(UIImage(named: "timBlueImage"), for: .normal)

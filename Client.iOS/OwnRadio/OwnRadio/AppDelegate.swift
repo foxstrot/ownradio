@@ -41,7 +41,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			print("Приложение запущено впервые")
 		}
 		//Регистрируем настройки по умолчанию (не меняя имеющиеся значения, если они уже есть)
-		userDefaults.register(defaults: ["maxMemorySize" : 1])
+		userDefaults.register(defaults: ["maxMemorySize" : 10])
 		userDefaults.register(defaults: ["isOnlyWiFi" : false])
 
 		// создаем папку Tracks если ее нет

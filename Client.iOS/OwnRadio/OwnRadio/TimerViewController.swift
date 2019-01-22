@@ -8,27 +8,32 @@
 
 import UIKit
 import Foundation
+import HGCircularSlider
 
 class TimerViewController: UIViewController {
 
-	@IBOutlet weak var timePicker: UISlider!
+	
+	@IBOutlet weak var circularSliderView: UIView!
 	@IBOutlet weak var timeinfoLabel: UILabel!
 	@IBOutlet weak var setTimerBtn: UIButton!
 	@IBOutlet weak var setInfoLable: UILabel!
 	
 	
 	let defaults = UserDefaults.standard
-
+	var currentSliderValue = 0
+	var slider: CircularSlider = CircularSlider()
 	
     override func viewDidLoad() {
         super.viewDidLoad()
+		//Создаем слайдер
+		createCircularSlider()
 		//устанавливаем значение слайдера
 		timeinfoLabel.text = sliderValueToTime()
 		//Проверяем установлен ли таймер, если установлен отображаем его статус и меняем иконку кнопки
 		setInfoLable.text = ""
 		if defaults.bool(forKey: "timerState"){
 			setTimerBtn.setImage(UIImage(named: "blueTimer"), for: .normal)
-			timePicker.value = Float(UserDefaults.standard.integer(forKey: "timerDurationSeconds")) / 60
+			slider.endPointValue = CGFloat(Float(UserDefaults.standard.integer(forKey: "timerDurationSeconds")) / 60)
 			timeinfoLabel.text = sliderValueToTime()
 			let time = getRemainingTime()
 			let splittedTime = time.split(separator: ":")
@@ -46,10 +51,7 @@ class TimerViewController: UIViewController {
         // Do any additional setup after loading the view.
     }
 	
-	//Экшен смены значения ползунка
-	@IBAction func sliderValueChanged(_ sender: Any) {
-		timeinfoLabel.text = sliderValueToTime()
-	}
+
 	
 	//Получение осташегося времени работы таймера в виде интервала
 	func getRemainingTimeInterval() ->Double{
@@ -69,7 +71,35 @@ class TimerViewController: UIViewController {
 		return formattedString ?? "0"
 	}
 	
+	func createCircularSlider(){
+		
+		circularSliderView.backgroundColor = .clear
+		
+		var frame = circularSliderView.frame
+		frame.origin.x = 0
+		frame.origin.y = 0
 	
+		let grayColor = UIColor(red: 0.83, green: 0.83, blue: 0.83, alpha: 1)
+		let blueColor = UIColor(red: 0.08, green: 0.60, blue: 0.92, alpha: 1)
+		
+		slider = CircularSlider(frame: frame)
+		slider.maximumValue = 240.0
+		slider.trackColor = grayColor
+		slider.trackFillColor = blueColor
+		slider.diskColor = .clear
+		slider.diskFillColor = .clear
+		slider.backgroundColor = .clear
+		slider.endThumbStrokeColor = .clear
+		slider.endThumbTintColor = blueColor
+		slider.endThumbStrokeHighlightedColor = blueColor
+		slider.thumbRadius = 7
+		slider.addTarget(self, action: #selector(sliderValueChangedAction), for: .valueChanged)
+		circularSliderView.addSubview(slider)
+	}
+	//Экшен смены значения ползунка
+	@objc func sliderValueChangedAction(sender: CircularSlider!){
+		timeinfoLabel.text = sliderValueToTime()
+	}
 
 	var backgroundWorker = createTimerDispatchWorkItem()
 	
@@ -84,7 +114,7 @@ class TimerViewController: UIViewController {
 		//Если таймер не установлен, устанавливаем его
 		if !defaults.bool(forKey: "timerState"){
 			setTimerBtn.setImage(UIImage(named: "blueTimer"), for: .normal)
-			let seconds = timePicker.value * 60
+			let seconds = Float(Int(slider.endPointValue)) * 60
 			defaults.set(true, forKey: "timerState")
 			defaults.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
 			defaults.set(seconds, forKey:  "timerDurationSeconds")
@@ -124,7 +154,7 @@ class TimerViewController: UIViewController {
 		let formatter = DateComponentsFormatter()
 		formatter.allowedUnits = [.hour, .minute]
 		formatter.unitsStyle = .positional
-		let formattedString = formatter.string(from: TimeInterval(timePicker.value * 60))
+		let formattedString = formatter.string(from: TimeInterval(Float(slider.endPointValue) * 60))
 		
 		return formattedString ?? "0"
 	}

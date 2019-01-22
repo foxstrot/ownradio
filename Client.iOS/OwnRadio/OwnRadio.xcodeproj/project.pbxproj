@@ -35,6 +35,7 @@
 		28DE354121D5FDAC00B41A5D /* TimerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DE354021D5FDAC00B41A5D /* TimerViewController.swift */; };
 		28E7D51E21EC773900111F7D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 091679561DE451CF00619B3F /* ViewController.swift */; };
 		28E7D53621EF65B300111F7D /* AlertClockViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DE353B21D4EE0600B41A5D /* AlertClockViewController.swift */; };
+		28E7D55921F1E7BF00111F7D /* HGCircularSlider.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 28E7D55821F1E7BE00111F7D /* HGCircularSlider.framework */; };
 		4E09FC7A1F331E810055CD84 /* ItemViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E09FC791F331E810055CD84 /* ItemViewController.swift */; };
 		4E09FC7C1F3325C40055CD84 /* StartVideoViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E09FC7B1F3325C40055CD84 /* StartVideoViewController.swift */; };
 		4E09FC7F1F344DC00055CD84 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4E09FC7E1F344DC00055CD84 /* Assets.xcassets */; };
@@ -122,6 +123,7 @@
 		28DE353B21D4EE0600B41A5D /* AlertClockViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertClockViewController.swift; sourceTree = "<group>"; };
 		28DE354021D5FDAC00B41A5D /* TimerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerViewController.swift; sourceTree = "<group>"; };
 		28E7D51F21EC8B5B00111F7D /* OwnRadio.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OwnRadio.entitlements; sourceTree = "<group>"; };
+		28E7D55821F1E7BE00111F7D /* HGCircularSlider.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HGCircularSlider.framework; path = Carthage/Build/iOS/HGCircularSlider.framework; sourceTree = "<group>"; };
 		4E09FC791F331E810055CD84 /* ItemViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ItemViewController.swift; sourceTree = "<group>"; };
 		4E09FC7B1F3325C40055CD84 /* StartVideoViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StartVideoViewController.swift; sourceTree = "<group>"; };
 		4E09FC7D1F344D760055CD84 /* video.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = video.mp4; path = ../video.mp4; sourceTree = "<group>"; };
@@ -137,6 +139,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				28E7D55921F1E7BF00111F7D /* HGCircularSlider.framework in Frameworks */,
 				099EAE511E30FC0B005478F2 /* Alamofire.framework in Frameworks */,
 				0979B1B41DF00FCE003C01C7 /* CoreData.framework in Frameworks */,
 				50D8269B1DE74B0800238F96 /* Crashlytics.framework in Frameworks */,
@@ -245,6 +248,7 @@
 		091679C81DE47D9900619B3F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				28E7D55821F1E7BE00111F7D /* HGCircularSlider.framework */,
 				0979B1B31DF00FCE003C01C7 /* CoreData.framework */,
 				50D826981DE74B0800238F96 /* Fabric.framework */,
 				50D826991DE74B0800238F96 /* Crashlytics.framework */,
@@ -435,6 +439,8 @@
 			files = (
 			);
 			inputPaths = (
+				"$(SRCROOT)/Carthage/Build/iOS/HGCircularSlider.framework",
+				"$(SRCROOT)/Carthage/Build/iOS/Alamofire.framework",
 			);
 			name = "Run Script";
 			outputPaths = (
