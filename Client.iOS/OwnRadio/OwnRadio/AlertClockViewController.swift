@@ -22,13 +22,14 @@ class AlertClockViewController: UIViewController {
 	@IBOutlet weak var currentPlaySongLbl: UILabel!
     @IBOutlet weak var setBudButton: UIButton!
     @IBOutlet weak var infoLabel: UILabel!
-    
+	
+	
 	let userDefaults = UserDefaults.standard
 	var daysSelected = [Bool]()
 	var selectedTime = Date()
 	var player: AudioPlayerManager!
 	var budSchedule = [Date]()
-    var backgroundWorker: DispatchWorkItem!
+	var timer: DispatchSourceTimer?
 	
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
 	let budTracksUrlString = FileManager.applicationSupportDir().appending("/AlarmTracks/")
@@ -38,7 +39,6 @@ class AlertClockViewController: UIViewController {
 		let dateformatter = DateFormatter()
 		dateformatter.timeStyle = DateFormatter.Style.short
 		timePicker.date = (userDefaults.object(forKey: "alarmClockTime") as? Date ?? Date())!
-        backgroundWorker = createBudDispatchWorkItem()
 		
 		if self.userDefaults.data(forKey: "PlayingSongObject") != nil{
 			let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
@@ -77,7 +77,7 @@ class AlertClockViewController: UIViewController {
 			setBudButton.setImage(UIImage(named: "budBlue"), for: .normal)
             budSchedule = userDefaults.object(forKey: "budSchedule") as? [Date] ?? [Date]()
             if budSchedule.count != 0 || userDefaults.bool(forKey: "budState"){
-                getMinDatediff()
+				getMinDatediff(needDisplay: true)
             }
             else{
                 infoLabel.text = ""
@@ -181,9 +181,6 @@ class AlertClockViewController: UIViewController {
 	
     
 	@IBAction func setBudButtonClick(_ sender: Any) {
-        if backgroundWorker.isCancelled || backgroundWorker == nil{
-            backgroundWorker = createBudDispatchWorkItem()
-        }
         
         if !userDefaults.bool(forKey: "budState") && self.userDefaults.data(forKey: "PlayingSongObject") != nil{
 			budSchedule = [Date]()
@@ -226,8 +223,11 @@ class AlertClockViewController: UIViewController {
 				}
 			}
 			userDefaults.set(budSchedule, forKey: "budSchedule")
-            getMinDatediff()
-            DispatchQueue.global(qos: .background).async(execute: backgroundWorker)
+			let minInterval = getMinDatediff(needDisplay: true)
+			if minInterval[1] >= 0{
+				startTimer(timeInterval: TimeInterval(minInterval[1]), minIndex: minInterval[0])
+			}
+			
 			userDefaults.set(Int(Date().timeIntervalSince1970), forKey:  "setBudDate")
 		}
 		else if self.userDefaults.data(forKey: "PlayingSongObject") == nil{
@@ -236,18 +236,54 @@ class AlertClockViewController: UIViewController {
 		else{
 			setBudButton.setImage(UIImage(named: "budGray"), for: .normal)
 			userDefaults.set(false, forKey: "budState")
-            if !backgroundWorker.isCancelled || backgroundWorker != nil{
-                DispatchQueue.global(qos: .background).async{
-                    self.backgroundWorker.cancel()
-                }
-            }
+			stopTimer()
 		}
 		userDefaults.set(timePicker.date, forKey: "alarmClockTime")
 		userDefaults.set(daysSelected, forKey: "selectedDaysArray")
 		
 	}
+
 	
-    func getMinDatediff(){
+	private func startTimer(timeInterval: TimeInterval, minIndex: Int){
+		let queue = DispatchQueue(label: "AlertClockTimer", attributes: .concurrent)
+		timer?.cancel()
+		timer = DispatchSource.makeTimerSource(queue: queue)
+		
+//		timer?.scheduleRepeating(deadline: .now() + .seconds(Int(timeInterval)), interval: timeInterval)
+		timer?.scheduleOneshot(deadline: .now() + .seconds(Int(timeInterval)))
+		timer?.setEventHandler{
+			self.timerAction(currentMinIndex: minIndex)
+		}
+		timer?.resume()
+		
+	}
+	
+	private func stopTimer(){
+		timer?.cancel()
+		timer = nil
+	}
+	
+	func timerAction(currentMinIndex: Int) -> Void{
+		//Обновление расписания
+		let newScheduleDate = Date(timeInterval: 7 * 86400, since: budSchedule[currentMinIndex]) // будильник ставится через неделю
+		budSchedule[currentMinIndex] = newScheduleDate
+		userDefaults.set(budSchedule, forKey: "budSchedule")
+		let minInterval = getMinDatediff(needDisplay: false)
+		stopTimer()
+		startTimer(timeInterval: TimeInterval(minInterval[1]), minIndex: minInterval[0])
+		
+		//Проигрывание сохраненного трека
+		let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
+		let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+		let songFileName = songObject.path
+		let songFilePath = self.budTracksUrlString + songFileName!
+		let trackPath = NSURL(fileURLWithPath: songFilePath) as URL
+		DispatchQueue.main.async {
+			self.player.playAlertClockTrack(trackURL: trackPath, song: songObject)
+		}
+	}
+	
+	func getMinDatediff(needDisplay: Bool) -> [Int]{
         var dateDiffs = [Int]()
         for date in budSchedule{
             let dateDiff = Calendar.current.dateComponents([.second], from: Date(), to: date).second
@@ -259,7 +295,13 @@ class AlertClockViewController: UIViewController {
         let bellMonth = String(bellDate.month!)
         let bellHour = String(bellDate.hour!)
         let bellMinute = String(bellDate.minute!)
-        infoLabel.text = "Будильник зазвонит " + bellDay + "." + bellMonth + "\n в " + bellHour + ":" + bellMinute
+		
+		if needDisplay{
+			infoLabel.text = "Будильник зазвонит " + bellDay + "." + bellMonth + "\n в " + bellHour + ":" + bellMinute
+		}
+		
+		let returnedArr = [minDiffIndex, dateDiffs[minDiffIndex!]]
+		return returnedArr as! [Int]
     }
     
     /*
@@ -271,28 +313,6 @@ class AlertClockViewController: UIViewController {
         // Pass the selected object to the new view controller.
     }
     */
-
-	func createBudDispatchWorkItem() -> DispatchWorkItem{
-		let workItem = DispatchWorkItem{
-			let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
-			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
-			let songFileName = songObject.path
-			let songFilePath = self.budTracksUrlString + songFileName!
-			let trackPath = NSURL(fileURLWithPath: songFilePath) as URL
-			while self.userDefaults.bool(forKey: "budState"){
-				var schedule = UserDefaults.standard.object(forKey: "budSchedule") as? [Date] ?? [Date]()
-				for (index, element) in schedule.enumerated(){
-					if Date() >= element{
-                        schedule[index] = (Date(timeInterval: 86400, since: schedule[index]))
-                        self.userDefaults.set(schedule, forKey: "budSchedule")
-						self.player.playAlertClockTrack(trackURL: trackPath, song: songObject)
-						//trackURL: trackPath, song: songObject
-					}
-				}
-			}
-		}
-		return workItem
-	}
 	
 	//Копирование играющего трека в директорию для будильника
 	func copyCurrentTrackToAlarmDir(){

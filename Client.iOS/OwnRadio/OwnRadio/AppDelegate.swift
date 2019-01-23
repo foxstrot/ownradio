@@ -45,10 +45,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		userDefaults.register(defaults: ["isOnlyWiFi" : false])
 
 		// создаем папку Tracks если ее нет
-		let applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+		var applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
 		let tracksPath = applicationSupportPath.appendingPathComponent("Tracks")
 		do {
 			try FileManager.default.createDirectory(at: tracksPath, withIntermediateDirectories: true, attributes: nil)
+		} catch let error as NSError {
+			NSLog("Unable to create directory \(error.debugDescription)")
+		}
+		//создаем папку AlarmTracks
+		applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+		let applicationTracksPath = applicationSupportPath.appendingPathComponent("AlarmTracks")
+		do {
+			try FileManager.default.createDirectory(at: applicationTracksPath, withIntermediateDirectories: true, attributes: nil)
 		} catch let error as NSError {
 			NSLog("Unable to create directory \(error.debugDescription)")
 		}

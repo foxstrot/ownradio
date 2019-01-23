@@ -22,6 +22,7 @@ class TimerViewController: UIViewController {
 	let defaults = UserDefaults.standard
 	var currentSliderValue = 0
 	var slider: CircularSlider = CircularSlider()
+	var timer: DispatchSourceTimer?
 	
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,7 +48,7 @@ class TimerViewController: UIViewController {
 		}else{
 			setTimerBtn.setImage(UIImage(named: "grayTimer"), for: .normal)
 		}
-		backgroundWorker = createTimerDispatchWorkItem()
+		
         // Do any additional setup after loading the view.
     }
 	
@@ -118,7 +119,7 @@ class TimerViewController: UIViewController {
 			defaults.set(true, forKey: "timerState")
 			defaults.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
 			defaults.set(seconds, forKey:  "timerDurationSeconds")
-			DispatchQueue.global(qos: .background).async(execute: backgroundWorker)
+			startTimer(timeInterval: TimeInterval(seconds))
 			let time = secondsToString(seconds: TimeInterval(seconds))
 			let splittedTime = time.split(separator: ":")
 			if splittedTime.count == 2{
@@ -165,8 +166,25 @@ class TimerViewController: UIViewController {
 			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
 		}
 	}
+	private func startTimer(timeInterval: TimeInterval){
+		let queue = DispatchQueue(label: "AlertClockTimer", attributes: .concurrent)
+		timer?.cancel()
+		timer = DispatchSource.makeTimerSource(queue: queue)
+		
+		//		timer?.scheduleRepeating(deadline: .now() + .seconds(Int(timeInterval)), interval: timeInterval)
+		timer?.scheduleOneshot(deadline: .now() + .seconds(Int(timeInterval)))
+		timer?.setEventHandler{
+			self.timerAction()
+		}
+		timer?.resume()
+		
+	}
 	
-	//Процесс проверки таймера
+	func timerAction(){
+		UserDefaults.standard.set(false, forKey: "timerState")
+		UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
+		exit(0)
+	}
 	
     /*
     // MARK: - Navigation
@@ -178,21 +196,4 @@ class TimerViewController: UIViewController {
     }
     */
 
-}
-
-func createTimerDispatchWorkItem() -> DispatchWorkItem{
-	let workItem = DispatchWorkItem{
-		while UserDefaults.standard.bool(forKey: "timerState"){
-			let currentDate = Date()
-			let setTimerDate = UserDefaults.standard.integer(forKey: "setTimerDate")
-			let timerDuration = UserDefaults.standard.integer(forKey: "timerDurationSeconds")
-			let remainingTimerDuration = Double(setTimerDate + timerDuration) - currentDate.timeIntervalSince1970
-			if remainingTimerDuration <= 0{
-				UserDefaults.standard.set(false, forKey: "timerState")
-				UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
-				exit(0)
-			}
-		}
-	}
-	return workItem
 }
