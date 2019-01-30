@@ -297,8 +297,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			final TrackToCache memoryUtil = new TrackToCache(getActivity().getApplicationContext());
 			final TrackDataAccess trackInfo = new TrackDataAccess(getActivity().getApplicationContext());
 
-			double freeSpace = memoryUtil.FreeSpace();
-			double tracksSpace = memoryUtil.FolderSize(((App) getActivity().getApplicationContext()).getMusicDirectory());
+			final double freeSpace = memoryUtil.FreeSpace();
+			final double tracksSpace = memoryUtil.FolderSize(((App) getActivity().getApplicationContext()).getMusicDirectory());
 
 			double listeningTracksSpace = memoryUtil.ListeningTracksSize();
 			//TODO удаляем раздел настроек "Слушать только свои треки". Вернуть, когда будет готова эта фича и ее описание: preferenceScreen.addPreference(somePreference);
@@ -316,12 +316,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			else
 				freeMemorySize.setTitle(getResources().getString(R.string.pref_free_memory_size) + " " + BigDecimal.valueOf(freeSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
 			
-			Preference allTracksMemorySize = findPreference("all_tracks_size");
-			//TODO менять окончания в зависимости от числа. Выводить в Мб/Гб если число небольшое
-			if (tracksSpace / bytesInGB > 0.1d)
-				allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (" + trackInfo.GetExistTracksCount() + " " +  getResources().getString(R.string.tracks) + ")");
-			else
-				allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (" + trackInfo.GetExistTracksCount() + " " +  getResources().getString(R.string.tracks) + ")");
+
 			Preference listeningTracksMemorySize = findPreference("listening_tracks_size");
 			if (listeningTracksSpace / bytesInGB > 0.1d)
 				listeningTracksMemorySize.setTitle(getResources().getString(R.string.pref_listening_tracks_size_size) + " " + BigDecimal.valueOf(listeningTracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (" + trackInfo.GetCountPlayTracks() + " " +  getResources().getString(R.string.tracks) + ")");
@@ -346,10 +341,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 			final NumberPickerPreference maxMemorySize = (NumberPickerPreference) findPreference("key_number");
 			maxMemorySize.setTitle(getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getValue() * 10 + "%");
 			if(freeSpace / bytesInGB > 0.1d){
-				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf((freeSpace + tracksSpace + listeningTracksSpace) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
+				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf((freeSpace + listeningTracksSpace) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb");
 			}
 			else{
-				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf((freeSpace + tracksSpace + listeningTracksSpace) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
+				maxMemorySize.setSummary(getResources().getString(R.string.from_free_memory) + " " + BigDecimal.valueOf((freeSpace + listeningTracksSpace) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb");
 			}
 			maxMemorySize.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 				@Override
@@ -363,9 +358,45 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 //							index >= 0
 //									? getResources().getString(R.string.pref_max_memory_size) + " " + maxMemorySize.getEntries()[index]
 //									: getResources().getString(R.string.pref_max_memory_size));
+					Preference allTracksMemorySize = findPreference("all_tracks_size");
+					//TODO менять окончания в зависимости от числа. Выводить в Мб/Гб если число небольшое
+					if (tracksSpace / bytesInGB > 0.1d) {
+						if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB > 0.1d) {
+//					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (" + trackInfo.GetExistTracksCount() + " " + getResources().getString(R.string.tracks) + ")");
+							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
+						} else {
+							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
+						}
+					}
+					else{
+						if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB > 0.1d) {
+							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
+						} else {
+							allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
+						}
+					}
+					allTracksMemorySize.setSummary(trackInfo.GetExistTracksCount() + " треков");
 					return true;
 				}
 			});
+
+			Preference allTracksMemorySize = findPreference("all_tracks_size");
+			//TODO менять окончания в зависимости от числа. Выводить в Мб/Гб если число небольшое
+			if (tracksSpace / bytesInGB > 0.1d) {
+				if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB > 0.1d) {
+					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
+				} else {
+					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
+				}
+			}
+			else{
+				if ((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB > 0.1d) {
+					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " + BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInGB).setScale(2, BigDecimal.ROUND_DOWN) + "Gb)");
+				} else {
+					allTracksMemorySize.setTitle(getResources().getString(R.string.pref_all_tracks_size) + " " + BigDecimal.valueOf(tracksSpace / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb (из " +  BigDecimal.valueOf((freeSpace * (((float) maxMemorySize.getValue()) / 10)) / bytesInMB).setScale(2, BigDecimal.ROUND_DOWN) + "Mb)");
+				}
+			}
+			allTracksMemorySize.setSummary(trackInfo.GetExistTracksCount() + " треков");
 
 			Preference storageSettings = findPreference("key_number");
 			if(prefManager.getPrefItemBool("is_subscribed", false) || subscribeStatus  || (android.os.Build.VERSION.SDK_INT < 24 && android.os.Build.VERSION.SDK_INT >= 19)){

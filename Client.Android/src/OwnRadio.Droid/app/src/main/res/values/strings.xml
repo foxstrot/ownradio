@@ -145,6 +145,7 @@
 		<item>8</item>
 		<item>9</item>
 	</string-array>
+	<string name="pref_total_space_tracks">треков</string>
 	<string name="pref_percent_of_free_memory1">А также не более 30%% от свободной памяти</string>
 	<string name="pref_percent_of_free_memory">А также не более 30% от свободной памяти</string>
 	<string name="from_free_memory">*от свободной памяти</string>
