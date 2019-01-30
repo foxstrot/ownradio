@@ -219,10 +219,10 @@
 				09D52F8A1E3F36BA006B66E6 /* View */,
 				091679581DE451CF00619B3F /* Main.storyboard */,
 				4E09FC7E1F344DC00055CD84 /* Assets.xcassets */,
+				090501101DE70FB400B1841C /* Fonts */,
 				0916795D1DE451CF00619B3F /* LaunchScreen.storyboard */,
 				091679601DE451CF00619B3F /* Info.plist */,
 				4E09FC7D1F344D760055CD84 /* video.mp4 */,
-				090501101DE70FB400B1841C /* Fonts */,
 			);
 			path = OwnRadio;
 			sourceTree = "<group>";

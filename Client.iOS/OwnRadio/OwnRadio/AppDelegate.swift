@@ -43,7 +43,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		//Регистрируем настройки по умолчанию (не меняя имеющиеся значения, если они уже есть)
 		userDefaults.register(defaults: ["maxMemorySize" : 10])
 		userDefaults.register(defaults: ["isOnlyWiFi" : false])
-
+		userDefaults.register(defaults: ["PlayingSongInfo" : ""])
+		try? userDefaults.register(defaults: ["PlayingSongObject": PropertyListEncoder().encode(SongObject())])
+		try? userDefaults.register(defaults: ["interruptedSongObject": PropertyListEncoder().encode(SongObject())])
+		userDefaults.register(defaults: ["trackPlayingNow" : false])
+		userDefaults.register(defaults: ["playingInterrupted" : false])
 		// создаем папку Tracks если ее нет
 		var applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
 		let tracksPath = applicationSupportPath.appendingPathComponent("Tracks")
@@ -82,8 +86,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 				}
 			}
 		}
-		
-
 		return true
 	}
 	
@@ -149,6 +151,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		// Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 		UserDefaults.standard.set(false, forKey: "timerState")
 		UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
+		UserDefaults.standard.set(false, forKey: "budState")
+		UserDefaults.standard.synchronize()
+		//UserDefaults.standard.set(false, forKey: "playingInterruptedByTimer")
 	}
 
 }

@@ -28,6 +28,7 @@ class AlertClockViewController: UIViewController {
 	var daysSelected = [Bool]()
 	var selectedTime = Date()
 	var player: AudioPlayerManager!
+	var mainController: RadioViewController!
 	var budSchedule = [Date]()
 	var timer: DispatchSourceTimer?
 	
@@ -175,7 +176,7 @@ class AlertClockViewController: UIViewController {
 	@IBAction func oneTapAction(_ sender: Any) {
 		//Обновление состояния таймера по нажатию на экран
 		if UserDefaults.standard.bool(forKey: "timerState"){
-			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "updateTimerDate")
 		}
 	}
 	
@@ -184,7 +185,10 @@ class AlertClockViewController: UIViewController {
         
         if !userDefaults.bool(forKey: "budState") && self.userDefaults.data(forKey: "PlayingSongObject") != nil{
 			budSchedule = [Date]()
-			copyCurrentTrackToAlarmDir()
+//			if player.isPlaying{
+//				copyCurrentTrackToAlarmDir()
+//			}
+			
 			setBudButton.setImage(UIImage(named: "budBlue"), for: .normal)
 			userDefaults.set(true, forKey: "budState")
 			
@@ -245,17 +249,16 @@ class AlertClockViewController: UIViewController {
 
 	
 	private func startTimer(timeInterval: TimeInterval, minIndex: Int){
-		let queue = DispatchQueue(label: "AlertClockTimer", attributes: .concurrent)
+		let queue = DispatchQueue.main
 		timer?.cancel()
 		timer = DispatchSource.makeTimerSource(queue: queue)
 		
-//		timer?.scheduleRepeating(deadline: .now() + .seconds(Int(timeInterval)), interval: timeInterval)
+		//timer?.scheduleRepeating(deadline: .now() + .seconds(Int(timeInterval)), interval: timeInterval)
 		timer?.scheduleOneshot(deadline: .now() + .seconds(Int(timeInterval)))
 		timer?.setEventHandler{
 			self.timerAction(currentMinIndex: minIndex)
 		}
 		timer?.resume()
-		
 	}
 	
 	private func stopTimer(){
@@ -272,15 +275,38 @@ class AlertClockViewController: UIViewController {
 		stopTimer()
 		startTimer(timeInterval: TimeInterval(minInterval[1]), minIndex: minInterval[0])
 		
-		//Проигрывание сохраненного трека
-		let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
-		let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
-		let songFileName = songObject.path
-		let songFilePath = self.budTracksUrlString + songFileName!
-		let trackPath = NSURL(fileURLWithPath: songFilePath) as URL
-		DispatchQueue.main.async {
-			self.player.playAlertClockTrack(trackURL: trackPath, song: songObject)
+		//Проигрывание сохраненного трека если будильник установлен
+		if userDefaults.bool(forKey: "budState"){
+			let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
+			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+			let songFileName = songObject.path
+//			var songFilePath = self.budTracksUrlString + songFileName!
+//			let trackPath = NSURL(fileURLWithPath: songFilePath) as URL
+			var trackPath: URL
+			
+			let fileManager = FileManager.default
+			if fileManager.fileExists(atPath: self.tracksUrlString + songFileName!){
+				trackPath = NSURL(fileURLWithPath: self.tracksUrlString + songFileName!) as URL
+			}
+			else{
+				trackPath = copyTrackToCache(trackName: songFileName!)
+			}
+			
+			if self.mainController != nil{
+				self.mainController.playTrackByUrl(trackURL: trackPath, song: songObject)
+			}
+
 		}
+		
+	}
+	
+	func copyTrackToCache(trackName: String) -> URL{
+		let pathToTrack = budTracksUrlString + trackName
+		let pathToTrackInCache = tracksUrlString + trackName
+		
+		try! FileManager.default.copyItem(atPath: pathToTrack, toPath: pathToTrackInCache)
+		
+		return NSURL(fileURLWithPath: pathToTrackInCache) as URL
 	}
 	
 	func getMinDatediff(needDisplay: Bool) -> [Int]{
@@ -332,18 +358,14 @@ class AlertClockViewController: UIViewController {
 				createDirectory(path: budTracksUrlString)
 			}
 			
-			do{
-				let items = try FileManager.default.contentsOfDirectory(atPath: budTracksUrlString)
-				// Удаляем старый трек
-				for item in items{
-					try FileManager.default.removeItem(atPath: budTracksUrlString + item)
-				}
-				// Копируем новый
-				try FileManager.default.copyItem(atPath: pathToTrack, toPath: budTracksUrlString + songFileName!)
-				
-			}catch{
-				
+			let items = try! FileManager.default.contentsOfDirectory(atPath: budTracksUrlString)
+			// Удаляем старый трек
+			for item in items{
+				try! FileManager.default.removeItem(atPath: budTracksUrlString + item)
 			}
+			// Копируем новый
+			try! FileManager.default.copyItem(atPath: pathToTrack, toPath: budTracksUrlString + songFileName!)
+				
 		}
 	}
 	

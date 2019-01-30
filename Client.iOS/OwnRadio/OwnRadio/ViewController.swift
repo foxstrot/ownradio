@@ -13,6 +13,7 @@ import Alamofire
 import CloudKit
 
 
+
 class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
 	
 	
@@ -83,6 +84,12 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		if segue.identifier == "alertClockSegue"{
 			if let nextViewController = segue.destination as? AlertClockViewController{
 				nextViewController.player = self.player
+				nextViewController.mainController = self
+			}
+		}
+		else if segue.identifier == "timerSegue"{
+			if let nextViewController = segue.destination as? TimerViewController{
+				nextViewController.player = self.player
 			}
 		}
 	}
@@ -107,6 +114,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 //		self.navigationController?.navigationBar.barTintColor = UIColor(red: 3.0/255.0, green: 169.0/255.0, blue: 244.0/255.0, alpha: 1.0)
 		//цвет кнопки и иконки
 		self.navigationController?.navigationBar.tintColor = UIColor.darkGray
+//		self.navigationController?.navigationBar.tintColor = UIColor(red: 1, green: 0, blue: 0, alpha: 1.0)
 		//цвет заголовка
 		self.navigationController?.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName : UIColor.darkGray]
 		
@@ -150,17 +158,47 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
                 self.downloadTracks()
             }
 		}
+		
 		reachability?.startListening()
-		self.updateUI()
+		
 		//обрыв воспроизведения трека
 		NotificationCenter.default.addObserver(self, selector: #selector(crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
 		//трек доигран до конца
 		NotificationCenter.default.addObserver(self, selector: #selector(songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+		//Приложение закрывается
+		NotificationCenter.default.addObserver(self, selector: #selector(self.appTerminate), name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
 		//обновление системной информации
 //		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
 		
+		if UserDefaults.standard.bool(forKey: "playingInterrupted"){
+			UserDefaults.standard.set(false, forKey: "playingInterrupted")
+			let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
+			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+			self.playTrackByUrl(trackURL: NSURL(fileURLWithPath: tracksUrlString + "/" + String(songObject.path!)) as URL, song: songObject)
+			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
+			self.player.playerItem.seek(to: CMTimeMakeWithSeconds(Float64(playFromTime), 1000000000))
+		}
+		else{
+			UserDefaults.standard.set(false, forKey:"trackPlayingNow")
+			UserDefaults.standard.synchronize()
+			self.updateUI()
+		}
 	}
 	
+	func playTrackByUrl(trackURL: URL, song: SongObject){
+		
+		UserDefaults.standard.set(true, forKey:"trackPlayingNow")
+		UserDefaults.standard.synchronize()
+		
+		NotificationCenter.default.addObserver(self, selector: #selector(self.crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
+		//трек доигран до конца
+		NotificationCenter.default.addObserver(self, selector: #selector(self.songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+		//Приложение закрывается
+		NotificationCenter.default.addObserver(self, selector: #selector(self.appTerminate), name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
+		player.playOuterTrack(url: trackURL, song: song)
+		self.isStartListening = true
+		self.updateUI()
+	}
 	
 	func checkMemoryWarning() {
 		guard DiskStatus.freeDiskSpaceInBytes < 104857600 && CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity") < 1 else {
@@ -196,6 +234,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		//обновление системной информации
 		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
 		
+		
 		self.player = AudioPlayerManager.sharedInstance
 		
 		if UserDefaults.standard.bool(forKey: "timerState"){
@@ -206,6 +245,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 		if UserDefaults.standard.bool(forKey: "budState"){
 			budButton.setImage(UIImage(named: "budBlueImage"), for: .normal)
+			updateUI()
 		}
 		else{
 			budButton.setImage(UIImage(named: "budGrayImage"), for: .normal)
@@ -221,6 +261,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		NotificationCenter.default.removeObserver(self, name:  NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: nil)
 		NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.player.playerItem)
 		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
+		//NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
 	}
 	
 	//управление проигрыванием со шторки / экрана блокировки
@@ -286,6 +327,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 //		self.progressView.isHidden = true
 	}
+	
 	
 	//функция обновления поля Info системной информации
 	func updateSysInfo(_ notification: Notification){
@@ -393,7 +435,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		//если трек проигрывается - ставим на паузу
 		if player.isPlaying == true {
 			player.pauseSong(complition: { [unowned self] in
-				
+				UserDefaults.standard.set(false, forKey:"trackPlayingNow")
+				UserDefaults.standard.synchronize()
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 0
 					self.updateUI()
@@ -402,12 +445,12 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			//иначе - возобновляем проигрывание если возможно или начинаем проигрывать новый трек
 			player.resumeSong(complition: { [unowned self] in
                 if CoreDataManager.instance.getCountOfTracks() > 0 {
-				//Вылетает, если ничего не проигрывалось и играет трек из будильника и нажата кнопка PLAY
-				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
-				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 1
+					//Вылетает, если ничего не проигрывалось и играет трек из будильника и нажата кнопка PLAY
+					MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
+					MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 1
 					self.updateUI()
-                }
-				})
+				}
+			})
 		}
 	}
 	
@@ -523,11 +566,25 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 		return cell
 	}
+	//Функция уведомления о закрытии приложения
+	func appTerminate(){
+		if UserDefaults.standard.bool(forKey: "trackPlayingNow"){
+			UserDefaults.standard.set(true, forKey: "playingInterrupted")
+			if self.player != nil{
+				if self.player.playerItem.currentTime().seconds - 30 > 0{
+					UserDefaults.standard.set(self.player.playerItem.currentTime().seconds - 30, forKey: "playingDuration")
+				}
+				else{
+					UserDefaults.standard.set(0, forKey: "playingDuration")
+				}
+			}
+		}
+	}
 	
 	@IBAction func oneTapAction(_ sender: Any) {
 		//Обновление состояния таймера по нажатию на экран
 		if UserDefaults.standard.bool(forKey: "timerState"){
-			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "updateTimerDate")
 		}
 	}
 	
@@ -566,7 +623,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		guard self.player.playerItem != nil else {
 			
 			self.player.isPlaying = true
+			UserDefaults.standard.set(true, forKey:"trackPlayingNow")
+			UserDefaults.standard.synchronize()
+			
 			nextTrackButtonPressed()
+			
 			return
 		}
 		self.progressView.isHidden = false
@@ -581,5 +642,6 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	@IBAction func skipTrackToEnd(_ sender: UIButton) {
 		self.player.fwdTrackToEnd()
 	}
+
 
 }

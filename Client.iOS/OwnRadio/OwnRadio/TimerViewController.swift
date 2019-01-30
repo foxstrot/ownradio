@@ -18,6 +18,7 @@ class TimerViewController: UIViewController {
 	@IBOutlet weak var setTimerBtn: UIButton!
 	@IBOutlet weak var setInfoLable: UILabel!
 	
+	var player: AudioPlayerManager!
 	
 	let defaults = UserDefaults.standard
 	var currentSliderValue = 0
@@ -34,9 +35,19 @@ class TimerViewController: UIViewController {
 		setInfoLable.text = ""
 		if defaults.bool(forKey: "timerState"){
 			setTimerBtn.setImage(UIImage(named: "blueTimer"), for: .normal)
-			slider.endPointValue = CGFloat(Float(UserDefaults.standard.integer(forKey: "timerDurationSeconds")) / 60)
+			
+			let updateTimerDate = UserDefaults.standard.integer(forKey: "updateTimerDate")
+			let time: String //getRemainingTime()
+			
+			if updateTimerDate > UserDefaults.standard.integer(forKey: "setTimerDate"){
+				time = getRemainingTime(interval: updateTimerDate)
+				slider.endPointValue = CGFloat(Float(getRemainingTimeInterval(interval: updateTimerDate)) / 60)
+			}
+			else{
+				time = getRemainingTime()
+				slider.endPointValue = CGFloat(Float(getRemainingTimeInterval()) / 60)
+			}
 			timeinfoLabel.text = sliderValueToTime()
-			let time = getRemainingTime()
 			let splittedTime = time.split(separator: ":")
 			if splittedTime.count == 2{
 				setInfoLable.text = "Таймер установлен\nприложение закроется через " + splittedTime[0] + " ч, " + splittedTime[1] + " мин"
@@ -55,11 +66,18 @@ class TimerViewController: UIViewController {
 
 	
 	//Получение осташегося времени работы таймера в виде интервала
-	func getRemainingTimeInterval() ->Double{
+	func getRemainingTimeInterval() ->Float{
 		let currentDate = Date()
 		let setTimerDate = UserDefaults.standard.integer(forKey: "setTimerDate")
 		let timerDuration = UserDefaults.standard.integer(forKey: "timerDurationSeconds")
-		let remainingTimerDuration = Double(setTimerDate + timerDuration) - currentDate.timeIntervalSince1970
+		let remainingTimerDuration = Float(Double(setTimerDate + timerDuration) - currentDate.timeIntervalSince1970)
+		return remainingTimerDuration
+	}
+	
+	func getRemainingTimeInterval(interval: Int) ->Float{
+		let currentDate = Date()
+		let timerDuration = UserDefaults.standard.integer(forKey: "timerDurationSeconds")
+		let remainingTimerDuration = Float(Double(interval + timerDuration) - currentDate.timeIntervalSince1970)
 		return remainingTimerDuration
 	}
 	
@@ -102,15 +120,15 @@ class TimerViewController: UIViewController {
 		timeinfoLabel.text = sliderValueToTime()
 	}
 
-	var backgroundWorker = createTimerDispatchWorkItem()
+	//var backgroundWorker = createTimerDispatchWorkItem()
 	
 	//Экшен нажатия на кнопку установки будильника
 	@IBAction func btnSetTimerClick(_ sender: UIButton) {
 		
 		//Если таймер был остановлен пользователем, пересоздаем его
-		if backgroundWorker.isCancelled{
-			backgroundWorker = createTimerDispatchWorkItem()
-		}
+//		if backgroundWorker.isCancelled{
+//			backgroundWorker = createTimerDispatchWorkItem()
+//		}
 		
 		//Если таймер не установлен, устанавливаем его
 		if !defaults.bool(forKey: "timerState"){
@@ -133,9 +151,9 @@ class TimerViewController: UIViewController {
 		else{
 			setTimerBtn.setImage(UIImage(named: "grayTimer"), for: .normal)
 			defaults.set(false, forKey: "timerState")
-			DispatchQueue.global(qos: .background).async{
-				self.backgroundWorker.cancel()
-			}
+//			DispatchQueue.global(qos: .background).async{
+//				self.backgroundWorker.cancel()
+//			}
 			setInfoLable.text = "Таймер остановлен"
 		}
 	}
@@ -147,6 +165,15 @@ class TimerViewController: UIViewController {
 		let timerDuration = UserDefaults.standard.integer(forKey: "timerDurationSeconds")
 		let remainingTimerDuration = Double(setTimerDate + timerDuration) - currentDate.timeIntervalSince1970
 		let formattedString = secondsToString(seconds: remainingTimerDuration)
+		return formattedString ?? "0"
+	}
+	
+	func getRemainingTime(interval: Int) -> String{
+		let currentDate = Int(Date().timeIntervalSince1970)
+		//let setTimerDate = UserDefaults.standard.integer(forKey: "setTimerDate")
+		let timerDuration = UserDefaults.standard.integer(forKey: "timerDurationSeconds")
+		let remainingTimerDuration = interval + timerDuration - currentDate
+		let formattedString = secondsToString(seconds: TimeInterval(remainingTimerDuration))
 		return formattedString ?? "0"
 	}
 	
@@ -163,7 +190,7 @@ class TimerViewController: UIViewController {
 	@IBAction func oneTapAction(_ sender: Any) {
 		//Обновление состояния таймера по нажатию на экран
 		if UserDefaults.standard.bool(forKey: "timerState"){
-			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "updateTimerDate")
 		}
 	}
 	private func startTimer(timeInterval: TimeInterval){
@@ -181,9 +208,43 @@ class TimerViewController: UIViewController {
 	}
 	
 	func timerAction(){
-		UserDefaults.standard.set(false, forKey: "timerState")
-		UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
-		exit(0)
+		if UserDefaults.standard.bool(forKey: "timerState") && !(timer?.isCancelled)!{
+			UserDefaults.standard.synchronize()
+			var setTimerDate = UserDefaults.standard.integer(forKey: "setTimerDate")
+			let updateTimerDate = UserDefaults.standard.integer(forKey: "updateTimerDate")
+			
+			if updateTimerDate > setTimerDate{ //Если была активность пользователя, обновляем дату срабатывания таймера
+				setTimerDate = updateTimerDate
+			}
+			let timeInterval = Float(Int(slider.endPointValue)) * 60
+			if (Int(Date().timeIntervalSince1970) - Int(timeInterval)) >= setTimerDate{ //Если активности пользователя не было, таймер срабатывает, если была, переставляем на тот же интервал
+				UserDefaults.standard.synchronize()
+				if UserDefaults.standard.bool(forKey: "trackPlayingNow"){
+					UserDefaults.standard.set(true, forKey: "playingInterrupted")
+					if self.player != nil{
+						if self.player.playerItem.currentTime().seconds - 30 > 0{
+							UserDefaults.standard.set(self.player.playerItem.currentTime().seconds - 30, forKey: "playingDuration")
+						}
+						else{
+							UserDefaults.standard.set(0, forKey: "playingDuration")
+						}
+						
+					}
+				}
+				UserDefaults.standard.set(false, forKey: "timerState")
+				UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
+				UserDefaults.standard.synchronize()
+				exit(0)
+			}
+			else{
+				let datesDifferent = timeInterval - Float(Int(Date().timeIntervalSince1970) - updateTimerDate)
+				startTimer(timeInterval: TimeInterval(datesDifferent))
+			}
+		}
+		else{
+			timer?.cancel()
+		}
+		
 	}
 	
     /*

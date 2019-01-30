@@ -191,7 +191,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 			
 			isSkipped = false;
 			self.playingSong.isListen = 1
-			self.addDateToHistoryTable(playingSong: self.playingSong)
+			self.addDateToHistoryTable(playingSong: self.playingSong) //bug: иногда программа заходит сюда и воспроизведение останавливается, следующий трек не проигрывается
+																	  //Останавливается внутри ассемблера, тупо примораживается процесс
 		}
 	}
 	
@@ -224,7 +225,6 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 								DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
 									radioViewContr.updateUI()
 								})
-								
 							}
 						}
 					}
@@ -273,6 +273,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	//возобновление воспроизведения
 	func resumeSong(complition: @escaping (() -> Void)) {
 		isPlaying = true
+		UserDefaults.standard.set(true, forKey:"trackPlayingNow")
+		UserDefaults.standard.synchronize()
 		if self.playerItem != nil {
 			self.player.play()
 			complition()
@@ -404,11 +406,6 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	}
 	*/
 	
-	func playAlertClockTrack(trackURL: URL, song: SongObject){
-		self.playingSong = song
-	    playAudioWith(trackURL: trackURL)
-		self.player.play()
-	}
 	
 	// проигрываем трек из кеша
 	func playFromCache(complition: (() -> Void)?) {
@@ -440,12 +437,21 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		let resUrl = docUrl?.absoluteURL.appendingPathComponent(playingSong.path!)
 		var playingTrackUrlString = resUrl?.absoluteURL.absoluteString.replacingOccurrences(of: "%2F", with: "/")
 		playingTrackUrlString = playingTrackUrlString?.replacingOccurrences(of: "%20", with: " ")
+		
 		//сохранение пути и объекта трека в userDefaults для использования с будильником
 //		UserDefaults.standard.set(playingSong.path, forKey:"PlayingSongPath")
-		if !UserDefaults.standard.bool(forKey: "budState"){
+		if !UserDefaults.standard.bool(forKey: "budState"){ //Если будильник не установлен
 			try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"PlayingSongObject")
 			UserDefaults.standard.synchronize()
+			DispatchQueue.global(qos: .background).async {
+				self.copyCurrentTrackToAlarmDir(song: self.playingSong)
+			}
+			
 		}
+		
+		// Сохранение объекта для последующего возобновления проигрывания при отключении приложения
+		try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"interruptedSongObject")
+		UserDefaults.standard.synchronize()
 		
 		guard let url = resUrl else {
 			return
@@ -486,5 +492,48 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	func fwdTrackToEnd(){
 		isSkipped = true
 		player.seek(to: (player.currentItem?.duration)!-CMTimeMake(3, 1))
+	}
+	
+	func copyCurrentTrackToAlarmDir(song: SongObject){
+		let songFileName = song.path
+		if songFileName != ""{
+			let pathToTrack = tracksUrlString + songFileName!
+			var isDir: ObjCBool = true
+			if FileManager.default.fileExists(atPath: budTracksUrlString, isDirectory: &isDir){
+				if !isDir.boolValue{
+					createDirectory(path: budTracksUrlString)
+				}
+			}
+			else{
+				createDirectory(path: budTracksUrlString)
+			}
+			
+			let items = try! FileManager.default.contentsOfDirectory(atPath: budTracksUrlString)
+			// Удаляем старый трек
+			for item in items{
+				try! FileManager.default.removeItem(atPath: budTracksUrlString + item)
+			}
+			// Копируем новый
+			try! FileManager.default.copyItem(atPath: pathToTrack, toPath: budTracksUrlString + songFileName!)
+			
+		}
+	}
+	
+	func createDirectory(path: String){
+		try! FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: false, attributes: nil)
+	}
+	
+	func playOuterTrack(url: URL, song: SongObject){
+		if self.isPlaying{
+			self.player.pause()
+		}
+		playingSong = song
+		isPlaying = true
+		//self.player.createPlayerItemWith(url: NSURL(fileURLWithPath: tracksUrlString + "/" + String(songObject.path!)) as URL)
+		playAudioWith(trackURL: url)
+		self.playingSongID = song.trackID
+		CoreDataManager.instance.setDateForTrackBy(trackId: song.trackID)
+		//		self.player.isPlaying = true
+		configurePlayingSong(song: song)
 	}
 }

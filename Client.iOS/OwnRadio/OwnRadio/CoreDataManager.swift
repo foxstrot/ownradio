@@ -321,7 +321,7 @@ class CoreDataManager {
 		let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "TrackEntity") //TrackEntity.fetchRequest()
 		fetchRequest.sortDescriptors = sortDescriptors
 		fetchRequest.predicate = NSPredicate(format: "countPlay > %@", "0")
-		var  song = SongObject()
+		var song = SongObject()
 		var listenTracks = [SongObject]()
 		do {
 			//выполняем запрос к БД
