@@ -32,6 +32,7 @@
 		09D52F8C1E3F36EF006B66E6 /* CachingView.xib in Resources */ = {isa = PBXBuildFile; fileRef = 09D52F8B1E3F36EF006B66E6 /* CachingView.xib */; };
 		09D52F8E1E3F3F37006B66E6 /* CachingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09D52F8D1E3F3F37006B66E6 /* CachingView.swift */; };
 		09EA799B1DE57D040034B8DF /* AudioPlayerManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09EA799A1DE57D040034B8DF /* AudioPlayerManager.swift */; };
+		285EC272220B08EF00D1574C /* CopyManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 285EC271220B08EF00D1574C /* CopyManager.swift */; };
 		28DE354121D5FDAC00B41A5D /* TimerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DE354021D5FDAC00B41A5D /* TimerViewController.swift */; };
 		28E7D51E21EC773900111F7D /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 091679561DE451CF00619B3F /* ViewController.swift */; };
 		28E7D53621EF65B300111F7D /* AlertClockViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28DE353B21D4EE0600B41A5D /* AlertClockViewController.swift */; };
@@ -120,6 +121,7 @@
 		09D52F8B1E3F36EF006B66E6 /* CachingView.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CachingView.xib; sourceTree = "<group>"; };
 		09D52F8D1E3F3F37006B66E6 /* CachingView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CachingView.swift; sourceTree = "<group>"; };
 		09EA799A1DE57D040034B8DF /* AudioPlayerManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AudioPlayerManager.swift; sourceTree = "<group>"; usesTabs = 1; };
+		285EC271220B08EF00D1574C /* CopyManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CopyManager.swift; sourceTree = "<group>"; };
 		28DE353B21D4EE0600B41A5D /* AlertClockViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertClockViewController.swift; sourceTree = "<group>"; };
 		28DE354021D5FDAC00B41A5D /* TimerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerViewController.swift; sourceTree = "<group>"; };
 		28E7D51F21EC8B5B00111F7D /* OwnRadio.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = OwnRadio.entitlements; sourceTree = "<group>"; };
@@ -201,6 +203,7 @@
 			isa = PBXGroup;
 			children = (
 				28E7D51F21EC8B5B00111F7D /* OwnRadio.entitlements */,
+				285EC271220B08EF00D1574C /* CopyManager.swift */,
 				091679541DE451CF00619B3F /* AppDelegate.swift */,
 				09B953A01DFEBED70098417C /* CircularView.swift */,
 				09A054141DF168170008ACE7 /* Utilities.swift */,
@@ -491,6 +494,7 @@
 				4ED299581F28977A00E2616F /* SettingsViewController.swift in Sources */,
 				098886861DFB069700E401B9 /* TrackEntity+CoreDataProperties.swift in Sources */,
 				098B515C1DF9623A00293DE5 /* HistoryEntity+CoreDataProperties.swift in Sources */,
+				285EC272220B08EF00D1574C /* CopyManager.swift in Sources */,
 				4E09FC7A1F331E810055CD84 /* ItemViewController.swift in Sources */,
 				098B51561DF95E5000293DE5 /* HistoryEntity+CoreDataClass.swift in Sources */,
 				28DE354121D5FDAC00B41A5D /* TimerViewController.swift in Sources */,
@@ -675,7 +679,7 @@
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = OwnRadio/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -704,7 +708,7 @@
 					"$(PROJECT_DIR)",
 				);
 				INFOPLIST_FILE = OwnRadio/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",

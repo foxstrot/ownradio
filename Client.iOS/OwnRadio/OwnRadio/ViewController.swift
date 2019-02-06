@@ -15,6 +15,7 @@ import CallKit
 import CoreBluetooth
 
 
+
 @available(iOS 10.0, *)
 class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate{
 	
@@ -83,6 +84,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
 	let currentTrackPathUrl = FileManager.applicationSupportDir().appending("/currentTrackPath/")
+	let budTracksUrlString = FileManager.applicationSupportDir().appending("/AlarmTracks/")
 	
 	var alertClock: DispatchSourceTimer?
 	var timer: DispatchSourceTimer?
@@ -205,7 +207,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	}
 	
 	func checkPlayingInterrupt(){
-		if UserDefaults.standard.bool(forKey: "trackPlayingNow"){
+		let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
+		let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+		
+		
+		if UserDefaults.standard.bool(forKey: "trackPlayingNow") && songObject.path != nil{
 			print("Воспроизведение было прервано, проигрывается прерваный трек")
 			
 			if UserDefaults.standard.bool(forKey: "playingInterrupted"){
@@ -216,8 +222,6 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				print("Прервано вылетом")
 			}
 			
-			let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
-			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
 			let songFileName = String(songObject.path!)
 			var trackPath: URL
 			
@@ -227,16 +231,25 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			}
 			else{
 				print("Прерваный трек отсутсвует в кеше, копируем его туда")
-				trackPath = copyTrackToCache(trackName: songFileName!)
+				trackPath = CopyManager.copyTrackToCache(trackPath: currentTrackPathUrl + songFileName!, trackName: songFileName!)
+			}
+			
+			if !UserDefaults.standard.bool(forKey: "budState"){ //Если будильник не установлен
+				try? UserDefaults.standard.set(PropertyListEncoder().encode(songObject), forKey:"PlayingSongObject")
+				UserDefaults.standard.synchronize()
+				DispatchQueue.global(qos: .utility).async{
+					CopyManager.copyCurrentTrackToDir(song: songObject, copyTo: self.budTracksUrlString)
+					print("Текущий трек скопирован в директорию будильника")
+				}
+				
 			}
 			
 			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
 			
 			self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
 		}
-		else if UserDefaults.standard.bool(forKey: "listenRunning"){ //Супер костыль
-			let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
-			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+		else if UserDefaults.standard.bool(forKey: "listenRunning") && songObject.path != nil{ //Супер костыль
+			
 			let songFileName = String(songObject.path!)
 			var trackPath: URL
 			
@@ -246,7 +259,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			}
 			else{
 				print("Прерваный трек отсутсвует в кеше, копируем его туда")
-				trackPath = copyTrackToCache(trackName: songFileName!)
+				trackPath = CopyManager.copyTrackToCache(trackPath: currentTrackPathUrl + songFileName!, trackName: songFileName!)
 			}
 			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
 			self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
@@ -504,11 +517,10 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				if description.portType == AVAudioSessionPortHeadphones {
 					print(description.portType)
 					print(self.player.isPlaying)
-					
 					if self.player != nil && !self.player.isPlaying && !self.interruptedManually && !self.activeCall{
-						self.player.isPlaying = true
-						self.player.player.play()
-						updateUI()
+						player.resumeSong {
+							self.updateUI()
+						}
 					}
 				}
 	//				else if (description.portType == AVAudioSessionPortBluetoothLE || description.portType == AVAudioSessionPortBluetoothHFP || description.portType == AVAudioSessionPortBluetoothA2DP){
@@ -530,10 +542,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 //			btHeadsetDetached = true
 			print("headphone pulled out")
 			print(self.player.isPlaying)
-			self.player.isPlaying = false
 			print(self.player.isPlaying)
 			self.interruptedManually = false
-			updateUI()
+			self.player.pauseSong {
+				self.updateUI()
+			}
 			
 //		case AVAudioSessionRouteChangeReason.categoryChange.rawValue:
 //
@@ -655,8 +668,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 					UserDefaults.standard.set(self.player.playingSong.trackID as String, forKey:"lastTrack")
 					if Int(time.seconds) % 15 == 0{
 						UserDefaults.standard.set(self.player.playerItem.currentTime().seconds, forKey: "playingDuration")
+						UserDefaults.standard.synchronize()
 					}
-					UserDefaults.standard.synchronize()
+					
 //				self.progressView.progress = (CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!))
                 }
 			}
@@ -706,16 +720,6 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			cell.textLabel?.text = str as String
 		}
 		return cell
-	}
-
-	
-	func copyTrackToCache(trackName: String) -> URL{
-		let pathToTrack = currentTrackPathUrl + trackName
-		let pathToTrackInCache = tracksUrlString + trackName
-		
-		try! FileManager.default.copyItem(atPath: pathToTrack, toPath: pathToTrackInCache)
-		
-		return NSURL(fileURLWithPath: pathToTrackInCache) as URL
 	}
 	
 	func createPostNotificationSysInfo (message:String) {
@@ -842,8 +846,4 @@ extension RadioViewController: CXCallObserverDelegate{
 		}
 	}
 }
-extension RadioViewController: CBCentralManagerDelegate{
-	func centralManagerDidUpdateState(_ central: CBCentralManager) {
-		let centralManager = CBCentralManager(delegate: self, queue: nil)
-	}
-}
+

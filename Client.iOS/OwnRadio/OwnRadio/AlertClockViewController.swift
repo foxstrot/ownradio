@@ -240,6 +240,13 @@ class AlertClockViewController: UIViewController {
 			}
 			
 			userDefaults.set(Int(Date().timeIntervalSince1970), forKey:  "setBudDate")
+			
+			let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
+			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+			DispatchQueue.global(qos: .utility).async{
+				CopyManager.copyCurrentTrackToDir(song: songObject, copyTo: self.budTracksUrlString)
+				print("Текущий трек скопирован в директорию будильника")
+			}
 		}
 		else if self.userDefaults.data(forKey: "PlayingSongObject") == nil{
 			infoLabel.text = "Нет прослушиваемого трека"
@@ -299,22 +306,13 @@ class AlertClockViewController: UIViewController {
 				trackPath = NSURL(fileURLWithPath: self.tracksUrlString + songFileName!) as URL
 			}
 			else{
-				trackPath = copyTrackToCache(trackName: songFileName!)
+				trackPath = CopyManager.copyTrackToCache(trackPath: budTracksUrlString + songFileName!, trackName: songFileName!)
 			}
 			
 			if self.mainController != nil{
 				self.mainController.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: 0)
 			}
 		}
-	}
-	
-	func copyTrackToCache(trackName: String) -> URL{
-		let pathToTrack = budTracksUrlString + trackName
-		let pathToTrackInCache = tracksUrlString + trackName
-		
-		try! FileManager.default.copyItem(atPath: pathToTrack, toPath: pathToTrackInCache)
-		
-		return NSURL(fileURLWithPath: pathToTrackInCache) as URL
 	}
 	
 	func getMinDatediff(needDisplay: Bool) -> [Int]{

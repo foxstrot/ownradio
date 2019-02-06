@@ -449,18 +449,17 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		if !UserDefaults.standard.bool(forKey: "budState"){ //Если будильник не установлен
 			try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"PlayingSongObject")
 			UserDefaults.standard.synchronize()
-			DispatchQueue.main.async {
-				self.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.budTracksUrlString)
-				print("Текущий трек скопирован в директорию будильника")
-			}
-			
+//			DispatchQueue.global(qos: .utility).async{
+//				CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.budTracksUrlString)
+//				print("Текущий трек скопирован в директорию будильника")
+//			}
 		}
 		
 		// Сохранение объекта для последующего возобновления проигрывания при отключении приложения
 		try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"interruptedSongObject")
 		UserDefaults.standard.synchronize()
-		DispatchQueue.main.async {
-			self.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.currentTrackPathString)
+		DispatchQueue.global(qos: .utility).async{
+			CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.currentTrackPathString)
 			print("Текущий трек скопирован во временное хранилище")
 		}
 	
@@ -506,50 +505,48 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		player.seek(to: (player.currentItem?.duration)!-CMTimeMake(3, 1))
 	}
 	
-	func copyCurrentTrackToDir(song: SongObject, copyTo: String){
-		let songFileName = song.path
-		if songFileName != ""{
-			let pathToTrack = tracksUrlString + songFileName!
-			var isDir: ObjCBool = true
-			if FileManager.default.fileExists(atPath: copyTo, isDirectory: &isDir){
-				if !isDir.boolValue{
-					createDirectory(path: copyTo)
-				}
-			}
-			else{
-				createDirectory(path: copyTo)
-			}
-			
-			let items = try! FileManager.default.contentsOfDirectory(atPath: copyTo)
-			// Удаляем старый трек
-			for item in items{
-				try! FileManager.default.removeItem(atPath: copyTo + item)
-			}
-			// Копируем новый
-			try! FileManager.default.copyItem(atPath: pathToTrack, toPath: copyTo + songFileName!)
-			
-		}
-	}
-	
-	func createDirectory(path: String){
-		try! FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: false, attributes: nil)
-	}
+//	func copyCurrentTrackToDir(song: SongObject, copyTo: String){
+//		let songFileName = song.path
+//		if songFileName != ""{
+//			let pathToTrack = tracksUrlString + songFileName!
+//			var isDir: ObjCBool = true
+//			if FileManager.default.fileExists(atPath: copyTo, isDirectory: &isDir){
+//				if !isDir.boolValue{
+//					createDirectory(path: copyTo)
+//				}
+//			}
+//			else{
+//				createDirectory(path: copyTo)
+//			}
+//
+//			let items = try! FileManager.default.contentsOfDirectory(atPath: copyTo)
+//			// Удаляем старый трек
+//			for item in items{
+//				try! FileManager.default.removeItem(atPath: copyTo + item)
+//			}
+//			// Копируем новый
+//			try! FileManager.default.copyItem(atPath: pathToTrack, toPath: copyTo + songFileName!)
+//
+//		}
+//	}
+//
+//	func createDirectory(path: String){
+//		try! FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: false, attributes: nil)
+//	}
 	
 	func playOuterTrack(url: URL, song: SongObject, seekTo: Float64){
-		if self.isPlaying{
-			self.player.pause()
-		}
+		self.pauseSong {}
 //		self.player = AVPlayer()
 		
 		playingSong = song
-		isPlaying = true
 		//self.player.createPlayerItemWith(url: NSURL(fileURLWithPath: tracksUrlString + "/" + String(songObject.path!)) as URL)
 		playAudioWith(trackURL: url)
+		
 		playerItem.seek(to: CMTimeMakeWithSeconds(seekTo, 1000000000))
 		try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"interruptedSongObject")
 		UserDefaults.standard.synchronize()
-		DispatchQueue.main.async {
-			self.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.currentTrackPathString)
+		DispatchQueue.global(qos: .utility).async{
+			CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.currentTrackPathString)
 			print("Текущий трек скопирован во временное хранилище")
 		}
 		
@@ -558,5 +555,6 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		//CoreDataManager.instance.u(trackId: song.trackID)
 		//		self.player.isPlaying = true
 		configurePlayingSong(song: song)
+		self.resumeSong {}
 	}
 }
