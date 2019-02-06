@@ -11,12 +11,12 @@ import UIKit
 import MediaPlayer
 import Alamofire
 import CloudKit
+import CallKit
+import CoreBluetooth
 
 
-
-class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
-	
-	
+@available(iOS 10.0, *)
+class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate{
 	
 	// MARK:  Outlets
 	
@@ -46,6 +46,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	@IBOutlet var numberOfFilesInDB: UILabel!
 	@IBOutlet var isNowPlaying: UILabel!
 	@IBOutlet var tableView: UITableView!
+	@IBOutlet weak var intrrpt_info: UILabel!
 	
 	@IBOutlet weak var playPauseBtn: UIButton!
 	@IBOutlet weak var nextButton: UIButton!
@@ -64,9 +65,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 	var isPlaying: Bool!
 	var visibleInfoView: Bool!
-    var isStartListening: Bool! = false
+    var isStartListening: Bool = false
+	var activeCall:Bool = false
+	var btHeadsetDetached: Bool = false
+//	var callObserver: CXCallObserver!
 	
-	var timer = Timer()
 	var timeObserverToken:AnyObject? = nil
 	
 	//let progressView = CircularView(frame: CGRect.zero)
@@ -79,17 +82,35 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	var reachability = NetworkReachabilityManager(host: "http://api.ownradio.ru/v5")
 	
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
+	let currentTrackPathUrl = FileManager.applicationSupportDir().appending("/currentTrackPath/")
+	
+	var alertClock: DispatchSourceTimer?
+	var timer: DispatchSourceTimer?
+	var bluetoothWaitTimer: DispatchSourceTimer?
+	
+	var interrupedByMalfunction = false
+	//Воспроизведение прервано пользователем
+	var interruptedManually = false
+	
+	let callObserver = CXCallObserver()
+	
 	
 	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
 		if segue.identifier == "alertClockSegue"{
 			if let nextViewController = segue.destination as? AlertClockViewController{
 				nextViewController.player = self.player
 				nextViewController.mainController = self
+				if alertClock != nil && UserDefaults.standard.bool(forKey: "budState"){
+					nextViewController.timer = alertClock
+				}
 			}
 		}
 		else if segue.identifier == "timerSegue"{
 			if let nextViewController = segue.destination as? TimerViewController{
 				nextViewController.player = self.player
+				if self.timer != nil && UserDefaults.standard.bool(forKey: "timerState"){
+					nextViewController.timer = timer
+				}
 			}
 		}
 	}
@@ -98,6 +119,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	//выполняется при загрузке окна
 	override func viewDidLoad() {
 		super.viewDidLoad()
+//		let items = try! FileManager.default.contentsOfDirectory(atPath: tracksUrlString)
+//		for item in items{
+//			if item == "10000000-0000-0000-0000-000000000001.mp3"{
+//				var a = 0
+//				a = 0
+//			}
+//		}
 		view.isUserInteractionEnabled = true
 		//включаем отображение навигационной панели
 		self.navigationController?.isNavigationBarHidden = false
@@ -160,44 +188,102 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 		
 		reachability?.startListening()
-		
-		//обрыв воспроизведения трека
-		NotificationCenter.default.addObserver(self, selector: #selector(crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
-		//трек доигран до конца
-		NotificationCenter.default.addObserver(self, selector: #selector(songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
-		//Приложение закрывается
-		NotificationCenter.default.addObserver(self, selector: #selector(self.appTerminate), name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
-		//обновление системной информации
-//		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
-		
-		if UserDefaults.standard.bool(forKey: "playingInterrupted"){
-			UserDefaults.standard.set(false, forKey: "playingInterrupted")
-			let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
-			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
-			self.playTrackByUrl(trackURL: NSURL(fileURLWithPath: tracksUrlString + "/" + String(songObject.path!)) as URL, song: songObject)
-			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
-			self.player.playerItem.seek(to: CMTimeMakeWithSeconds(Float64(playFromTime), 1000000000))
+		//Проверяем как вылетело приложение
+		if UserDefaults.standard.bool(forKey: "wasMalfunction") == false{
+			self.interrupedByMalfunction = false
+			UserDefaults.standard.set(true, forKey: "wasMalfunction")
 		}
 		else{
+			self.interrupedByMalfunction = true
+			UserDefaults.standard.set(true, forKey: "wasMalfunction")
+		}
+        UserDefaults.standard.synchronize()
+		checkPlayingInterrupt()
+		
+		
+		callObserver.setDelegate(self, queue: nil)
+	}
+	
+	func checkPlayingInterrupt(){
+		if UserDefaults.standard.bool(forKey: "trackPlayingNow"){
+			print("Воспроизведение было прервано, проигрывается прерваный трек")
+			
+			if UserDefaults.standard.bool(forKey: "playingInterrupted"){
+				UserDefaults.standard.set(false, forKey: "playingInterrupted")
+				print("Прервано выгрузкой или по таймеру")
+			}
+			else{
+				print("Прервано вылетом")
+			}
+			
+			let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
+			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+			let songFileName = String(songObject.path!)
+			var trackPath: URL
+			
+			let fileManager = FileManager.default
+			if fileManager.fileExists(atPath: self.tracksUrlString + songFileName!){
+				trackPath = NSURL(fileURLWithPath: self.tracksUrlString + songFileName!) as URL
+			}
+			else{
+				print("Прерваный трек отсутсвует в кеше, копируем его туда")
+				trackPath = copyTrackToCache(trackName: songFileName!)
+			}
+			
+			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
+			
+			self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
+		}
+		else if UserDefaults.standard.bool(forKey: "listenRunning"){ //Супер костыль
+			let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
+			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+			let songFileName = String(songObject.path!)
+			var trackPath: URL
+			
+			let fileManager = FileManager.default
+			if fileManager.fileExists(atPath: self.tracksUrlString + songFileName!){
+				trackPath = NSURL(fileURLWithPath: self.tracksUrlString + songFileName!) as URL
+			}
+			else{
+				print("Прерваный трек отсутсвует в кеше, копируем его туда")
+				trackPath = copyTrackToCache(trackName: songFileName!)
+			}
+			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
+			self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
+			self.player.pauseSong {
+				print("Song paused")
+			}
+		}
+		else{
+			UserDefaults.standard.set(false, forKey: "listenRunning")
 			UserDefaults.standard.set(false, forKey:"trackPlayingNow")
 			UserDefaults.standard.synchronize()
 			self.updateUI()
 		}
-	}
-	
-	func playTrackByUrl(trackURL: URL, song: SongObject){
-		
-		UserDefaults.standard.set(true, forKey:"trackPlayingNow")
-		UserDefaults.standard.synchronize()
-		
-		NotificationCenter.default.addObserver(self, selector: #selector(self.crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
+		//обрыв воспроизведения трека
+		NotificationCenter.default.addObserver(self, selector: #selector(crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
 		//трек доигран до конца
 		NotificationCenter.default.addObserver(self, selector: #selector(self.songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
 		//Приложение закрывается
 		NotificationCenter.default.addObserver(self, selector: #selector(self.appTerminate), name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
-		player.playOuterTrack(url: trackURL, song: song)
-		self.isStartListening = true
-		self.updateUI()
+		//обновление системной информации
+		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
+	}
+	
+	func playTrackByUrl(trackURL: URL, song: SongObject, seekTo: Float64){
+		if !activeCall{
+			UserDefaults.standard.set(true, forKey:"trackPlayingNow")
+			UserDefaults.standard.synchronize()
+//			NotificationCenter.default.addObserver(self, selector: #selector(self.crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
+//			//трек доигран до конца
+//			NotificationCenter.default.addObserver(self, selector: #selector(self.songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+//			//Приложение закрывается
+//			NotificationCenter.default.addObserver(self, selector: #selector(self.appTerminate), name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
+			
+			self.player.playOuterTrack(url: trackURL, song: song, seekTo: seekTo)
+			self.isStartListening = true
+			self.updateUI()
+		}
 	}
 	
 	func checkMemoryWarning() {
@@ -224,15 +310,21 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		} else {
 			print("requires connection to device")
 		}
-		NotificationCenter.default.addObserver(self, selector:  #selector(RadioViewController.audioRouteChangeListener(notification:)), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
+		NotificationCenter.default.addObserver(self, selector:  #selector(self.audioRouteChangeListener), name: NSNotification.Name.AVAudioSessionRouteChange, object: nil)
 	}
 	
 	override func viewDidAppear(_ animated: Bool) {
 		super.viewDidAppear(animated)
 		//Центр уведомлений не предоставляет API, позволяющее проверить был ли уже зарегистрирован наблюдатель, поэтому когда представление снова становится видимым удаляем наблюдателя и добавляем его заново
-		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
-		//обновление системной информации
-		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
+//		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
+//		//обновление системной информации
+//		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
+//
+//		NotificationCenter.default.addObserver(self, selector: #selector(self.crashNetwork(_:)), name: NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: self.player.playerItem)
+//		//трек доигран до конца
+//		NotificationCenter.default.addObserver(self, selector: #selector(self.songDidPlay), name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: nil)
+//		//Приложение закрывается
+//		NotificationCenter.default.addObserver(self, selector: #selector(self.appTerminate), name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
 		
 		
 		self.player = AudioPlayerManager.sharedInstance
@@ -258,9 +350,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		super.viewDidDisappear(animated)
 //		reachability?.stopListening()
 		
-		NotificationCenter.default.removeObserver(self, name:  NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: nil)
-		NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.player.playerItem)
-		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
+//		NotificationCenter.default.removeObserver(self, name:  NSNotification.Name.AVPlayerItemFailedToPlayToEndTime, object: nil)
+//		NotificationCenter.default.removeObserver(self, name: NSNotification.Name.AVPlayerItemDidPlayToEndTime, object: self.player.playerItem)
+//		NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
 		//NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
 	}
 	
@@ -274,6 +366,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				guard MPNowPlayingInfoCenter.default().nowPlayingInfo != nil else {
 					break
 				}
+				interruptedManually = true
 				changePlayBtnState()
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
 				MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 0
@@ -384,6 +477,21 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		self.infoLabel1.text = notification.description
 	}
 	
+	//Функция уведомления о закрытии приложения
+	func appTerminate(){
+		if UserDefaults.standard.bool(forKey: "trackPlayingNow"){
+			UserDefaults.standard.set(true, forKey: "playingInterrupted")
+			if self.player != nil{
+				UserDefaults.standard.set(self.player.playerItem.currentTime().seconds, forKey: "playingDuration")
+			}
+		}
+		UserDefaults.standard.set(false, forKey: "listenRunning")
+        UserDefaults.standard.set(false, forKey: "wasMalfunction")
+        UserDefaults.standard.synchronize()
+	}
+	
+
+	
 	func audioRouteChangeListener(notification:NSNotification) {
 		let audioRouteChangeReason = notification.userInfo![AVAudioSessionRouteChangeReasonKey] as! UInt
 		//		 AVAudioSessionPortHeadphones
@@ -396,35 +504,60 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				if description.portType == AVAudioSessionPortHeadphones {
 					print(description.portType)
 					print(self.player.isPlaying)
-				}else {
+					
+					if self.player != nil && !self.player.isPlaying && !self.interruptedManually && !self.activeCall{
+						self.player.isPlaying = true
+						self.player.player.play()
+						updateUI()
+					}
+				}
+	//				else if (description.portType == AVAudioSessionPortBluetoothLE || description.portType == AVAudioSessionPortBluetoothHFP || description.portType == AVAudioSessionPortBluetoothA2DP){
+	//					bluetoothWaitTimer?.cancel()
+	//					if !self.activeCall{
+	//
+	//						if self.player != nil && !self.player.isPlaying && !self.interruptedManually && !self.activeCall{
+	//							self.player.isPlaying = true
+	//							self.player.player.play()
+	//							updateUI()
+	//						}
+	//					}
+	//				}
+				else {
 					print(description.portType)
 				}
 			}
 		case AVAudioSessionRouteChangeReason.oldDeviceUnavailable.rawValue:
+//			btHeadsetDetached = true
 			print("headphone pulled out")
 			print(self.player.isPlaying)
 			self.player.isPlaying = false
 			print(self.player.isPlaying)
+			self.interruptedManually = false
 			updateUI()
 			
-		case AVAudioSessionRouteChangeReason.categoryChange.rawValue:
-			
-			for description in AVAudioSession.sharedInstance().currentRoute.outputs {
-				
-				switch description.portType {
-				case AVAudioSessionPortBluetoothA2DP:
-					if self.player.isPlaying == false {
-						self.player.pauseSong {
-						}
-					}
-				case AVAudioSessionPortBluetoothLE:
-					if self.player.isPlaying == false {
-						self.player.pauseSong {
-						}
-					}
-				default: break
-				}
-			}
+//		case AVAudioSessionRouteChangeReason.categoryChange.rawValue:
+//
+//			for description in AVAudioSession.sharedInstance().currentRoute.outputs {
+//
+//				switch description.portType {
+//				case AVAudioSessionPortBluetoothA2DP:
+//					if self.player.isPlaying == false {
+//						self.player.pauseSong{
+//						}
+//					}
+//				case AVAudioSessionPortBluetoothLE:
+//					if self.player.isPlaying == false {
+//						self.player.pauseSong {
+//						}
+//					}
+//				case AVAudioSessionPortBluetoothHFP:
+//					if self.player.isPlaying == false {
+//						self.player.pauseSong {
+//						}
+//					}
+//				default: break
+//				}
+//			}
 		default:
 			break
 		}
@@ -520,11 +653,16 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
                 self.progressView.setProgress(Float(CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!)), animated: false)
 					UserDefaults.standard.set(time.seconds.description, forKey:"lastTrackPosition")
 					UserDefaults.standard.set(self.player.playingSong.trackID as String, forKey:"lastTrack")
+					if Int(time.seconds) % 15 == 0{
+						UserDefaults.standard.set(self.player.playerItem.currentTime().seconds, forKey: "playingDuration")
+					}
 					UserDefaults.standard.synchronize()
 //				self.progressView.progress = (CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!))
                 }
 			}
 			} as AnyObject?
+		}
+	
 		
 		//обновление кнопки playPause
 		if self.player.isPlaying == false {
@@ -541,13 +679,16 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		// update table 
 		self.playedTracks = CoreDataManager.instance.getGroupedTracks()
 		self.tableView.reloadData()
-		
 		self.freeSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.freeDiskSpaceInBytes)) + " Gb"
 		self.folderSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.folderSize(folderPath: self.tracksUrlString))) + " Gb"
+		if interrupedByMalfunction{
+			self.intrrpt_info.text = "true"
+		}
+		else{
+			self.intrrpt_info.text = "false"
 		}
 	}
 	
-
 	
 	// MARK: UITableViewDataSource
 	func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -566,20 +707,21 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 		return cell
 	}
-	//Функция уведомления о закрытии приложения
-	func appTerminate(){
-		if UserDefaults.standard.bool(forKey: "trackPlayingNow"){
-			UserDefaults.standard.set(true, forKey: "playingInterrupted")
-			if self.player != nil{
-				if self.player.playerItem.currentTime().seconds - 30 > 0{
-					UserDefaults.standard.set(self.player.playerItem.currentTime().seconds - 30, forKey: "playingDuration")
-				}
-				else{
-					UserDefaults.standard.set(0, forKey: "playingDuration")
-				}
-			}
-		}
+
+	
+	func copyTrackToCache(trackName: String) -> URL{
+		let pathToTrack = currentTrackPathUrl + trackName
+		let pathToTrackInCache = tracksUrlString + trackName
+		
+		try! FileManager.default.copyItem(atPath: pathToTrack, toPath: pathToTrackInCache)
+		
+		return NSURL(fileURLWithPath: pathToTrackInCache) as URL
 	}
+	
+	func createPostNotificationSysInfo (message:String) {
+		NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":message])
+	}
+	
 	
 	@IBAction func oneTapAction(_ sender: Any) {
 		//Обновление состояния таймера по нажатию на экран
@@ -619,7 +761,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	//обработчик нажатий на кнопку play/pause
 	@IBAction func playBtnPressed() {
         isStartListening = true
-        
+		if player.isPlaying{
+			self.interruptedManually = true
+		}
+		else{
+			interruptedManually = false
+		}
+		
 		guard self.player.playerItem != nil else {
 			
 			self.player.isPlaying = true
@@ -633,7 +781,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		self.progressView.isHidden = false
 		changePlayBtnState()
 	}
-
+		
 	@IBAction func refreshPressed() {
 		updateUI()
 	}
@@ -644,4 +792,58 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	}
 
 
+}
+
+@available(iOS 10.0, *)
+extension RadioViewController: CXCallObserverDelegate{
+	func callObserver(_ callObserver: CXCallObserver, callChanged call: CXCall){
+		if call.isOutgoing == true && call.hasConnected == false{
+			if player.isPlaying{
+				self.interruptedManually = false
+			}
+			print("Звонок начался")
+			self.createPostNotificationSysInfo(message: "Call started")
+			self.activeCall = true
+			if self.player != nil{
+				player.pauseSong {
+					print("call start, song paused")
+					self.updateUI()
+				}
+			}
+		}
+		
+		else if call.isOutgoing == false && call.hasConnected == false && call.hasEnded == false{
+			
+			
+			if player.isPlaying{
+				self.interruptedManually = false
+			}
+			print("Звонок начался")
+			self.createPostNotificationSysInfo(message: "Call started")
+			self.activeCall = true
+			if self.player != nil{
+				player.pauseSong {
+					print("call start, song paused")
+					self.updateUI()
+				}
+			}
+		}
+		else if call.hasEnded == true{
+			
+			self.activeCall = false
+			print("Звонок завершен")
+			self.createPostNotificationSysInfo(message: "Call end")
+			if self.player != nil && !self.interruptedManually{
+				player.resumeSong {
+					print("call stop, song resumed")
+					self.updateUI()
+				}
+			}
+		}
+	}
+}
+extension RadioViewController: CBCentralManagerDelegate{
+	func centralManagerDidUpdateState(_ central: CBCentralManager) {
+		let centralManager = CBCentralManager(delegate: self, queue: nil)
+	}
 }

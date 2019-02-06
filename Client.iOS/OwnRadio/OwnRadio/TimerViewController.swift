@@ -10,6 +10,7 @@ import UIKit
 import Foundation
 import HGCircularSlider
 
+@available(iOS 10.0, *)
 class TimerViewController: UIViewController {
 
 	
@@ -63,6 +64,17 @@ class TimerViewController: UIViewController {
         // Do any additional setup after loading the view.
     }
 	
+	override func viewDidDisappear(_ animated: Bool) {
+		super.viewDidDisappear(true)
+		if let rootController = UIApplication.shared.keyWindow?.rootViewController {
+			let navigationController = rootController as! UINavigationController
+			
+			if let radioViewContr = navigationController.topViewController  as? RadioViewController {
+				radioViewContr.timer = self.timer
+			}
+		}
+		defaults.synchronize()
+	}
 
 	
 	//Получение осташегося времени работы таймера в виде интервала
@@ -136,6 +148,7 @@ class TimerViewController: UIViewController {
 			let seconds = Float(Int(slider.endPointValue)) * 60
 			defaults.set(true, forKey: "timerState")
 			defaults.set(Int(Date().timeIntervalSince1970), forKey:  "setTimerDate")
+			defaults.set(Int(Date().timeIntervalSince1970), forKey:  "updateTimerDate")
 			defaults.set(seconds, forKey:  "timerDurationSeconds")
 			startTimer(timeInterval: TimeInterval(seconds))
 			let time = secondsToString(seconds: TimeInterval(seconds))
@@ -151,11 +164,14 @@ class TimerViewController: UIViewController {
 		else{
 			setTimerBtn.setImage(UIImage(named: "grayTimer"), for: .normal)
 			defaults.set(false, forKey: "timerState")
+			self.timer?.cancel()
+			self.timer = nil
 //			DispatchQueue.global(qos: .background).async{
 //				self.backgroundWorker.cancel()
 //			}
 			setInfoLable.text = "Таймер остановлен"
 		}
+		defaults.synchronize()
 	}
 	
 	//Получение оставшегося времени работы таймера в виде hh:mm
@@ -222,17 +238,12 @@ class TimerViewController: UIViewController {
 				if UserDefaults.standard.bool(forKey: "trackPlayingNow"){
 					UserDefaults.standard.set(true, forKey: "playingInterrupted")
 					if self.player != nil{
-						if self.player.playerItem.currentTime().seconds - 30 > 0{
-							UserDefaults.standard.set(self.player.playerItem.currentTime().seconds - 30, forKey: "playingDuration")
-						}
-						else{
-							UserDefaults.standard.set(0, forKey: "playingDuration")
-						}
-						
+						UserDefaults.standard.set(self.player.playerItem.currentTime().seconds, forKey: "playingDuration")
 					}
 				}
 				UserDefaults.standard.set(false, forKey: "timerState")
 				UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
+				UserDefaults.standard.set(false, forKey: "wasMalfunction")
 				UserDefaults.standard.synchronize()
 				exit(0)
 			}

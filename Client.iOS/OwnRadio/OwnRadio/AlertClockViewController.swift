@@ -8,6 +8,7 @@
 
 import UIKit
 
+@available(iOS 10.0, *)
 class AlertClockViewController: UIViewController {
 
 	@IBOutlet weak var timePicker: UIDatePicker!
@@ -97,10 +98,18 @@ class AlertClockViewController: UIViewController {
 	override func viewWillDisappear(_ animated: Bool) {
 		userDefaults.set(timePicker.date, forKey: "alarmClockTime")
 		userDefaults.set(daysSelected, forKey: "selectedDaysArray")
+		if let rootController = UIApplication.shared.keyWindow?.rootViewController {
+			let navigationController = rootController as! UINavigationController
+			
+			if userDefaults.bool(forKey: "budState"){
+				if let radioViewContr = navigationController.topViewController  as? RadioViewController {
+					radioViewContr.alertClock = timer
+				}
+			}
+		}
 	}
 	@IBAction func weekDaySelect(sender: UIButton){
 		sender.isSelected = !sender.isSelected
-		
 		switch sender {
 		case mondayBTN:
 			if sender.isSelected{
@@ -154,8 +163,6 @@ class AlertClockViewController: UIViewController {
 		default:
 			break;
 		}
-		
-		
 	}
 	
 	func appendDayToSchedule(additionalDays: Int){
@@ -240,6 +247,9 @@ class AlertClockViewController: UIViewController {
 		else{
 			setBudButton.setImage(UIImage(named: "budGray"), for: .normal)
 			userDefaults.set(false, forKey: "budState")
+			budSchedule = [Date]()
+			userDefaults.set(budSchedule, forKey: "budSchedule")
+			userDefaults.synchronize()
 			stopTimer()
 		}
 		userDefaults.set(timePicker.date, forKey: "alarmClockTime")
@@ -293,11 +303,9 @@ class AlertClockViewController: UIViewController {
 			}
 			
 			if self.mainController != nil{
-				self.mainController.playTrackByUrl(trackURL: trackPath, song: songObject)
+				self.mainController.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: 0)
 			}
-
 		}
-		
 	}
 	
 	func copyTrackToCache(trackName: String) -> URL{

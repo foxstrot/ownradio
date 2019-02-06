@@ -277,7 +277,7 @@ class CoreDataManager {
 			fetchRequest.predicate = NSPredicate(format: "countPlay >= %d", 0)
 		}
 		fetchRequest.fetchLimit = 1
-		let  song = SongObject()
+		let song = SongObject()
 		do {
 			// выполняем запрос и проверяем кол-во результатов
 			let searchResults = try self.managedObjectContext.fetch(fetchRequest)
