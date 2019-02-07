@@ -17,7 +17,7 @@ import CoreBluetooth
 
 
 @available(iOS 10.0, *)
-class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate{
+class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, RemoteAudioControls{
 	
 	// MARK:  Outlets
 	
@@ -102,6 +102,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			if let nextViewController = segue.destination as? AlertClockViewController{
 				nextViewController.player = self.player
 				nextViewController.mainController = self
+				nextViewController.remoteAudioControls = self
 				if alertClock != nil && UserDefaults.standard.bool(forKey: "budState"){
 					nextViewController.timer = alertClock
 				}
@@ -110,9 +111,16 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		else if segue.identifier == "timerSegue"{
 			if let nextViewController = segue.destination as? TimerViewController{
 				nextViewController.player = self.player
+				nextViewController.remoteAudioControls = self
 				if self.timer != nil && UserDefaults.standard.bool(forKey: "timerState"){
 					nextViewController.timer = timer
+					
 				}
+			}
+		}
+		else if segue.identifier == "SettingsByButton" || segue.identifier == "SettingsBySwipe"{
+			if let nextViewController = segue.destination as? SettingsViewController{
+				nextViewController.remoteAudioControls = self
 			}
 		}
 	}
@@ -121,12 +129,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	//выполняется при загрузке окна
 	override func viewDidLoad() {
 		super.viewDidLoad()
-//		let items = try! FileManager.default.contentsOfDirectory(atPath: tracksUrlString)
+		let items = try! FileManager.default.contentsOfDirectory(atPath: tracksUrlString)
 //		for item in items{
-//			if item == "10000000-0000-0000-0000-000000000001.mp3"{
-//				var a = 0
-//				a = 0
-//			}
+//			print(item)
 //		}
 		view.isUserInteractionEnabled = true
 		//включаем отображение навигационной панели
@@ -224,14 +229,17 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			
 			let songFileName = String(songObject.path!)
 			var trackPath: URL
+			var isCorrect: Bool = false
 			
 			let fileManager = FileManager.default
 			if fileManager.fileExists(atPath: self.tracksUrlString + songFileName!){
+				isCorrect = true
 				trackPath = NSURL(fileURLWithPath: self.tracksUrlString + songFileName!) as URL
 			}
 			else{
 				print("Прерваный трек отсутсвует в кеше, копируем его туда")
-				trackPath = CopyManager.copyTrackToCache(trackPath: currentTrackPathUrl + songFileName!, trackName: songFileName!)
+				isCorrect = CopyManager.copyTrackToCache(trackPath: currentTrackPathUrl + songFileName!, trackName: songFileName!)
+				trackPath = NSURL(fileURLWithPath: tracksUrlString + songFileName!) as URL
 			}
 			
 			if !UserDefaults.standard.bool(forKey: "budState"){ //Если будильник не установлен
@@ -245,26 +253,32 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			}
 			
 			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
-			
-			self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
+			if isCorrect{
+				self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
+			}
 		}
 		else if UserDefaults.standard.bool(forKey: "listenRunning") && songObject.path != nil{ //Супер костыль
 			
 			let songFileName = String(songObject.path!)
 			var trackPath: URL
+			var isCorrect: Bool
 			
 			let fileManager = FileManager.default
 			if fileManager.fileExists(atPath: self.tracksUrlString + songFileName!){
 				trackPath = NSURL(fileURLWithPath: self.tracksUrlString + songFileName!) as URL
+				isCorrect = true
 			}
 			else{
 				print("Прерваный трек отсутсвует в кеше, копируем его туда")
-				trackPath = CopyManager.copyTrackToCache(trackPath: currentTrackPathUrl + songFileName!, trackName: songFileName!)
+				isCorrect = CopyManager.copyTrackToCache(trackPath: currentTrackPathUrl + songFileName!, trackName: songFileName!)
+				trackPath = NSURL(fileURLWithPath: tracksUrlString + songFileName!) as URL
 			}
 			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
-			self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
-			self.player.pauseSong {
-				print("Song paused")
+			if isCorrect{
+				self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
+				self.player.pauseSong {
+					print("Song paused")
+				}
 			}
 		}
 		else{
@@ -516,12 +530,12 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				
 				if description.portType == AVAudioSessionPortHeadphones {
 					print(description.portType)
-					print(self.player.isPlaying)
-					if self.player != nil && !self.player.isPlaying && !self.interruptedManually && !self.activeCall{
-						player.resumeSong {
-							self.updateUI()
-						}
-					}
+//					print(self.player.isPlaying)
+//					if self.player != nil && !self.player.isPlaying && !self.interruptedManually && !self.activeCall{
+//						player.resumeSong {
+//							self.updateUI()
+//						}
+//					}
 				}
 	//				else if (description.portType == AVAudioSessionPortBluetoothLE || description.portType == AVAudioSessionPortBluetoothHFP || description.portType == AVAudioSessionPortBluetoothA2DP){
 	//					bluetoothWaitTimer?.cancel()
@@ -845,5 +859,9 @@ extension RadioViewController: CXCallObserverDelegate{
 			}
 		}
 	}
+}
+
+protocol RemoteAudioControls {
+	func remoteControlReceived(with event: UIEvent?)
 }
 

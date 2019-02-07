@@ -25,14 +25,30 @@ class CopyManager{
 			else{
 				createDirectory(path: copyTo)
 			}
-			
-			let items = try! FileManager.default.contentsOfDirectory(atPath: copyTo)
-			// Удаляем старый трек
-			for item in items{
-				try! FileManager.default.removeItem(atPath: copyTo + item)
+			do{
+				let items = try FileManager.default.contentsOfDirectory(atPath: copyTo)
+				// Удаляем старый трек
+				for item in items{
+					if FileManager.default.fileExists(atPath: copyTo + item){
+						try FileManager.default.removeItem(atPath: copyTo + item)
+					}
+				}
+				// Копируем новый
+				if FileManager.default.fileExists(atPath: pathToTrack){
+					if !FileManager.default.fileExists(atPath: copyTo + songFileName!){
+						try FileManager.default.copyItem(atPath: pathToTrack, toPath: copyTo + songFileName!)
+					}
+					else{
+						print("Файл существует в целевой директории")
+					}
+				}
+				else{
+					print("Файл не существует в исходной директории")
+				}
 			}
-			// Копируем новый
-			try! FileManager.default.copyItem(atPath: pathToTrack, toPath: copyTo + songFileName!)
+			catch{
+				print("Трек не скопирован")
+			}
 			
 		}
 	}
@@ -41,9 +57,14 @@ class CopyManager{
 		try! FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: false, attributes: nil)
 	}
 	//Копирует трек из папки по пути trackPath в папку с кешем, возвращает полный путь к файлу в папке с кешем
-	static func copyTrackToCache(trackPath: String, trackName: String) -> URL{
+	static func copyTrackToCache(trackPath: String, trackName: String) -> Bool{
 		let pathToTrackInCache = tracksUrlString + trackName
-		try! FileManager.default.copyItem(atPath: trackPath, toPath: pathToTrackInCache)
-		return NSURL(fileURLWithPath: pathToTrackInCache) as URL
+		if FileManager.default.fileExists(atPath: pathToTrackInCache) && !FileManager.default.fileExists(atPath: trackPath){
+			try! FileManager.default.copyItem(atPath: trackPath, toPath: pathToTrackInCache)
+			return true
+		}
+		else{
+			return false
+		}
 	}
 }

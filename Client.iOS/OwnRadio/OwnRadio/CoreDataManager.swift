@@ -73,6 +73,12 @@ class CoreDataManager {
 		return managedObjectContext
 	}()
 	
+	private lazy var privateManagedObjectContext: NSManagedObjectContext = {
+		let moc = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
+		moc.parent = self.managedObjectContext
+		return moc
+	}()
+	
 	// End of data stack
 	//MARK: Support Functions
 	// возвращает количество записей в таблице
@@ -351,12 +357,14 @@ class CoreDataManager {
 	// функция сохранения контекста
 	func saveContext () {
 		if managedObjectContext.hasChanges {
-			do {
-				try managedObjectContext.save()
-			} catch {
-				let nserror = error as NSError
-				NSLog("Unresolved error \(nserror), \(nserror.userInfo)")
-				abort()
+			DispatchQueue.main.async{
+				do {
+					try self.managedObjectContext.save()
+				} catch {
+					let nserror = error as NSError
+					NSLog("Unresolved error \(nserror), \(nserror.userInfo)")
+					abort()
+				}
 			}
 		}
 	}

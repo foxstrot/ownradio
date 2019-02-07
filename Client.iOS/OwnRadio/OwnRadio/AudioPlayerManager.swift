@@ -301,12 +301,13 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 			self.playingSong.isListen = -1
 			self.addDateToHistoryTable(playingSong: self.playingSong)
 			if  self.playingSong.path != nil {
-				let path = FileManager.applicationSupportDir().appending("/").appending("Tracks").appending("/").appending(self.playingSong.path!)
+				//let path = FileManager.applicationSupportDir().appending("/").appending("Tracks").appending("/").appending(self.playingSong.path!)
+				let path = self.tracksUrlString.appending(self.playingSong.path!)
+				print(path)
 				if FileManager.default.fileExists(atPath: path) {
 					//удаляем пропущенный трек
 					do{
 						try FileManager.default.removeItem(atPath: path)
-						
 						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Пропущ. трек удален"])
 					}
 					catch {
@@ -436,6 +437,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		CoreDataManager.instance.setCountOfPlayForTrackBy(trackId: self.playingSong.trackID)
 		CoreDataManager.instance.setDateForTrackBy(trackId: self.playingSong.trackID)
 		CoreDataManager.instance.saveContext()
+		
+		
 		NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Старт \(self.playingSong.trackID!)"])
 		print("Проигрываем \(self.playingSong.trackID)")
 		let str = FileManager.applicationSupportDir().addingPercentEncoding(withAllowedCharacters:.urlHostAllowed)
@@ -448,7 +451,6 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 //		UserDefaults.standard.set(playingSong.path, forKey:"PlayingSongPath")
 		if !UserDefaults.standard.bool(forKey: "budState"){ //Если будильник не установлен
 			try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"PlayingSongObject")
-			UserDefaults.standard.synchronize()
 //			DispatchQueue.global(qos: .utility).async{
 //				CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.budTracksUrlString)
 //				print("Текущий трек скопирован в директорию будильника")
@@ -456,12 +458,22 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		}
 		
 		// Сохранение объекта для последующего возобновления проигрывания при отключении приложения
-		try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"interruptedSongObject")
-		UserDefaults.standard.synchronize()
-		DispatchQueue.global(qos: .utility).async{
-			CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.currentTrackPathString)
-			print("Текущий трек скопирован во временное хранилище")
+		do{
+			UserDefaults.standard.set(try PropertyListEncoder().encode(self.playingSong), forKey:"interruptedSongObject")
 		}
+		catch{
+			print("Объект не сохранен в ud")
+		}
+		
+		do{
+			DispatchQueue.global(qos: .utility).async{
+				CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.currentTrackPathString)
+				print("Текущий трек скопирован во временное хранилище")
+			}
+		}catch{
+			print("Трек не скопирован во временное хранилище")
+		}
+		
 	
 		guard let url = resUrl else {
 			return
@@ -474,6 +486,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		if complition != nil {
 			complition!()
 		}
+		UserDefaults.standard.synchronize()
 	}
 	
 	func nextTrack(complition: @escaping (() -> Void)) {
@@ -496,8 +509,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
         historyEntity.trackId = playingSong.trackID
 		historyEntity.isListen = playingSong.isListen!
 		historyEntity.recCreated = creationDateString
-		
 		CoreDataManager.instance.saveContext()
+		
 	}
 	
 	func fwdTrackToEnd(){
@@ -543,7 +556,14 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		playAudioWith(trackURL: url)
 		
 		playerItem.seek(to: CMTimeMakeWithSeconds(seekTo, 1000000000))
-		try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"interruptedSongObject")
+		
+		do{
+			try UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"interruptedSongObject")
+		}
+		catch{
+			print("Текущий трек не сохранен в ud")
+		}
+		
 		UserDefaults.standard.synchronize()
 		DispatchQueue.global(qos: .utility).async{
 			CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.currentTrackPathString)

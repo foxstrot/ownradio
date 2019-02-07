@@ -31,6 +31,8 @@ class SettingsViewController: UITableViewController {
 	var playedTracks: NSArray = CoreDataManager.instance.getGroupedTracks()
 	
     let tracksUrlString = FileManager.applicationSupportDir().appending("/Tracks/")
+	
+	var remoteAudioControls: RemoteAudioControls?
     
 	override func viewDidLoad() {
 		super.viewDidLoad()
@@ -94,6 +96,14 @@ class SettingsViewController: UITableViewController {
 	@IBAction func onlyWiFiSwitchValueChanged(_ sender: UISwitch) {
 		UserDefaults.standard.set(onlyWiFiSwitch.isOn, forKey: "isOnlyWiFi")
 		UserDefaults.standard.synchronize()
+	}
+	
+	override func remoteControlReceived(with event: UIEvent?) {
+		guard let remoteControls = remoteAudioControls else {
+			print("Remote controls not set")
+			return
+		}
+		remoteControls.remoteControlReceived(with: event)
 	}
 	
 	//Сохраняем настроки "занимать не более" и выводим актуальное значение при его изменении

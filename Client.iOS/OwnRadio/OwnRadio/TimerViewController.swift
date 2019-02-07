@@ -9,6 +9,7 @@
 import UIKit
 import Foundation
 import HGCircularSlider
+import MediaPlayer
 
 @available(iOS 10.0, *)
 class TimerViewController: UIViewController {
@@ -25,6 +26,9 @@ class TimerViewController: UIViewController {
 	var currentSliderValue = 0
 	var slider: CircularSlider = CircularSlider()
 	var timer: DispatchSourceTimer?
+	
+	var remoteAudioControls: RemoteAudioControls?
+	
 	
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -75,7 +79,35 @@ class TimerViewController: UIViewController {
 		}
 		defaults.synchronize()
 	}
-
+	
+	override func remoteControlReceived(with event: UIEvent?) {
+		guard let remoteControls = remoteAudioControls else {
+			print("Remote controls not set")
+			return
+		}
+		remoteControls.remoteControlReceived(with: event)
+	}
+	
+//	func remoteControlRegister(){
+//		UIApplication.shared.beginReceivingRemoteControlEvents()
+//		let commandCenter = MPRemoteCommandCenter.shared()
+//
+//		let handler: (String) -> ((MPRemoteCommandEvent) -> (MPRemoteCommandHandlerStatus)) = { (name) in
+//				return {(event) -> MPRemoteCommandHandlerStatus in dump("\(name) \(event.timestamp) \(event.command)")
+//					return .success
+//				}
+//			}
+//		commandCenter.nextTrackCommand.isEnabled = true
+//		commandCenter.nextTrackCommand.addTarget(handler: handler("skipSong"))
+//		
+//		commandCenter.playCommand.isEnabled = true
+//		commandCenter.playCommand.addTarget(handler: handler("resumeSong"))
+//
+//		commandCenter.pauseCommand.isEnabled = true
+//		commandCenter.pauseCommand.addTarget(handler: handler("pauseSong"))
+//
+//		NotificationCenter.default.addObserver(self, selector: #selector(AudioPlayerManager.sharedInstance.onAudioSessionEvent(_:)), name: Notification.Name.AVAudioSessionInterruption, object: AVAudioSession.sharedInstance())
+//	}
 	
 	//Получение осташегося времени работы таймера в виде интервала
 	func getRemainingTimeInterval() ->Float{

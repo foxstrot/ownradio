@@ -33,6 +33,8 @@ class AlertClockViewController: UIViewController {
 	var budSchedule = [Date]()
 	var timer: DispatchSourceTimer?
 	
+	var remoteAudioControls: RemoteAudioControls?
+	
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
 	let budTracksUrlString = FileManager.applicationSupportDir().appending("/AlarmTracks/")
 	
@@ -108,6 +110,15 @@ class AlertClockViewController: UIViewController {
 			}
 		}
 	}
+	
+	override func remoteControlReceived(with event: UIEvent?) {
+		guard let remoteControls = remoteAudioControls else {
+			print("Remote controls not set")
+			return
+		}
+		remoteControls.remoteControlReceived(with: event)
+	}
+	
 	@IBAction func weekDaySelect(sender: UIButton){
 		sender.isSelected = !sender.isSelected
 		switch sender {
@@ -300,16 +311,19 @@ class AlertClockViewController: UIViewController {
 //			var songFilePath = self.budTracksUrlString + songFileName!
 //			let trackPath = NSURL(fileURLWithPath: songFilePath) as URL
 			var trackPath: URL
+			var isCorrect: Bool = false
 			
 			let fileManager = FileManager.default
 			if fileManager.fileExists(atPath: self.tracksUrlString + songFileName!){
 				trackPath = NSURL(fileURLWithPath: self.tracksUrlString + songFileName!) as URL
+				isCorrect = true
 			}
 			else{
-				trackPath = CopyManager.copyTrackToCache(trackPath: budTracksUrlString + songFileName!, trackName: songFileName!)
+				isCorrect = CopyManager.copyTrackToCache(trackPath: budTracksUrlString + songFileName!, trackName: songFileName!)
+				trackPath = NSURL(fileURLWithPath: self.tracksUrlString + songFileName!) as URL
 			}
 			
-			if self.mainController != nil{
+			if self.mainController != nil && isCorrect{
 				self.mainController.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: 0)
 			}
 		}

@@ -185,6 +185,7 @@ class Downloader: NSObject {
 						
 						CoreDataManager.instance.saveContext()
 						
+						
 						self.createPostNotificationSysInfo(message: "Трек (\(self.requestCount+1)) загружен \(trackEntity.recId ?? "")")
 						if self.requestCount < self.maxRequest {
 							if self.completionHandler != nil {
@@ -225,28 +226,35 @@ class Downloader: NSObject {
 		self.createPostNotificationSysInfo(message: "Удаляем \(song!.trackID.description)")
 		print("Удаляем \(song!.trackID.description)")
 		
-		if FileManager.default.fileExists(atPath: path) {
-			do{
-				// удаляем обьект по пути
-				try FileManager.default.removeItem(atPath: path)
-				self.createPostNotificationSysInfo(message: "Файл успешно удален")
-				print("Файл успешно удален")
-			}
-			catch {
-				self.createPostNotificationSysInfo(message: "Ошибка удаления трека: \(error)")
-				print("Ошибка удаления трека: \(error)")
-			}
-		} else {
-			self.createPostNotificationSysInfo(message: "Трек уже удалён с устройства")
-			print("Трек уже удалён с устройства")
+		let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
+		let currentSongObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
+		if UserDefaults.standard.bool(forKey: "trackPlayingNow") && (song?.isEqual(currentSongObject))!{
+			print("Не удаляем сейчас играющий трек")
 		}
+		else{
+			if FileManager.default.fileExists(atPath: path) {
+				do{
+					// удаляем обьект по пути
+					try FileManager.default.removeItem(atPath: path)
+					self.createPostNotificationSysInfo(message: "Файл успешно удален")
+					print("Файл успешно удален")
+				}
+				catch {
+					self.createPostNotificationSysInfo(message: "Ошибка удаления трека: \(error)")
+					print("Ошибка удаления трека: \(error)")
+				}
+			} else {
+				self.createPostNotificationSysInfo(message: "Трек уже удалён с устройства")
+				print("Трек уже удалён с устройства")
+			}
 			// удаляем трек с базы
 			//			CoreDataManager.instance.managedObjectContext.performAndWait {
 			CoreDataManager.instance.deleteTrackFor(trackID: (song?.trackID)!)
 			CoreDataManager.instance.saveContext()
 			//			}
 			
-//		}
+			//		}
+		}
 	}
 	
 	func fillCache () {

@@ -534,7 +534,7 @@
                         <barButtonItem key="leftBarButtonItem" image="humburgerBtn" id="KUI-pP-e7C">
                             <color key="tintColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
-                                <segue destination="d65-A4-a0S" kind="show" id="20l-do-XoF"/>
+                                <segue destination="d65-A4-a0S" kind="show" identifier="SettingsByButton" id="20l-do-XoF"/>
                             </connections>
                         </barButtonItem>
                         <barButtonItem key="rightBarButtonItem" style="plain" id="7Vn-kS-JzR">
@@ -587,7 +587,7 @@
                 </tapGestureRecognizer>
                 <swipeGestureRecognizer direction="right" id="1ac-vt-IJJ">
                     <connections>
-                        <segue destination="d65-A4-a0S" kind="show" id="pLa-VH-WHm"/>
+                        <segue destination="d65-A4-a0S" kind="show" identifier="SettingsBySwipe" id="pLa-VH-WHm"/>
                     </connections>
                 </swipeGestureRecognizer>
                 <tapGestureRecognizer numberOfTapsRequired="3" id="PT9-wb-C5T">
