@@ -132,9 +132,9 @@ namespace ownTrackDownloader
             string path;
 
             path = GlobalSettings.mediaDirectory + track.Deviceid;
-            full_path = GlobalSettings.mediaDirectory + track.Deviceid + "\\" + track.Recid + track.Recname + track.Artist + ".mp3"; //test
+          //  full_path = GlobalSettings.mediaDirectory + track.Deviceid + "\\" + track.Recid + track.Recname + track.Artist + ".mp3"; //test
                                                                                                                                             
-            // full_path = GlobalSettings.mediaDirectory + track.Deviceid + "\\" + track.Recid + ".mp3"; //prod
+             full_path = GlobalSettings.mediaDirectory + track.Deviceid + "\\" + track.Recid + ".mp3"; //prod
 
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
             
@@ -224,7 +224,7 @@ namespace ownTrackDownloader
             builder.AddJsonFile("appsettings.json");
             // создаем конфигурацию
             var config = builder.Build();
-            // получаем строку подключения
+            // получаем строку подключения, ид устройства по умочанию, путь для хранения трэков на диске
             connectionString = config.GetConnectionString("DefaultConnection");
             defaultDeviceId = config.GetSection("DeviceId")["DefaultDeviceId"];
             mediaDirectory = config.GetSection("MediaDirectory")["Directory"];
