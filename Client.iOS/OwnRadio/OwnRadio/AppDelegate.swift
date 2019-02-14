@@ -54,6 +54,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate{
 		userDefaults.register(defaults: ["playingInterrupted" : false])
 		userDefaults.register(defaults: ["wasMalfunction": false])
 		userDefaults.register(defaults: ["listenRunning": false])
+		userDefaults.register(defaults: ["isSubscribed" : false])
 		// создаем папку Tracks если ее нет
 		var applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
 		let tracksPath = applicationSupportPath.appendingPathComponent("Tracks")
@@ -171,6 +172,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate{
 		UserDefaults.standard.set(false, forKey: "listenRunning")
 		UserDefaults.standard.synchronize()
 		//UserDefaults.standard.set(false, forKey: "playingInterruptedByTimer")
+		CoreDataManager.instance.setLogRecord(eventDescription: "Приложение выгружено", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 	}
 
 }

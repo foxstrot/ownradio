@@ -8,8 +8,11 @@
 
 import UIKit
 import Foundation
+import StoreKit
 
-class SettingsViewController: UITableViewController {
+
+class SettingsViewController: UITableViewController, SKProductsRequestDelegate, SKPaymentTransactionObserver{
+	
 	
 	@IBOutlet weak var maxMemoryLbl: UILabel!
 	@IBOutlet weak var stepper: UIStepper!
@@ -26,18 +29,27 @@ class SettingsViewController: UITableViewController {
 	@IBOutlet weak var delAllTracksCell: UITableViewCell!
 	@IBOutlet weak var countPlayingTracksTable: UILabel!
     @IBOutlet weak var countTracksLbl: UILabel!
-    
+	@IBOutlet weak var buySubscribeBtn: UIButton!
+	
 	//получаем таблицу с количеством треков сгруппированных по количестсву их прослушиваний
 	var playedTracks: NSArray = CoreDataManager.instance.getGroupedTracks()
 	
     let tracksUrlString = FileManager.applicationSupportDir().appending("/Tracks/")
 	
 	var remoteAudioControls: RemoteAudioControls?
-    
+	
+	var productsRequest = SKProductsRequest()
+	let subId = "test.subscribtion"
+	var productsArray = [SKProduct]()
+	var productID = ""
+	
+	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		let userDefaults = UserDefaults.standard
 		
+		fetchAvailableProducts()
+		
+		let userDefaults = UserDefaults.standard
 
 		onlyWiFiSwitch.isOn = (userDefaults.object(forKey: "isOnlyWiFi") as? Bool)!
 		
@@ -91,7 +103,14 @@ class SettingsViewController: UITableViewController {
 		
 		countPlayingTracksTable.numberOfLines = playedTracks.count
 		countPlayingTracksTable.text = str as String
+		
+		CoreDataManager.instance.setLogRecord(eventDescription: "Переход в настройки", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
+		
 	}
+	
+	
+	
 	
 	@IBAction func onlyWiFiSwitchValueChanged(_ sender: UISwitch) {
 		UserDefaults.standard.set(onlyWiFiSwitch.isOn, forKey: "isOnlyWiFi")
@@ -123,9 +142,20 @@ class SettingsViewController: UITableViewController {
 			return
 		}
 		
-		DispatchQueue.global(qos: .background).async {
+		DispatchQueue.global(qos: .utility).async {
 			Downloader.sharedInstance.fillCache()
 		}
+	}
+	
+	@IBAction func btnBuySubClick(_ sender: Any) {
+		purchaseSubscribe()
+	}
+	
+	func fetchAvailableProducts(){
+		let productsIdentifiers = NSSet(object: subId)
+		productsRequest = SKProductsRequest(productIdentifiers: productsIdentifiers as! Set<String>)
+		productsRequest.delegate = self
+		productsRequest.start()
 	}
 	
 	func tapDelAllTracks(sender: UITapGestureRecognizer) {
@@ -146,6 +176,8 @@ class SettingsViewController: UITableViewController {
 							
 						} catch  {
 							print("Ошибка при удалении файла  - \(error)")
+							CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при удалении файла", isError: true, errorMessage: error.localizedDescription)
+							CoreDataManager.instance.saveContext()
 						}
 					}
 				}
@@ -168,6 +200,62 @@ class SettingsViewController: UITableViewController {
 		
 	}
 	
+	func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
+		for transaction: AnyObject in transactions{
+			if let trans = transaction as? SKPaymentTransaction{
+				switch trans.transactionState{
+				case .purchased:
+					SKPaymentQueue.default().finishTransaction(transaction as! SKPaymentTransaction)
+					
+					if productID == subId{
+						//Сохранить инфу о том, что подписка куплена
+					}
+					break
+				case .failed:
+					SKPaymentQueue.default().finishTransaction(transaction as! SKPaymentTransaction)
+					print("Transaction failed")
+					break
+					
+				case .restored:
+					SKPaymentQueue.default().finishTransaction(transaction as! SKPaymentTransaction)
+					break
+				case .purchasing:
+					SKPaymentQueue.default().finishTransaction(transaction as! SKPaymentTransaction)
+				case .deferred:
+					SKPaymentQueue.default().finishTransaction(transaction as! SKPaymentTransaction)
+				}
+			}
+		}
+	}
+	
+	func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
+		if response.products.count > 0{
+			productsArray = response.products
+		}
+	}
+	
+	func canPurchase() -> Bool {return SKPaymentQueue.canMakePayments() }
+	
+	func purchaseSubscribe(){
+		if productsArray.count > 0 {
+			if self.canPurchase(){
+				let payment = SKPayment(product: productsArray[0])
+				SKPaymentQueue.default().add(self)
+				SKPaymentQueue.default().add(payment)
+				
+				productID = productsArray[0].productIdentifier
+				
+			}
+			else{
+				print("Purchases disabled")
+			}
+		}
+		else{
+			print("Products not fetched")
+		}
+	}
+	
+	
 	@IBAction func delListenTracksBtn(_ sender: UIButton) {
 		let dellListenTracksAlert = UIAlertController(title: "Удаление прослушанных треков", message: "Вы хотите удалить прослушанные треки из кэша?", preferredStyle: UIAlertControllerStyle.alert)
 		
@@ -187,6 +275,8 @@ class SettingsViewController: UITableViewController {
 					}
 					catch {
 						print("Ошибка при удалении файла - \(error)")
+						CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при удалении прослушаннх треков", isError: true, errorMessage: error.localizedDescription)
+						CoreDataManager.instance.saveContext()
 					}
 				}
 				// удаляем трек с базы

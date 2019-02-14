@@ -137,6 +137,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 				}
 			case .failed:
 				Downloader.sharedInstance.createPostNotificationSysInfo(message: "Player Item was fail")
+				CoreDataManager.instance.setLogRecord(eventDescription: "Player item failed", isError: true, errorMessage: playerItem.error.debugDescription)
+				CoreDataManager.instance.saveContext()
 				print(playerItem.error.debugDescription)
 				self.skipSong{
 					DispatchQueue.main.async {
@@ -285,12 +287,16 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		} else {
 			self.nextTrack(complition: complition)
 		}
+		CoreDataManager.instance.setLogRecord(eventDescription: "Трек продолжен", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 	}
 	
 	//пауза
 	func pauseSong(complition: (() -> Void)) {
 		isPlaying = false
 		self.player.pause()
+		CoreDataManager.instance.setLogRecord(eventDescription: "Трек на паузе", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 		complition()
 	}
 	
@@ -344,6 +350,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable{
 			CoreDataManager.instance.sentHistory()
 		}
+
 	}
 	
 	func createPlayerItemWith(url:URL) {
@@ -352,6 +359,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		} else {
 			playerItem = AVPlayerItem(url: url)
 		}
+		CoreDataManager.instance.setLogRecord(eventDescription: "PlayerItem создан", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 	}
 	
 	// selection way to playing (Online or Cache)
@@ -416,10 +425,10 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	
 	// проигрываем трек из кеша
 	func playFromCache(complition: (() -> Void)?) {
-		
-//		if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable{
-//			CoreDataManager.instance.sentHistory()
-//		}
+
+		//		if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable{
+		//			CoreDataManager.instance.sentHistory()
+		//		}
 		//получаем из БД трек для проигрывания
 		self.playingSong = CoreDataManager.instance.getTrackToPlaing()
 		guard playingSong.trackID != nil else {
@@ -448,13 +457,13 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		playingTrackUrlString = playingTrackUrlString?.replacingOccurrences(of: "%20", with: " ")
 		
 		//сохранение пути и объекта трека в userDefaults для использования с будильником
-//		UserDefaults.standard.set(playingSong.path, forKey:"PlayingSongPath")
+		//		UserDefaults.standard.set(playingSong.path, forKey:"PlayingSongPath")
 		if !UserDefaults.standard.bool(forKey: "budState"){ //Если будильник не установлен
 			try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"PlayingSongObject")
-//			DispatchQueue.global(qos: .utility).async{
-//				CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.budTracksUrlString)
-//				print("Текущий трек скопирован в директорию будильника")
-//			}
+			//			DispatchQueue.global(qos: .utility).async{
+			//				CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.budTracksUrlString)
+			//				print("Текущий трек скопирован в директорию будильника")
+			//			}
 		}
 		
 		// Сохранение объекта для последующего возобновления проигрывания при отключении приложения
@@ -463,6 +472,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		}
 		catch{
 			print("Объект не сохранен в ud")
+			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при сохранении текущего объекта трека в UserDefaults", isError: true, errorMessage: error.localizedDescription)
+			CoreDataManager.instance.saveContext()
 		}
 		
 		do{
@@ -472,9 +483,10 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 			}
 		}catch{
 			print("Трек не скопирован во временное хранилище")
+			
 		}
 		
-	
+		
 		guard let url = resUrl else {
 			return
 		}
@@ -509,6 +521,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
         historyEntity.trackId = playingSong.trackID
 		historyEntity.isListen = playingSong.isListen!
 		historyEntity.recCreated = creationDateString
+		CoreDataManager.instance.setLogRecord(eventDescription: "История прослушивания сохранена", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 		CoreDataManager.instance.saveContext()
 		
 	}
@@ -516,6 +530,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	func fwdTrackToEnd(){
 		isSkipped = true
 		player.seek(to: (player.currentItem?.duration)!-CMTimeMake(3, 1))
+		CoreDataManager.instance.setLogRecord(eventDescription: "Трек перемотан в конец", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 	}
 	
 //	func copyCurrentTrackToDir(song: SongObject, copyTo: String){

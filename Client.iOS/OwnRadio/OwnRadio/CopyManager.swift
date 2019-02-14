@@ -14,6 +14,8 @@ class CopyManager{
 	
 	static public func copyCurrentTrackToDir(song: SongObject, copyTo: String){
 		let songFileName = song.path
+		CoreDataManager.instance.setLogRecord(eventDescription: "Трек \(song.trackID.description) копируется во временную директорию", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 		if songFileName != ""{
 			let pathToTrack = tracksUrlString + songFileName!
 			var isDir: ObjCBool = true
@@ -40,13 +42,19 @@ class CopyManager{
 					}
 					else{
 						print("Файл существует в целевой директории")
+						CoreDataManager.instance.setLogRecord(eventDescription: "Копируемый файл существует во временной директории", isError: false, errorMessage: "")
+						CoreDataManager.instance.saveContext()
 					}
 				}
 				else{
 					print("Файл не существует в исходной директории")
+					CoreDataManager.instance.setLogRecord(eventDescription: "Файл для копирования во временную директорию отсутвует в исходной директории, id = \(song.trackID.description)", isError: false, errorMessage: "")
+					CoreDataManager.instance.saveContext()
 				}
 			}
 			catch{
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при копировании трека во временную директорию:", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
 				print("Трек не скопирован")
 			}
 			

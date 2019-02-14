@@ -57,6 +57,8 @@ class DiskStatus {
 				let space = (systemAttributes[FileAttributeKey.systemSize] as? NSNumber)?.uint64Value
 				return space!
 			} catch {
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении общего количества памяти", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
 				return 0
 			}
 		}
@@ -78,6 +80,8 @@ class DiskStatus {
 				fileSize += UInt64(fileDictionary.fileSize())
 			} catch {
 				print(error.localizedDescription)
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении количества памяти занятого треками(DiskStatus.FolderSize)", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
 			}
 		}
 		
@@ -123,6 +127,8 @@ class DiskStatus {
                     fileSize += UInt64(fileDictionary.fileSize())
                 } catch {
                     print(error.localizedDescription)
+					CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении количества памяти занятого треками", isError: true, errorMessage: error.localizedDescription)
+					CoreDataManager.instance.saveContext()
                 }
             } else {
                 print("Ошибка: файл не существует")

@@ -129,10 +129,10 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	//выполняется при загрузке окна
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		let items = try! FileManager.default.contentsOfDirectory(atPath: tracksUrlString)
-//		for item in items{
-//			print(item)
-//		}
+		print(Thread.current.description)
+		DispatchQueue.global(qos: .background).sync {
+			print(Thread.current.description)
+		}
 		view.isUserInteractionEnabled = true
 		//включаем отображение навигационной панели
 		self.navigationController?.isNavigationBarHidden = false
@@ -209,6 +209,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		
 		callObserver.setDelegate(self, queue: nil)
+		CoreDataManager.instance.setLogRecord(eventDescription: "Приложение запущено", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
+		
 	}
 	
 	func checkPlayingInterrupt(){
@@ -276,6 +279,10 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
 			if isCorrect{
 				self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
+				CoreDataManager.instance.setLogRecord(eventDescription: "Восстановлено после вылета uuid трека = \(songObject.trackID.description)", isError: false, errorMessage: "")
+				CoreDataManager.instance.saveContext()
+			}
+			if player.playerItem != nil{
 				self.player.pauseSong {
 					print("Song paused")
 				}
@@ -515,6 +522,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		UserDefaults.standard.set(false, forKey: "listenRunning")
         UserDefaults.standard.set(false, forKey: "wasMalfunction")
         UserDefaults.standard.synchronize()
+		
+		CoreDataManager.instance.setLogRecord(eventDescription: "Приложение выгружено", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 	}
 	
 
@@ -753,6 +763,10 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		if self.infoView.isHidden == true {
 			self.infoView.isHidden = false
 			self.visibleInfoView = false
+			let items = try! FileManager.default.contentsOfDirectory(atPath: tracksUrlString)
+			for item in items{
+				print("Track:" + item)
+			}
 		}else {
 			self.infoView.isHidden = true
 			self.visibleInfoView = true
@@ -828,6 +842,8 @@ extension RadioViewController: CXCallObserverDelegate{
 					self.updateUI()
 				}
 			}
+			CoreDataManager.instance.setLogRecord(eventDescription: "Входящий звонок", isError: false, errorMessage: "")
+			CoreDataManager.instance.saveContext()
 		}
 		
 		else if call.isOutgoing == false && call.hasConnected == false && call.hasEnded == false{
@@ -845,9 +861,10 @@ extension RadioViewController: CXCallObserverDelegate{
 					self.updateUI()
 				}
 			}
+			CoreDataManager.instance.setLogRecord(eventDescription: "Входящий звонок", isError: false, errorMessage: "")
+			CoreDataManager.instance.saveContext()
 		}
 		else if call.hasEnded == true{
-			
 			self.activeCall = false
 			print("Звонок завершен")
 			self.createPostNotificationSysInfo(message: "Call end")
@@ -857,6 +874,8 @@ extension RadioViewController: CXCallObserverDelegate{
 					self.updateUI()
 				}
 			}
+			CoreDataManager.instance.setLogRecord(eventDescription: "Звонок завершен", isError: false, errorMessage: "")
+			CoreDataManager.instance.saveContext()
 		}
 	}
 }
