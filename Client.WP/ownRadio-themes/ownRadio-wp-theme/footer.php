@@ -1,31 +1,52 @@
 <?php
 /**
  * The template for displaying the footer
+ *
+ * Contains the closing of the #content div and all content after.
+ *
+ * @link https://developer.wordpress.org/themes/basics/template-files/#template-partials
+ *
+ * @package Creativeily
  */
+
 ?>
 
-<footer class="page-footer">
-    <div class="page-footer__left-part">
-        <a href="https://itunes.apple.com/app/ownradio/id1179868370?mt=8" class="btn appstore"></a>
-        <a href="https://play.google.com/store/apps/details?id=ru.netvoxlab.ownradio" class="btn playmarket"></a>
-    </div>
-    <div class="page-footer__right-part">
-        <img src="<?php echo get_stylesheet_directory_uri(); ?>/images/pic.png" width="186" height="254" alt="phones">
-    </div>
-</footer>
+</div><!-- #content -->
 
+<footer id="colophon" class="site-footer" role="contentinfo">
+	<div class="footer-wrapmain">
+			<div class="footer-column-wrapper">
 
+			<?php if ( is_active_sidebar( 'footerwidget-1' ) ) : ?>
+				<div class="footer-column-three footer-column-left">
+					<?php dynamic_sidebar( 'footerwidget-1' ); ?>
+				</div>
+			<?php endif; ?>
 
+			<?php if ( is_active_sidebar( 'footerwidget-2' ) ) : ?>
+			<div class="footer-column-three footer-column-middle">
+				<?php dynamic_sidebar( 'footerwidget-2' ); ?>
+			</div>
+		<?php endif; ?>
 
+		<?php if ( is_active_sidebar( 'footerwidget-3' ) ) : ?>
+		<div class="footer-column-three footer-column-right">
+			<?php dynamic_sidebar( 'footerwidget-3' ); ?>				
+		</div>
+	<?php endif; ?>
+	</div>
 
-<div id="vk_comments"></div>
-<script type="text/javascript">
-    VK.Widgets.Comments("vk_comments", {limit: 10, attach: "*",pageUrl: "https://vk.com/ownradio"});
-</script>
-
-
-
-</div><!-- container end-->
+		<div class="site-info">
+			&copy;<?php echo date('Y'); ?> <?php bloginfo( 'name' ); ?>
+			<!-- Delete below lines to remove copyright from footer -->
+			<span class="footer-info-right">
+				<?php echo __(' | WordPress Theme by', 'creativeily') ?> <a href="<?php echo esc_url('https://superbthemes.com/', 'creativeily'); ?>"><?php echo __(' Superb WordPress Themes', 'creativeily') ?></a>
+			</span>
+			<!-- Delete above lines to remove copyright from footer -->
+</div>
+</footer><!-- #colophon -->
+</div><!-- .site-content-contain -->
+</div><!-- #page -->
 <?php wp_footer(); ?>
 
 </body>

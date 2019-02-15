@@ -117,6 +117,107 @@
   overflow: hidden;
 }
 
+.ownRadioPlayer-new-track {
+  width: 100%;
+  padding-top: 7px;
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+#radioPause {
+  display: none;
+}
+
+.track-det {
+  width: 100%;
+  text-align: center;
+  color: #999;
+}
+
+#myBar {
+  background-color: #03A9F4;
+  width: 0px;
+  height: 100%;
+}
+
+#radioProgress {
+  transition: 0.5;
+}
+
+#radioProgress:hover {
+  height: 5px;
+}
+
+.hidden {
+  display: none;
+}
+
+#ownRadio-player {
+  text-shadow: none;
+}
+
+.extended-class {
+  display: flex;
+  font-size: 16px;
+}
+
+.left-side  {
+ width: 50%;
+}
+
+.right-side  {
+ width: 50%;
+}
+
+@media only screen and (max-width: 728px) {
+
+
+  #ownRadio-player {
+    width: auto;
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  .right-side {
+    width: 100%;
+  }
+
+  .media {
+    position: relative;
+  }
+}
+
+.media {
+  border-top: 1px solid white;
+    width: 87%;
+    padding-top: 12px;
+}
+
+#radioNext:active {
+  transform: scale(0.9);
+}
+
+.image-block {
+  width: 300px;
+  height: 300px;
+  cursor: pointer;
+}
+
+.time-block {
+  display: inline-flex;
+  flex-direction: row;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.player-block {
+  background-color: white;
+}
+
 .ownRadioPlayer-name {
   font-size: 14px;
   line-height: 1.2em;
