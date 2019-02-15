@@ -200,11 +200,11 @@ public class TrackToCache {
 			Double percentageOfSize = Double.valueOf(prefManager.getPrefItemInt("key_number", 0)) / 10;
 			keyMaxMemorySize = (long) (percentageOfSize * (double)availableSpace);
 		}else{
-			//если нет подписки - ограничиваем размер кэша 1 гигабайтом
-			keyMaxMemorySize = (long) (1 * bytesInGB);
-		}
+            //если нет подписки - ограничиваем размер кэша 1 гигабайтом
+            keyMaxMemorySize = (long) (1 * bytesInGB);
+        }
 
-		keyMaxMemorySize = (long) (1 * bytesInGB);
+//		keyMaxMemorySize = (long) (1 * bytesInGB);
 
 		if(keyMaxMemorySize == 0)
 			keyMaxMemorySize = Long.MAX_VALUE;

@@ -9,10 +9,16 @@
 import UIKit
 import Fabric
 import Crashlytics
+import CoreBluetooth
 
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate{
+
+	
+	
+	
+	
 	
 	var window: UIWindow?
 	//Задаём ориентацию экрана по умолчанию
@@ -21,7 +27,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	//с этой функции начинается загрузка приложения
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 		// Override point for customization after application launch.
-		
 		let userDefaults = UserDefaults.standard
 		//для получения отчетов об ошибках на фабрик
 		Fabric.with([Crashlytics.self, Answers.self])
@@ -40,14 +45,36 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			print("Приложение запущено впервые")
 		}
 		//Регистрируем настройки по умолчанию (не меняя имеющиеся значения, если они уже есть)
-		userDefaults.register(defaults: ["maxMemorySize" : 1])
+		userDefaults.register(defaults: ["maxMemorySize" : 10])
 		userDefaults.register(defaults: ["isOnlyWiFi" : false])
-
+		userDefaults.register(defaults: ["PlayingSongInfo" : ""])
+		try? userDefaults.register(defaults: ["PlayingSongObject": PropertyListEncoder().encode(SongObject())])
+		try? userDefaults.register(defaults: ["interruptedSongObject": PropertyListEncoder().encode(SongObject())])
+		userDefaults.register(defaults: ["trackPlayingNow" : false])
+		userDefaults.register(defaults: ["playingInterrupted" : false])
+		userDefaults.register(defaults: ["wasMalfunction": false])
+		userDefaults.register(defaults: ["listenRunning": false])
+		userDefaults.register(defaults: ["isSubscribed" : false])
 		// создаем папку Tracks если ее нет
-		let applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+		var applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
 		let tracksPath = applicationSupportPath.appendingPathComponent("Tracks")
 		do {
 			try FileManager.default.createDirectory(at: tracksPath, withIntermediateDirectories: true, attributes: nil)
+		} catch let error as NSError {
+			NSLog("Unable to create directory \(error.debugDescription)")
+		}
+		//создаем папку AlarmTracks
+		applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+		let applicationTracksPath = applicationSupportPath.appendingPathComponent("AlarmTracks")
+		do {
+			try FileManager.default.createDirectory(at: applicationTracksPath, withIntermediateDirectories: true, attributes: nil)
+		} catch let error as NSError {
+			NSLog("Unable to create directory \(error.debugDescription)")
+		}
+		applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+		let currentTrackPath = applicationSupportPath.appendingPathComponent("CurrentPlayTrack")
+		do {
+			try FileManager.default.createDirectory(at: currentTrackPath, withIntermediateDirectories: true, attributes: nil)
 		} catch let error as NSError {
 			NSLog("Unable to create directory \(error.debugDescription)")
 		}
@@ -73,8 +100,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 				}
 			}
 		}
+		UIApplication.shared.setMinimumBackgroundFetchInterval(1)
 		return true
 	}
+	
 	
 	func removeFilesFromDirectory (tracksContents:[String]) {
 		//если в папке больше 4 файлов (3 файла Sqlite и папка Tracks) то пытаемся удалить треки
@@ -138,6 +167,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		// Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
 		UserDefaults.standard.set(false, forKey: "timerState")
 		UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
+		//UserDefaults.standard.set(false, forKey: "budState")
+		UserDefaults.standard.set(false, forKey: "wasMalfunction")
+		UserDefaults.standard.set(false, forKey: "listenRunning")
+		UserDefaults.standard.synchronize()
+		//UserDefaults.standard.set(false, forKey: "playingInterruptedByTimer")
+		CoreDataManager.instance.setLogRecord(eventDescription: "Приложение выгружено", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 	}
 
 }

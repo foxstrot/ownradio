@@ -171,7 +171,6 @@ class StartVideoViewController: UIViewController, UIPageViewControllerDataSource
 	func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
 		
 		let itemController = viewController as! ItemViewController
-		
 		if itemController.itemIndex+1 < contentLabels.count {
 			timerStart()
 			return getItemController(itemController.itemIndex+1)
@@ -179,7 +178,6 @@ class StartVideoViewController: UIViewController, UIPageViewControllerDataSource
 		
 		if itemController.itemIndex+1 >= contentLabels.count && CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity") >= 1 {
 			openMainViewController()
-			
 			return nil
 		}
 		
@@ -218,7 +216,6 @@ class StartVideoViewController: UIViewController, UIPageViewControllerDataSource
 						
 						DispatchQueue.global(qos: .background).async {
 							Downloader.sharedInstance.load(isSelfFlag: false, complition: {
-								
 							})
 						}
 					} else {

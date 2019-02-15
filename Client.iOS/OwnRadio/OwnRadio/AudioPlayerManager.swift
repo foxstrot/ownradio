@@ -12,6 +12,8 @@ import AVFoundation
 import UIKit
 import MediaPlayer
 
+
+@available(iOS 10.0, *)
 class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnectionDataDelegate {
 	
 	var player: AVPlayer = AVPlayer()
@@ -35,9 +37,11 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	var shouldRemoveObserve: Bool!
 	
 	var wasInterreption = false
-    
-    let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
+
 	
+    let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
+	let budTracksUrlString = FileManager.applicationSupportDir().appending("/AlarmTracks/")
+	let currentTrackPathString = FileManager.applicationSupportDir().appending("/currentTrackPath/")
 	var isSkipped = false
 	
 	// MARK: Overrides
@@ -133,15 +137,19 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 				}
 			case .failed:
 				Downloader.sharedInstance.createPostNotificationSysInfo(message: "Player Item was fail")
+				CoreDataManager.instance.setLogRecord(eventDescription: "Player item failed", isError: true, errorMessage: playerItem.error.debugDescription)
+				CoreDataManager.instance.saveContext()
 				print(playerItem.error.debugDescription)
 				self.skipSong{
-					if let rootController = UIApplication.shared.keyWindow?.rootViewController {
-						let navigationController = rootController as! UINavigationController
-						
-						if let radioViewContr = navigationController.topViewController  as? RadioViewController {
-							DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
-								radioViewContr.updateUI()
-							})
+					DispatchQueue.main.async {
+						if let rootController = UIApplication.shared.keyWindow?.rootViewController {
+							let navigationController = rootController as! UINavigationController
+							
+							if let radioViewContr = navigationController.topViewController  as? RadioViewController {
+								DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
+									radioViewContr.updateUI()
+								})
+							}
 						}
 					}
 				}
@@ -189,7 +197,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 			
 			isSkipped = false;
 			self.playingSong.isListen = 1
-			self.addDateToHistoryTable(playingSong: self.playingSong)
+			self.addDateToHistoryTable(playingSong: self.playingSong) //bug: иногда программа заходит сюда и воспроизведение останавливается, следующий трек не проигрывается
+																	  //Останавливается внутри ассемблера, тупо примораживается процесс
 		}
 	}
 	
@@ -222,7 +231,6 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 								DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
 									radioViewContr.updateUI()
 								})
-								
 							}
 						}
 					}
@@ -263,26 +271,32 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		songInfo[MPMediaItemPropertyPlaybackDuration] = song.trackLength //NSNumber.init(value: song.trackLength)
 		
 		MPNowPlayingInfoCenter.default().nowPlayingInfo = songInfo
+		UserDefaults.standard.set(song.name, forKey:"PlayingSongInfo")
+
 	}
 	
 	// MARK: Cotrol functions
 	//возобновление воспроизведения
 	func resumeSong(complition: @escaping (() -> Void)) {
 		isPlaying = true
+		UserDefaults.standard.set(true, forKey:"trackPlayingNow")
+		UserDefaults.standard.synchronize()
 		if self.playerItem != nil {
 			self.player.play()
-			
 			complition()
 		} else {
 			self.nextTrack(complition: complition)
 		}
+		CoreDataManager.instance.setLogRecord(eventDescription: "Трек продолжен", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 	}
 	
 	//пауза
 	func pauseSong(complition: (() -> Void)) {
 		isPlaying = false
 		self.player.pause()
-		
+		CoreDataManager.instance.setLogRecord(eventDescription: "Трек на паузе", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 		complition()
 	}
 	
@@ -293,12 +307,13 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 			self.playingSong.isListen = -1
 			self.addDateToHistoryTable(playingSong: self.playingSong)
 			if  self.playingSong.path != nil {
-				let path = FileManager.applicationSupportDir().appending("/").appending("Tracks").appending("/").appending(self.playingSong.path!)
+				//let path = FileManager.applicationSupportDir().appending("/").appending("Tracks").appending("/").appending(self.playingSong.path!)
+				let path = self.tracksUrlString.appending(self.playingSong.path!)
+				print(path)
 				if FileManager.default.fileExists(atPath: path) {
 					//удаляем пропущенный трек
 					do{
 						try FileManager.default.removeItem(atPath: path)
-						
 						NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Пропущ. трек удален"])
 					}
 					catch {
@@ -315,9 +330,11 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		nextTrack(complition: complition)
 	}
 	
+	
 	// проигрываем трек по URL
 	func playAudioWith(trackURL:URL) {
-		
+		UserDefaults.standard.set(true, forKey: "listenRunning")
+		UserDefaults.standard.synchronize()
 		if playerItem != nil {
 			self.removeObserver(self, forKeyPath: #keyPath(AudioPlayerManager.playerItem.status))
 		}
@@ -333,6 +350,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable{
 			CoreDataManager.instance.sentHistory()
 		}
+
 	}
 	
 	func createPlayerItemWith(url:URL) {
@@ -341,6 +359,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		} else {
 			playerItem = AVPlayerItem(url: url)
 		}
+		CoreDataManager.instance.setLogRecord(eventDescription: "PlayerItem создан", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
 	}
 	
 	// selection way to playing (Online or Cache)
@@ -402,12 +422,13 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	}
 	*/
 	
+	
 	// проигрываем трек из кеша
 	func playFromCache(complition: (() -> Void)?) {
-		
-//		if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable{
-//			CoreDataManager.instance.sentHistory()
-//		}
+
+		//		if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable{
+		//			CoreDataManager.instance.sentHistory()
+		//		}
 		//получаем из БД трек для проигрывания
 		self.playingSong = CoreDataManager.instance.getTrackToPlaing()
 		guard playingSong.trackID != nil else {
@@ -425,11 +446,47 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		CoreDataManager.instance.setCountOfPlayForTrackBy(trackId: self.playingSong.trackID)
 		CoreDataManager.instance.setDateForTrackBy(trackId: self.playingSong.trackID)
 		CoreDataManager.instance.saveContext()
+		
+		
 		NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Старт \(self.playingSong.trackID!)"])
 		print("Проигрываем \(self.playingSong.trackID)")
 		let str = FileManager.applicationSupportDir().addingPercentEncoding(withAllowedCharacters:.urlHostAllowed)
 		let docUrl = NSURL(string:str!)?.appendingPathComponent("Tracks")
 		let resUrl = docUrl?.absoluteURL.appendingPathComponent(playingSong.path!)
+		var playingTrackUrlString = resUrl?.absoluteURL.absoluteString.replacingOccurrences(of: "%2F", with: "/")
+		playingTrackUrlString = playingTrackUrlString?.replacingOccurrences(of: "%20", with: " ")
+		
+		//сохранение пути и объекта трека в userDefaults для использования с будильником
+		//		UserDefaults.standard.set(playingSong.path, forKey:"PlayingSongPath")
+		if !UserDefaults.standard.bool(forKey: "budState"){ //Если будильник не установлен
+			try? UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"PlayingSongObject")
+			//			DispatchQueue.global(qos: .utility).async{
+			//				CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.budTracksUrlString)
+			//				print("Текущий трек скопирован в директорию будильника")
+			//			}
+		}
+		
+		// Сохранение объекта для последующего возобновления проигрывания при отключении приложения
+		do{
+			UserDefaults.standard.set(try PropertyListEncoder().encode(self.playingSong), forKey:"interruptedSongObject")
+		}
+		catch{
+			print("Объект не сохранен в ud")
+			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при сохранении текущего объекта трека в UserDefaults", isError: true, errorMessage: error.localizedDescription)
+			CoreDataManager.instance.saveContext()
+		}
+		
+		do{
+			DispatchQueue.global(qos: .utility).async{
+				CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.currentTrackPathString)
+				print("Текущий трек скопирован во временное хранилище")
+			}
+		}catch{
+			print("Трек не скопирован во временное хранилище")
+			
+		}
+		
+		
 		guard let url = resUrl else {
 			return
 		}
@@ -437,9 +494,11 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		self.playAudioWith(trackURL: url as URL)
 		self.playingSongID = self.playingSong.trackID
 		self.configurePlayingSong(song: self.playingSong)
+		self.player.play()
 		if complition != nil {
 			complition!()
 		}
+		UserDefaults.standard.synchronize()
 	}
 	
 	func nextTrack(complition: @escaping (() -> Void)) {
@@ -462,12 +521,76 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
         historyEntity.trackId = playingSong.trackID
 		historyEntity.isListen = playingSong.isListen!
 		historyEntity.recCreated = creationDateString
-		
+		CoreDataManager.instance.setLogRecord(eventDescription: "История прослушивания сохранена", isError: false, errorMessage: "")
 		CoreDataManager.instance.saveContext()
+		CoreDataManager.instance.saveContext()
+		
 	}
 	
 	func fwdTrackToEnd(){
 		isSkipped = true
 		player.seek(to: (player.currentItem?.duration)!-CMTimeMake(3, 1))
+		CoreDataManager.instance.setLogRecord(eventDescription: "Трек перемотан в конец", isError: false, errorMessage: "")
+		CoreDataManager.instance.saveContext()
+	}
+	
+//	func copyCurrentTrackToDir(song: SongObject, copyTo: String){
+//		let songFileName = song.path
+//		if songFileName != ""{
+//			let pathToTrack = tracksUrlString + songFileName!
+//			var isDir: ObjCBool = true
+//			if FileManager.default.fileExists(atPath: copyTo, isDirectory: &isDir){
+//				if !isDir.boolValue{
+//					createDirectory(path: copyTo)
+//				}
+//			}
+//			else{
+//				createDirectory(path: copyTo)
+//			}
+//
+//			let items = try! FileManager.default.contentsOfDirectory(atPath: copyTo)
+//			// Удаляем старый трек
+//			for item in items{
+//				try! FileManager.default.removeItem(atPath: copyTo + item)
+//			}
+//			// Копируем новый
+//			try! FileManager.default.copyItem(atPath: pathToTrack, toPath: copyTo + songFileName!)
+//
+//		}
+//	}
+//
+//	func createDirectory(path: String){
+//		try! FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: false, attributes: nil)
+//	}
+	
+	func playOuterTrack(url: URL, song: SongObject, seekTo: Float64){
+		self.pauseSong {}
+//		self.player = AVPlayer()
+		
+		playingSong = song
+		//self.player.createPlayerItemWith(url: NSURL(fileURLWithPath: tracksUrlString + "/" + String(songObject.path!)) as URL)
+		playAudioWith(trackURL: url)
+		
+		playerItem.seek(to: CMTimeMakeWithSeconds(seekTo, 1000000000))
+		
+		do{
+			try UserDefaults.standard.set(PropertyListEncoder().encode(self.playingSong), forKey:"interruptedSongObject")
+		}
+		catch{
+			print("Текущий трек не сохранен в ud")
+		}
+		
+		UserDefaults.standard.synchronize()
+		DispatchQueue.global(qos: .utility).async{
+			CopyManager.copyCurrentTrackToDir(song: self.playingSong, copyTo: self.currentTrackPathString)
+			print("Текущий трек скопирован во временное хранилище")
+		}
+		
+		self.playingSongID = song.trackID
+		
+		//CoreDataManager.instance.u(trackId: song.trackID)
+		//		self.player.isPlaying = true
+		configurePlayingSong(song: song)
+		self.resumeSong {}
 	}
 }

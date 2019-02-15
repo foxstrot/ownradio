@@ -20,5 +20,4 @@ extension HistoryEntity {
     @NSManaged public var recCreated: String?
     @NSManaged public var recId: String?
     @NSManaged public var trackId: String?
-
 }

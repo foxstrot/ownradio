@@ -330,8 +330,8 @@
 				android:layout_height="50dp"
 				android:layout_gravity="center_horizontal"
 				android:contentDescription="TODO"
-				android:onClick="btnStartClock"
 				app:srcCompat="@drawable/ic_blu_bud" />
+			<!--android:onClick="btnStartClock"-->
 
 			<TextView
 				android:id="@+id/txtProgress"

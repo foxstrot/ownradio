@@ -78,9 +78,11 @@ import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_ID;
 import static ru.netvoxlab.ownradio.Constants.CURRENT_TRACK_URL;
 import static ru.netvoxlab.ownradio.Constants.EXTRA_FILLCACHE_PROGRESS;
 import static ru.netvoxlab.ownradio.Constants.INTERNET_CONNECTION_TYPE;
+import static ru.netvoxlab.ownradio.Constants.IS_ALARM_WORK;
 import static ru.netvoxlab.ownradio.Constants.IS_TIME_ALARM;
 import static ru.netvoxlab.ownradio.Constants.ONLY_WIFI;
 import static ru.netvoxlab.ownradio.Constants.TAG;
+import static ru.netvoxlab.ownradio.Constants.IS_TIMER_WORK;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, View.OnTouchListener, NetworkStateReceiver.NetworkStateReceiverListener {
 	
@@ -100,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	ImageButton btnSkipTrack;
 	ImageButton btnTimer;
 	ImageButton btnAlarmClock;
+	ImageButton buttonShare;
 	//	TrackDB trackDB;
 	private Handler handler = new Handler();
 	private Handler handlerEvent = new Handler();
@@ -416,7 +419,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 					binder.GetMediaPlayerService().onCompletion(binder.GetMediaPlayerService().player);
 			}
 		});
-		
+
+		buttonShare = findViewById(R.id.buttonShareTrack);
+		buttonShare.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				onCopyLink(v);
+			}
+		});
+
 		Button btnTest = findViewById(R.id.btnTest);
 		btnTest.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -937,7 +948,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		
 		if (mediaPlayerServiceConnection == null)
 			InitilizeMedia();
-		
+
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		if (prefs.getBoolean(IS_ALARM_WORK, false)) {
+			btnAlarmClock.setImageResource(R.drawable.ic_bud_b);
+		}
+		else{
+			btnAlarmClock.setImageResource(R.drawable.ic_bud);
+		}
+		if(prefs.getBoolean(IS_TIMER_WORK, false)){
+			btnTimer.setImageResource(R.drawable.ic_set_tim);
+		}
+		else{
+			btnTimer.setImageResource(R.drawable.ic_tim);
+		}
+
 		txtTrackTitle.setOnTouchListener(this);
 		txtTrackArtist.setOnTouchListener(this);
 //		toolbar.setOnTouchListener(this);
@@ -1047,14 +1072,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				txtTrackTitle.setText("");
 				txtTrackArtist.setText("");
 			}
-			
+
 			return;
+
 		} catch (Exception ex) {
 			Log.d(TAG, " " + ex.getLocalizedMessage());
 			return;
 		}
-		
-		
 	}
 	
 	@Override
@@ -1193,6 +1217,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 		if(mService != null){
 			unbindService(mServiceConn);
 		}
+		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		final SharedPreferences.Editor prefEditor = prefs.edit();
+		prefEditor.putBoolean(IS_TIMER_WORK, false);
+		prefEditor.apply();
 
 		super.onDestroy();
 	}
