@@ -197,19 +197,19 @@ if( is_admin() )
 		static function netvoxlab_ownradio_new_player_func ($atts, $content = null)
 	 {
 
-		 $nextBut = plugin_dir_url( __FILE__ ) . "images/next.svg";
-		 $playBut = plugin_dir_url( __FILE__ ) . "images/but1.svg";
-		 $pauseBut = plugin_dir_url( __FILE__ ) . "images/pause.svg";
-		 $exPicture = plugin_dir_url( __FILE__ ) . "images/pic.png";
-		 $appBut = plugin_dir_url( __FILE__ ) . "images/app.svg";
-		 $googleBut = plugin_dir_url( __FILE__ ) . "images/gp.svg";
-     $logo = plugin_dir_url( __FILE__ ) . "images/tx.svg";
+		 $nextBut = plugin_dir_url( __FILE__ ) . "assets/next.svg";
+		 $playBut = plugin_dir_url( __FILE__ ) . "assets/but1.svg";
+		 $pauseBut = plugin_dir_url( __FILE__ ) . "assets/pause.svg";
+		 $exPicture = plugin_dir_url( __FILE__ ) . "assets/pic.png";
+		 $appBut = plugin_dir_url( __FILE__ ) . "assets/app.svg";
+		 $googleBut = plugin_dir_url( __FILE__ ) . "assets/gp.svg";
+     $logo = plugin_dir_url( __FILE__ ) . "assets/tx.svg";
 
 
 		 $boxView = get_option('my_option_name')['box_view'];
 
 		 if ($boxView == "small") {
-			 $hiddenClass = "hidden";
+			 $hiddenClass = "flex";
 			 $boxWidth = "600px";
 			 $boxHeight = "500px";
 			 $position = "block";
