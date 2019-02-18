@@ -78,6 +78,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	let playBtnConstraintConstant = CGFloat(15.0)
 	let pauseBtnConstraintConstant = CGFloat(10.0)
 	
+	let coreInstance = CoreDataManager.instance
+	
 	var cachingView = CachingView.instanceFromNib()
 	var playedTracks: NSArray = CoreDataManager.instance.getGroupedTracks()
 	var reachability = NetworkReachabilityManager(host: "http://api.ownradio.ru/v5")
@@ -185,13 +187,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	
 		//подписываемся на уведомлени
 		reachability?.listener = { [unowned self] status in
-			guard CoreDataManager.instance.getCountOfTracks() < 1 else {
+			guard self.coreInstance.getCountOfTracks() < 1 else {
 					self.updateUI()
 				return
 			}
-            if status != NetworkReachabilityManager.NetworkReachabilityStatus.notReachable {
-                self.downloadTracks()
-            }
+//            if status != NetworkReachabilityManager.NetworkReachabilityStatus.notReachable {
+//                self.downloadTracks()
+//            }
 		}
 		
 		reachability?.startListening()
@@ -209,8 +211,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		
 		callObserver.setDelegate(self, queue: nil)
-		CoreDataManager.instance.setLogRecord(eventDescription: "Приложение запущено", isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
+		coreInstance.setLogRecord(eventDescription: "Приложение запущено", isError: false, errorMessage: "")
+		coreInstance.saveContext()
 		
 	}
 	
@@ -257,7 +259,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			
 			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
 			if isCorrect{
-				self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
+				self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime, needUpdateUI: true)
 			}
 		}
 		else if UserDefaults.standard.bool(forKey: "listenRunning") && songObject.path != nil{ //Супер костыль
@@ -278,13 +280,14 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			}
 			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
 			if isCorrect{
-				self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime)
-				CoreDataManager.instance.setLogRecord(eventDescription: "Восстановлено после вылета uuid трека = \(songObject.trackID.description)", isError: false, errorMessage: "")
-				CoreDataManager.instance.saveContext()
+				self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime, needUpdateUI: false)
+				coreInstance.setLogRecord(eventDescription: "Восстановлено после вылета uuid трека = \(songObject.trackID.description)", isError: false, errorMessage: "")
+				coreInstance.saveContext()
 			}
 			if player.playerItem != nil{
 				self.player.pauseSong {
 					print("Song paused")
+					self.updateUI()
 				}
 			}
 		}
@@ -304,7 +307,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue:"updateSysInfo"), object: nil)
 	}
 	
-	func playTrackByUrl(trackURL: URL, song: SongObject, seekTo: Float64){
+	func playTrackByUrl(trackURL: URL, song: SongObject, seekTo: Float64, needUpdateUI: Bool){
 		if !activeCall{
 			UserDefaults.standard.set(true, forKey:"trackPlayingNow")
 			UserDefaults.standard.synchronize()
@@ -316,12 +319,14 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			
 			self.player.playOuterTrack(url: trackURL, song: song, seekTo: seekTo)
 			self.isStartListening = true
-			self.updateUI()
+			if needUpdateUI{
+				self.updateUI()
+			}
 		}
 	}
 	
 	func checkMemoryWarning() {
-		guard DiskStatus.freeDiskSpaceInBytes < 104857600 && CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity") < 1 else {
+		guard DiskStatus.freeDiskSpaceInBytes < 104857600 && coreInstance.chekCountOfEntitiesFor(entityName: "TrackEntity") < 1 else {
 			return
 		}
 		self.authorNameLbl.text = "Not enough free memory. To work correctly, you need at least 100 mb"
@@ -440,7 +445,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		guard currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable else {
 			return
 		}
-		DispatchQueue.global(qos: .background).async {
+		DispatchQueue.global(qos: .utility).async {
 			Downloader.sharedInstance.load(isSelfFlag: false){ [unowned self] in
 					self.updateUI()
 			}
@@ -515,7 +520,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	func appTerminate(){
 		if UserDefaults.standard.bool(forKey: "trackPlayingNow"){
 			UserDefaults.standard.set(true, forKey: "playingInterrupted")
-			if self.player != nil{
+			if self.player.playerItem != nil{
 				UserDefaults.standard.set(self.player.playerItem.currentTime().seconds, forKey: "playingDuration")
 			}
 		}
@@ -523,8 +528,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
         UserDefaults.standard.set(false, forKey: "wasMalfunction")
         UserDefaults.standard.synchronize()
 		
-		CoreDataManager.instance.setLogRecord(eventDescription: "Приложение выгружено", isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
+		coreInstance.setLogRecord(eventDescription: "Приложение выгружено", isError: false, errorMessage: "")
+		coreInstance.saveContext()
 	}
 	
 
@@ -614,7 +619,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}else {
 			//иначе - возобновляем проигрывание если возможно или начинаем проигрывать новый трек
 			player.resumeSong(complition: { [unowned self] in
-                if CoreDataManager.instance.getCountOfTracks() > 0 {
+				if self.coreInstance.getCountOfTracks() > 0 {
 					//Вылетает, если ничего не проигрывалось и играет трек из будильника и нажата кнопка PLAY
 					MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyElapsedPlaybackTime] = CMTimeGetSeconds(self.player.player.currentTime())
 					MPNowPlayingInfoCenter.default().nowPlayingInfo![MPNowPlayingInfoPropertyPlaybackRate] = 1
@@ -631,7 +636,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			let docUrl = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?.appendingPathComponent("Tracks")
 			let directoryContents = try FileManager.default.contentsOfDirectory(at: docUrl!, includingPropertiesForKeys: nil, options: [])
 			let mp3Files = directoryContents.filter{ $0.pathExtension == "mp3" }
-			self.numberOfFiles.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
+			self.numberOfFiles.text = String(coreInstance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
 		} catch let error as NSError {
 			print(error.localizedDescription)
 		}
@@ -667,11 +672,11 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		}
 			
 			
-		if CoreDataManager.instance.getCountOfTracks() < 3 && CoreDataManager.instance.getCountOfTracks() != 0 {
+			if self.coreInstance.getCountOfTracks() < 3 && self.coreInstance.getCountOfTracks() != 0 {
 //			self.playPauseBtn.isEnabled = false
 			self.nextButton.isEnabled = false
 			self.cachingView.removeFromSuperview()
-		}else if CoreDataManager.instance.getCountOfTracks() < 1 {
+			}else if self.coreInstance.getCountOfTracks() < 1 {
 			self.playPauseBtn.isEnabled = true
 			self.view.addSubview(self.cachingView)
 		}else {
@@ -713,9 +718,9 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		
 		self.getCountFilesInCache()
 		// обновление количевства записей в базе данных
-		self.numberOfFilesInDB.text = String(CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
+		self.numberOfFilesInDB.text = String(coreInstance.chekCountOfEntitiesFor(entityName: "TrackEntity"))
 		// update table 
-		self.playedTracks = CoreDataManager.instance.getGroupedTracks()
+		self.playedTracks = coreInstance.getGroupedTracks()
 		self.tableView.reloadData()
 		self.freeSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.freeDiskSpaceInBytes)) + " Gb"
 		self.folderSpaceLbl.text = DiskStatus.GBFormatter(Int64(DiskStatus.folderSize(folderPath: self.tracksUrlString))) + " Gb"
@@ -842,8 +847,8 @@ extension RadioViewController: CXCallObserverDelegate{
 					self.updateUI()
 				}
 			}
-			CoreDataManager.instance.setLogRecord(eventDescription: "Входящий звонок", isError: false, errorMessage: "")
-			CoreDataManager.instance.saveContext()
+			coreInstance.setLogRecord(eventDescription: "Входящий звонок", isError: false, errorMessage: "")
+			coreInstance.saveContext()
 		}
 		
 		else if call.isOutgoing == false && call.hasConnected == false && call.hasEnded == false{
@@ -861,8 +866,8 @@ extension RadioViewController: CXCallObserverDelegate{
 					self.updateUI()
 				}
 			}
-			CoreDataManager.instance.setLogRecord(eventDescription: "Входящий звонок", isError: false, errorMessage: "")
-			CoreDataManager.instance.saveContext()
+			coreInstance.setLogRecord(eventDescription: "Входящий звонок", isError: false, errorMessage: "")
+			coreInstance.saveContext()
 		}
 		else if call.hasEnded == true{
 			self.activeCall = false
@@ -874,8 +879,8 @@ extension RadioViewController: CXCallObserverDelegate{
 					self.updateUI()
 				}
 			}
-			CoreDataManager.instance.setLogRecord(eventDescription: "Звонок завершен", isError: false, errorMessage: "")
-			CoreDataManager.instance.saveContext()
+			coreInstance.setLogRecord(eventDescription: "Звонок завершен", isError: false, errorMessage: "")
+			coreInstance.saveContext()
 		}
 	}
 }

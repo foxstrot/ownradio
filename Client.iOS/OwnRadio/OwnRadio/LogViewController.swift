@@ -16,6 +16,8 @@ class LogViewController: UIViewController, UITableViewDelegate, UITableViewDataS
 	
     var logRecords: [LogObject] = []
 	var errorsRecords: [LogObject] = []
+	var timer: DispatchSourceTimer!
+	
 	
     let cellReuseIdentifier = "cell"
 	var tappedItem: LogObject!
@@ -28,6 +30,21 @@ class LogViewController: UIViewController, UITableViewDelegate, UITableViewDataS
         // Do any additional setup after loading the view.
     }
 	
+	override func viewWillAppear(_ animated: Bool) {
+		timer = DispatchSource.makeTimerSource()
+		timer.scheduleRepeating(deadline: .now(), interval: .seconds(1))
+		timer.setEventHandler(handler: {
+			self.logRecords = CoreDataManager.instance.getLogRecords()
+			DispatchQueue.main.async {
+				self.tableView.reloadData()
+			}
+		})
+		timer.resume()
+	}
+	
+	override func viewDidDisappear(_ animated: Bool) {
+		timer.cancel()
+	}
 	
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -52,7 +69,12 @@ class LogViewController: UIViewController, UITableViewDelegate, UITableViewDataS
 				cell.backgroundColor = UIColor(red: 1.00, green: 0.34, blue: 0.34, alpha: 1.0)
 			}
 			else{
-				cell.backgroundColor = UIColor(red: 0.44, green: 1.00, blue: 0.60, alpha: 1.0)
+				if errorsRecords[indexPath.row].eventDescription == "Приложение запущено"{
+					cell.backgroundColor = UIColor(red: 1.00, green: 0.97, blue: 0.0, alpha: 1.0)
+				}
+				else{
+					cell.backgroundColor = UIColor(red: 0.44, green: 1.00, blue: 0.60, alpha: 1.0)
+				}
 			}
 		}
 		else{
@@ -62,7 +84,13 @@ class LogViewController: UIViewController, UITableViewDelegate, UITableViewDataS
 				cell.backgroundColor = UIColor(red: 1.00, green: 0.34, blue: 0.34, alpha: 1.0)
 			}
 			else{
-				cell.backgroundColor = UIColor(red: 0.44, green: 1.00, blue: 0.60, alpha: 1.0)
+				if logRecords[indexPath.row].eventDescription == "Приложение запущено"{
+					cell.backgroundColor = UIColor(red: 1.00, green: 0.97, blue: 0.0, alpha: 1.0)
+				}
+				else{
+					cell.backgroundColor = UIColor(red: 0.44, green: 1.00, blue: 0.60, alpha: 1.0)
+				}
+
 			}
 		}
         return cell

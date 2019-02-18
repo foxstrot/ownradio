@@ -25,9 +25,9 @@
         <attribute name="trackName" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
     <elements>
-        <element name="HistoryEntity" positionX="153" positionY="18" width="128" height="105"/>
-        <element name="TrackEntity" positionX="7" positionY="18" width="128" height="150"/>
         <element name="Entity" positionX="525.359375" positionY="111.3203125" width="128" height="45"/>
+        <element name="HistoryEntity" positionX="153" positionY="18" width="128" height="105"/>
         <element name="LogEntity" positionX="352.07421875" positionY="72.81640625" width="128" height="135"/>
+        <element name="TrackEntity" positionX="7" positionY="18" width="128" height="150"/>
     </elements>
 </model>

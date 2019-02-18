@@ -324,7 +324,7 @@ class AlertClockViewController: UIViewController {
 			}
 			
 			if self.mainController != nil && isCorrect{
-				self.mainController.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: 0)
+				self.mainController.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: 0, needUpdateUI: true)
 			}
 		}
 	}

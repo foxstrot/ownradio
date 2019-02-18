@@ -184,6 +184,7 @@ class SettingsViewController: UITableViewController, SKProductsRequestDelegate, 
 				
 				//удаляем треки из базы
 				CoreDataManager.instance.deleteAllTracks()
+				CoreDataManager.instance.deleteLogRecords()
 				CoreDataManager.instance.saveContext()
 				self.viewDidLoad()
 			}

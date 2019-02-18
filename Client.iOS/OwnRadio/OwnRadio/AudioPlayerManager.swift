@@ -44,6 +44,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	let currentTrackPathString = FileManager.applicationSupportDir().appending("/currentTrackPath/")
 	var isSkipped = false
 	
+	let coreDataInstance = CoreDataManager.instance
+	
 	// MARK: Overrides
 	override init() {
 		super.init()
@@ -137,8 +139,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 				}
 			case .failed:
 				Downloader.sharedInstance.createPostNotificationSysInfo(message: "Player Item was fail")
-				CoreDataManager.instance.setLogRecord(eventDescription: "Player item failed", isError: true, errorMessage: playerItem.error.debugDescription)
-				CoreDataManager.instance.saveContext()
+				coreDataInstance.setLogRecord(eventDescription: "Player item failed", isError: true, errorMessage: playerItem.error.debugDescription)
+				coreDataInstance.saveContext()
 				print(playerItem.error.debugDescription)
 				self.skipSong{
 					DispatchQueue.main.async {
@@ -165,7 +167,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	func playerItemDidReachEnd(_ notification: Notification) {
 
 		if notification.object as? AVPlayerItem  == player.currentItem {
-            let dateLastTrackPlay = CoreDataManager.instance.getDateForTrackBy(trackId: self.playingSong.trackID)
+            let dateLastTrackPlay = coreDataInstance.getDateForTrackBy(trackId: self.playingSong.trackID)
             let currentDate = NSDate.init(timeIntervalSinceNow: -60.0)
             if dateLastTrackPlay != nil && !isSkipped{
 				//isSkipped = false
@@ -185,8 +187,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
                         }
                     }
                     // удаляем трек с базы
-                    CoreDataManager.instance.deleteTrackFor(trackID: self.playingSong.trackID)
-                    CoreDataManager.instance.saveContext()
+                    coreDataInstance.deleteTrackFor(trackID: self.playingSong.trackID)
+                    coreDataInstance.saveContext()
                     
                     print("Поврежденный файл был найден и удален")
                     NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Поврежденный файл был удален"])
@@ -287,16 +289,16 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		} else {
 			self.nextTrack(complition: complition)
 		}
-		CoreDataManager.instance.setLogRecord(eventDescription: "Трек продолжен", isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
+		coreDataInstance.setLogRecord(eventDescription: "Трек продолжен", isError: false, errorMessage: "")
+		coreDataInstance.saveContext()
 	}
 	
 	//пауза
 	func pauseSong(complition: (() -> Void)) {
 		isPlaying = false
 		self.player.pause()
-		CoreDataManager.instance.setLogRecord(eventDescription: "Трек на паузе", isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
+		coreDataInstance.setLogRecord(eventDescription: "Трек на паузе", isError: false, errorMessage: "")
+		coreDataInstance.saveContext()
 		complition()
 	}
 	
@@ -321,8 +323,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 						print("Error with remove file ")
 					}
 					//удаляем информацию о треке из БД
-					CoreDataManager.instance.deleteTrackFor(trackID: self.playingSong.trackID)
-					CoreDataManager.instance.saveContext()
+					coreDataInstance.deleteTrackFor(trackID: self.playingSong.trackID)
+					coreDataInstance.saveContext()
 				}
 			}
 		}
@@ -348,7 +350,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		                       context: nil)
         player = AVPlayer(playerItem: playerItem)
 		if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable{
-			CoreDataManager.instance.sentHistory()
+			coreDataInstance.sentHistory()
 		}
 
 	}
@@ -359,8 +361,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		} else {
 			playerItem = AVPlayerItem(url: url)
 		}
-		CoreDataManager.instance.setLogRecord(eventDescription: "PlayerItem создан", isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
+		coreDataInstance.setLogRecord(eventDescription: "PlayerItem создан", isError: false, errorMessage: "")
+		coreDataInstance.saveContext()
 	}
 	
 	// selection way to playing (Online or Cache)
@@ -389,7 +391,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 	//проверяем есть ли кешированные треки
 	func checkCountFileInCache() -> Bool {
 		self.canPlayFromCache = false
-		if CoreDataManager.instance.getCountOfTracks() > 0 {
+		if coreDataInstance.getCountOfTracks() > 0 {
 			self.canPlayFromCache = true
 		}
 		return self.canPlayFromCache
@@ -430,7 +432,7 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		//			CoreDataManager.instance.sentHistory()
 		//		}
 		//получаем из БД трек для проигрывания
-		self.playingSong = CoreDataManager.instance.getTrackToPlaing()
+		self.playingSong = coreDataInstance.getTrackToPlaing()
 		guard playingSong.trackID != nil else {
 			if let rootController = UIApplication.shared.keyWindow?.rootViewController {
 				let navigationController = rootController as! UINavigationController
@@ -443,9 +445,9 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 			}
 			return
 		}
-		CoreDataManager.instance.setCountOfPlayForTrackBy(trackId: self.playingSong.trackID)
-		CoreDataManager.instance.setDateForTrackBy(trackId: self.playingSong.trackID)
-		CoreDataManager.instance.saveContext()
+		coreDataInstance.setCountOfPlayForTrackBy(trackId: self.playingSong.trackID)
+		coreDataInstance.setDateForTrackBy(trackId: self.playingSong.trackID)
+		coreDataInstance.saveContext()
 		
 		
 		NotificationCenter.default.post(name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil, userInfo: ["message":"Старт \(self.playingSong.trackID!)"])
@@ -472,8 +474,8 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
 		}
 		catch{
 			print("Объект не сохранен в ud")
-			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при сохранении текущего объекта трека в UserDefaults", isError: true, errorMessage: error.localizedDescription)
-			CoreDataManager.instance.saveContext()
+			coreDataInstance.setLogRecord(eventDescription: "Ошибка при сохранении текущего объекта трека в UserDefaults", isError: true, errorMessage: error.localizedDescription)
+			coreDataInstance.saveContext()
 		}
 		
 		do{
@@ -521,17 +523,17 @@ class AudioPlayerManager: NSObject, AVAssetResourceLoaderDelegate, NSURLConnecti
         historyEntity.trackId = playingSong.trackID
 		historyEntity.isListen = playingSong.isListen!
 		historyEntity.recCreated = creationDateString
-		CoreDataManager.instance.setLogRecord(eventDescription: "История прослушивания сохранена", isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
-		CoreDataManager.instance.saveContext()
+		coreDataInstance.setLogRecord(eventDescription: "История прослушивания сохранена", isError: false, errorMessage: "")
+		coreDataInstance.saveContext()
+		coreDataInstance.saveContext()
 		
 	}
 	
 	func fwdTrackToEnd(){
 		isSkipped = true
 		player.seek(to: (player.currentItem?.duration)!-CMTimeMake(3, 1))
-		CoreDataManager.instance.setLogRecord(eventDescription: "Трек перемотан в конец", isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
+		coreDataInstance.setLogRecord(eventDescription: "Трек перемотан в конец", isError: false, errorMessage: "")
+		coreDataInstance.saveContext()
 	}
 	
 //	func copyCurrentTrackToDir(song: SongObject, copyTo: String){

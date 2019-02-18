@@ -27,7 +27,7 @@ class Downloader: NSObject {
 	var deleteCount = 0
 	var maxRequest = 9
 	var completionHandler:(()->Void)? = nil
-
+	let coreInstance = CoreDataManager.instance
 	func load(isSelfFlag: Bool, complition: @escaping (() -> Void)) {
 		print("call load")
 		
@@ -50,7 +50,7 @@ class Downloader: NSObject {
 		//удаляем "лишние" треки - в первую очередь прослушанные, затем, если необходимо - самые старые из загруженных
 		while (!isSelfFlag && DiskStatus.folderSize(folderPath: tracksUrlString) > maxMemory) {
 			// получаем трек проиграный большее кол-во раз
-			let song: SongObject? = CoreDataManager.instance.getOldTrack(onlyListen: false)
+			let song: SongObject? = coreInstance.getOldTrack(onlyListen: false)
 			// получаем путь файла
 			guard song != nil && song?.trackID != nil else {
 				self.createPostNotificationSysInfo(message: "Не найден трек для удаления")
@@ -63,8 +63,8 @@ class Downloader: NSObject {
 				deleteOldTrack(song: song)
 			}
 			else{
-				CoreDataManager.instance.setLogRecord(eventDescription: "Удаляемый трек сейчас играет, uuid = \(song?.trackID.description)", isError: false, errorMessage: "")
-				CoreDataManager.instance.saveContext()
+				coreInstance.setLogRecord(eventDescription: "Удаляемый трек сейчас играет, uuid = \(String(describing: song?.trackID.description))", isError: false, errorMessage: "")
+				coreInstance.saveContext()
 			}
 			
 		}
@@ -115,7 +115,7 @@ class Downloader: NSObject {
 				
 				
 				// получаем трек проиграный большее кол-во раз
-				let song: SongObject? = CoreDataManager.instance.getOldTrack(onlyListen: true)
+				let song: SongObject? = coreInstance.getOldTrack(onlyListen: true)
 				// получаем путь файла
 				guard song != nil && song?.trackID != nil else {
 					self.createPostNotificationSysInfo(message: "Память заполнена, нет прослуш треков")
@@ -130,8 +130,8 @@ class Downloader: NSObject {
 					deleteOldTrack(song: song)
 				}
 				else{
-					CoreDataManager.instance.setLogRecord(eventDescription: "Удаляемый трек сейчас играет, uuid = \(song?.trackID.description)", isError: false, errorMessage: "")
-					CoreDataManager.instance.saveContext()
+					coreInstance.setLogRecord(eventDescription: "Удаляемый трек сейчас играет, uuid = \(String(describing: song?.trackID.description))", isError: false, errorMessage: "")
+					coreInstance.saveContext()
 				}
 				
 				self.load (isSelfFlag: true){
@@ -147,14 +147,14 @@ class Downloader: NSObject {
 	
 	func createDownloadTask(audioUrl:URL, destinationUrl:URL, dict:[String:AnyObject]) -> URLSessionDownloadTask {
 		print("call createDownloadTask")
-		CoreDataManager.instance.setLogRecord(eventDescription: "Начата загрузка трека, url: " + audioUrl.description, isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
+//		self.coreInstance.setLogRecord(eventDescription: "Начато скачивание трека \(audioUrl.absoluteString)", isError: false, errorMessage: "")
+//		self.coreInstance.saveContext()
 		return URLSession.shared.downloadTask(with: audioUrl, completionHandler: { (location, response, error) -> Void in
 			guard error == nil else {
 				
 				self.createPostNotificationSysInfo(message: error.debugDescription)
-				CoreDataManager.instance.setLogRecord(eventDescription: "Download failed, url: \(audioUrl.absoluteString)", isError: true, errorMessage: error.debugDescription)
-				CoreDataManager.instance.saveContext()
+				self.coreInstance.setLogRecord(eventDescription: "Download failed, url: \(audioUrl.absoluteString)", isError: true, errorMessage: error.debugDescription)
+				self.coreInstance.saveContext()
 				return
 			}
 			guard let newLocation = location, error == nil else {return }
@@ -166,8 +166,8 @@ class Downloader: NSObject {
 						let mp3Path = destinationUrl.appendingPathExtension("mp3")
 						guard FileManager.default.fileExists(atPath: mp3Path.path ) == false else {
 							self.createPostNotificationSysInfo(message: "MP3 file exist")
-							CoreDataManager.instance.setLogRecord(eventDescription: "MP3 file exist", isError: true, errorMessage: mp3Path.path.description)
-							CoreDataManager.instance.saveContext()
+							self.coreInstance.setLogRecord(eventDescription: "MP3 file exist", isError: true, errorMessage: mp3Path.path.description)
+							self.coreInstance.saveContext()
 							return
 						}
 						
@@ -186,8 +186,8 @@ class Downloader: NSObject {
 										self.createPostNotificationSysInfo(message: "Файл с длиной = \(file!.length), ContentLength = \(contentLength) удален")
 									}
 									catch {
-										CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при удалении недокачанного трека", isError: true, errorMessage: error.localizedDescription)
-										CoreDataManager.instance.saveContext()
+										self.coreInstance.setLogRecord(eventDescription: "Ошибка при удалении недокачанного трека", isError: true, errorMessage: error.localizedDescription)
+										self.coreInstance.saveContext()
 										print("Ошибка при удалении недокачанного трека")
 									}
 								}
@@ -211,7 +211,7 @@ class Downloader: NSObject {
 						trackEntity.recId = dict["id"] as! String?
 						trackEntity.playingDate = NSDate.init(timeIntervalSinceNow: -315360000.0042889)
 						
-						CoreDataManager.instance.saveContext()
+						self.coreInstance.saveContext()
 						
 						
 						self.createPostNotificationSysInfo(message: "Трек (\(self.requestCount+1)) загружен \(trackEntity.recId ?? "")")
@@ -231,13 +231,13 @@ class Downloader: NSObject {
 						}
 						
 						//				complition()
-						CoreDataManager.instance.setLogRecord(eventDescription: "Информация о треке сохранена в БД", isError: false, errorMessage: "")
-						CoreDataManager.instance.saveContext()
+						self.coreInstance.setLogRecord(eventDescription: "Информация о треке сохранена в БД", isError: false, errorMessage: "")
+						self.coreInstance.saveContext()
 						print("File moved to documents folder")
 
-					} catch let error as NSError {
-						CoreDataManager.instance.setLogRecord(eventDescription: "Информация о треке не сохранена: " + error.localizedDescription, isError: true, errorMessage: error.localizedDescription)
-						CoreDataManager.instance.saveContext()
+					} catch {
+						self.coreInstance.setLogRecord(eventDescription: "Трек не скачан " + error.localizedDescription, isError: true, errorMessage: error.localizedDescription)
+						self.coreInstance.saveContext()
 						print(error.localizedDescription)
 					}
 				}
@@ -252,20 +252,20 @@ class Downloader: NSObject {
 	// удаление трека если память заполнена
 	func deleteOldTrack (song: SongObject?) {
 		print("call deleteOldTrack")
-		CoreDataManager.instance.setLogRecord(eventDescription: "Удаление старого трека", isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
+		self.coreInstance.setLogRecord(eventDescription: "Удаление старого трека", isError: false, errorMessage: "")
+		self.coreInstance.saveContext()
 		let path = self.tracksUrlString.appending((song?.path)!)
 		self.createPostNotificationSysInfo(message: "Удаляем \(song!.trackID.description)")
 		print("Удаляем \(song!.trackID.description)")
-		CoreDataManager.instance.setLogRecord(eventDescription: "Удаляем старый трек \(song!.trackID.description)", isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
+		self.coreInstance.setLogRecord(eventDescription: "Удаляем старый трек \(song!.trackID.description)", isError: false, errorMessage: "")
+		self.coreInstance.saveContext()
 		
 		let songObjectEncoded = UserDefaults.standard.data(forKey: "interruptedSongObject")
 		let currentSongObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
 		if UserDefaults.standard.bool(forKey: "trackPlayingNow") && (song?.isEqual(currentSongObject))!{
 			print("Не удаляем сейчас играющий трек")
-			CoreDataManager.instance.setLogRecord(eventDescription: "Старый удаляемый трек играет сейчас", isError: false, errorMessage: "")
-			CoreDataManager.instance.saveContext()
+			self.coreInstance.setLogRecord(eventDescription: "Старый удаляемый трек играет сейчас", isError: false, errorMessage: "")
+			self.coreInstance.saveContext()
 		}
 		else{
 			if FileManager.default.fileExists(atPath: path) {
@@ -274,26 +274,26 @@ class Downloader: NSObject {
 					try FileManager.default.removeItem(atPath: path)
 					self.createPostNotificationSysInfo(message: "Файл успешно удален")
 					print("Файл успешно удален")
-					CoreDataManager.instance.setLogRecord(eventDescription: "Старый трек удален", isError: false, errorMessage: "")
-					CoreDataManager.instance.saveContext()
+					self.coreInstance.setLogRecord(eventDescription: "Старый трек удален", isError: false, errorMessage: "")
+					self.coreInstance.saveContext()
 				}
 				catch {
 					self.createPostNotificationSysInfo(message: "Ошибка удаления трека: \(error)")
 					print("Ошибка удаления трека: \(error)")
-					CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка удаления старого трека: " + error.localizedDescription, isError: true, errorMessage: error.localizedDescription)
-					CoreDataManager.instance.saveContext()
+					self.coreInstance.setLogRecord(eventDescription: "Ошибка удаления старого трека: " + error.localizedDescription, isError: true, errorMessage: error.localizedDescription)
+					self.coreInstance.saveContext()
 				}
 			} else {
 				self.createPostNotificationSysInfo(message: "Трек уже удалён с устройства")
 				print("Трек уже удалён с устройства")
-				CoreDataManager.instance.setLogRecord(eventDescription: "Старый трек уже удален", isError: false, errorMessage: "")
-				CoreDataManager.instance.saveContext()
+				self.coreInstance.setLogRecord(eventDescription: "Старый трек уже удален", isError: false, errorMessage: "")
+				self.coreInstance.saveContext()
 			}
 			// удаляем трек с базы
 			//			CoreDataManager.instance.managedObjectContext.performAndWait {
-			CoreDataManager.instance.deleteTrackFor(trackID: (song?.trackID)!)
-			CoreDataManager.instance.setLogRecord(eventDescription: "Трек удален из БД, id: " + (song?.trackID.description)!, isError: false, errorMessage: "")
-			CoreDataManager.instance.saveContext()
+			self.coreInstance.deleteTrackFor(trackID: (song?.trackID)!)
+			self.coreInstance.setLogRecord(eventDescription: "Трек удален из БД, id: " + (song?.trackID.description)!, isError: false, errorMessage: "")
+			self.coreInstance.saveContext()
 			//			}
 			
 			//		}
@@ -307,8 +307,8 @@ class Downloader: NSObject {
 		let percentage = Double((UserDefaults.standard.object(forKey: "maxMemorySize") as? Double)! / 100)
 		maxMemory = UInt64(Double(memoryAvailable) * percentage)
 		let folderSize = DiskStatus.folderSize(folderPath: tracksUrlString)
-		CoreDataManager.instance.setLogRecord(eventDescription: "Заполнение кеша, объем: " + DiskStatus.GBFormatter(Int64(folderSize)).description + ", свободное место: " + maxMemory.description + ", разрешенный процент: " + percentage.description, isError: false, errorMessage: "")
-		CoreDataManager.instance.saveContext()
+		self.coreInstance.setLogRecord(eventDescription: "Заполнение кеша, объем: " + DiskStatus.GBFormatter(Int64(folderSize)).description + ", свободное место: " + maxMemory.description + ", разрешенный процент: " + percentage.description, isError: false, errorMessage: "")
+		self.coreInstance.saveContext()
 		
 		if folderSize < maxMemory  {
 			self.load (isSelfFlag: true){
@@ -317,8 +317,8 @@ class Downloader: NSObject {
 			}
 		}
 		else{
-			CoreDataManager.instance.setLogRecord(eventDescription: "Недостаточно памяти для заполнения кеша", isError: false, errorMessage: "")
-			CoreDataManager.instance.saveContext()
+			self.coreInstance.setLogRecord(eventDescription: "Недостаточно памяти для заполнения кеша", isError: false, errorMessage: "")
+			self.coreInstance.saveContext()
 		}
 	}
 	

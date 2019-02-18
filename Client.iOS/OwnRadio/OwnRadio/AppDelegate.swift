@@ -39,11 +39,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate{
 //		}
 		
 		//Проверяем в первый ли раз было запущено приложение
-		if userDefaults.object(forKey: "isAppAlreadyLaunchedOnce") == nil {
-			ApiService.shared.registerDevice()
-			userDefaults.set(true, forKey: "isAppAlreadyLaunchedOnce")
-			print("Приложение запущено впервые")
-		}
+		
 		//Регистрируем настройки по умолчанию (не меняя имеющиеся значения, если они уже есть)
 		userDefaults.register(defaults: ["maxMemorySize" : 10])
 		userDefaults.register(defaults: ["isOnlyWiFi" : false])
@@ -151,16 +147,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate{
 	
 	func applicationDidBecomeActive(_ application: UIApplication) {
 		// Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-		if let rootController = UIApplication.shared.keyWindow?.rootViewController {
-			let navigationController = rootController as! UINavigationController
-			//получаем отображаемый в текущий момент контроллер, если это контроллер видео-слайдера - возобновляем воспроизведение видео.
-			if let startViewContr = navigationController.topViewController  as? StartVideoViewController {
-				DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
-					startViewContr.playVideoBackgroud()
-				})
-				
-			}
-		}
+//		if let rootController = UIApplication.shared.keyWindow?.rootViewController {
+//			let navigationController = rootController as! UINavigationController
+//			//получаем отображаемый в текущий момент контроллер, если это контроллер видео-слайдера - возобновляем воспроизведение видео.
+//			if let startViewContr = navigationController.topViewController  as? StartVideoViewController {
+//				DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: {
+//					startViewContr.playVideoBackgroud()
+//				})
+//
+//			}
+//		}
 	}
 	
 	func applicationWillTerminate(_ application: UIApplication) {

@@ -252,7 +252,6 @@ class TimerViewController: UIViewController {
 			self.timerAction()
 		}
 		timer?.resume()
-		
 	}
 	
 	func timerAction(){

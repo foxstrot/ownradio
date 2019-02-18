@@ -258,6 +258,8 @@ class CoreDataManager: NSObject {
 			let res = try self.managedObjectContext.fetch(fetchRequest)
 			resultsArray = res as NSArray
 		} catch {
+			print(error.localizedDescription)
+			
 			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении количества проигрываний", isError: true, errorMessage: error.localizedDescription)
 			CoreDataManager.instance.saveContext()
 		}
@@ -377,17 +379,21 @@ class CoreDataManager: NSObject {
 		let entityDescription = NSEntityDescription.entity(forEntityName: "LogEntity", in: self.managedObjectContext)
 		let managedObject = NSManagedObject(entity: entityDescription!, insertInto: self.managedObjectContext)
 		let date = Date()
-		managedObject.setValue(date, forKey: "eventDate")
-		managedObject.setValue(eventDescription, forKey: "eventDescription")
-		managedObject.setValue(Thread.current.description, forKey: "eventThread")
-		if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable{
-			managedObject.setValue(true, forKey:"hasInternet")
+		do{
+			managedObject.setValue(date, forKey: "eventDate")
+			managedObject.setValue(eventDescription, forKey: "eventDescription")
+			managedObject.setValue(Thread.current.description, forKey: "eventThread")
+			if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable{
+				managedObject.setValue(true, forKey:"hasInternet")
+			}
+			else{
+				managedObject.setValue(false, forKey:"hasInternet")
+			}
+			managedObject.setValue(isError, forKey: "isError")
+			managedObject.setValue(errorMessage, forKey: "errorMessage")
+		}catch{
+			print("Ошибка сохранения лога \(error.localizedDescription)")
 		}
-		else{
-			managedObject.setValue(false, forKey:"hasInternet")
-		}
-		managedObject.setValue(isError, forKey: "isError")
-		managedObject.setValue(errorMessage, forKey: "errorMessage")
 	}
 	
 	func getLogRecords() -> [LogObject]{
@@ -438,8 +444,9 @@ class CoreDataManager: NSObject {
 				} catch {
 					let nserror = error as NSError
 					NSLog("Unresolved error \(nserror), \(nserror.userInfo)")
-					CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка сохранения контекста", isError: true, errorMessage: error.localizedDescription)
-					CoreDataManager.instance.saveContext()
+//					CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка сохранения контекста", isError: true, errorMessage: error.localizedDescription)
+//					CoreDataManager.instance.saveContext()
+					print("Ошибка сохранения контекста \(error.localizedDescription)")
 					abort()
 				}
 			}
