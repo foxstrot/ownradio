@@ -132,9 +132,11 @@ namespace ownTrackDownloader
             string path;
 
             path = GlobalSettings.mediaDirectory + track.Deviceid;
-          //  full_path = GlobalSettings.mediaDirectory + track.Deviceid + "\\" + track.Recid + track.Recname + track.Artist + ".mp3"; //test
-                                                                                                                                            
-             full_path = GlobalSettings.mediaDirectory + track.Deviceid + "\\" + track.Recid + ".mp3"; //prod
+            //  full_path = GlobalSettings.mediaDirectory + track.Deviceid + "\\" + track.Recid + track.Recname + track.Artist + ".mp3"; //test
+
+            full_path = Path.Combine(GlobalSettings.mediaDirectory, track.Deviceid.ToString(), track.Recid.ToString() + ".mp3"); //prod
+
+           // full_path = GlobalSettings.mediaDirectory + track.Deviceid + "\\" + track.Recid + ".mp3"; //prod
 
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
             
