@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -8,7 +9,7 @@ namespace ownTrackDownloader
 {
     public class DownloadEngine
     {
-        public async void Start()
+        public async void Start(ILogger logger)
         {
             GlobalSettings.ReadFromJson();
 
@@ -24,7 +25,7 @@ namespace ownTrackDownloader
 
                     //получаем контент страницы с нужного раздела
                     var pageContent = await pageGetter.NextPage(ZaycevRubric.top);
-
+                    logger.LogInformation("Обработка страницы с Zaycev.net");
                     //вычленяем из ответа трэки
                     List<Track> tracks = tracksGetter.GetTracks(pageContent.ToString());
 
@@ -47,7 +48,7 @@ namespace ownTrackDownloader
 
                             //вносим запись в бд таблицу tracks
                             trackUploader.BDTrackInsert(track);
-
+                            logger.LogInformation("Внесена запись в бд: "+ track.Recid);
 
                         }
                     }
@@ -55,7 +56,7 @@ namespace ownTrackDownloader
             }
             catch (Exception ex)
             {
-                
+                logger.LogInformation("Ошибка: "+ ex.Message);
             }
         }
 

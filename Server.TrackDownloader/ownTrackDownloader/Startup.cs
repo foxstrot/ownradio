@@ -33,7 +33,7 @@ namespace ownTrackDownloader
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             if (env.IsDevelopment())
             {
@@ -44,6 +44,9 @@ namespace ownTrackDownloader
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
+           // loggerFactory.AddConsole();
+           
 
             app.UseHttpsRedirection();
             app.UseMvc();

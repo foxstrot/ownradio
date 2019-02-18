@@ -24,9 +24,9 @@ namespace ownTrackDownloader
 
         public void DoWork()
         {
-            _logger.LogInformation("TrackDownloader работает.");
+            _logger.LogInformation("TrackDownloader запускается.");
 
-            _engine.Start();
+            _engine.Start(_logger);
         }
     }
 
