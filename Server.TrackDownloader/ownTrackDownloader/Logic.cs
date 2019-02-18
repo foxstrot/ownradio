@@ -216,7 +216,7 @@ namespace ownTrackDownloader
         {
             var builder = new ConfigurationBuilder();
             // установка пути к текущему каталогу
-            //builder.SetBasePath(AppContext.BaseDirectory); //для разработки 
+           // builder.SetBasePath(AppContext.BaseDirectory); //для разработки 
             builder.SetBasePath(Directory.GetCurrentDirectory()); //для сервака
 
 
@@ -239,6 +239,8 @@ namespace ownTrackDownloader
 
         public List<Track> CheckForNew(List<Track> tracks_in)
         {
+            try
+            {
                 tracks_out.Clear();
                 foreach (Track track in tracks_in)
                 {
@@ -247,19 +249,28 @@ namespace ownTrackDownloader
                     using (NpgsqlConnection conn = new NpgsqlConnection(GlobalSettings.connectionString))
                     {
                         conn.Open();
-                        NpgsqlCommand command = new NpgsqlCommand("gettrackbyouterguid", conn);
-                        command.CommandType = CommandType.StoredProcedure;
-                        command.Parameters.AddWithValue("i_outerguid", track.Outerguid);
-                        NpgsqlDataReader dr = command.ExecuteReader();
+                        string sql = "select outerguid from tracks where outerguid = '" + track.Outerguid + "' limit 1;";
 
-                        if (!dr.HasRows) { tracks_out.Add(track); }
+                        using (NpgsqlCommand command = new NpgsqlCommand(sql, conn))
+                        {
+                            command.CommandType = CommandType.Text;
 
+                            NpgsqlDataReader dr = command.ExecuteReader();
+
+                            if (!dr.HasRows) { tracks_out.Add(track); }
+
+                        }
                         conn.Close();
-                        
+
                     }
                 }
 
-            return tracks_out;
+                return tracks_out;
+            }
+            catch(Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
     }
 
