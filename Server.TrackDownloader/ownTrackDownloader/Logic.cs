@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Npgsql;
 using System;
@@ -18,6 +19,12 @@ namespace ownTrackDownloader
     {
         private int _currentPageNumber  = 0;
         private HttpClient _clientHttp = new HttpClient();
+        private ILogger _logger;
+
+        public PageGetter(ILogger logger)
+        {
+            _logger = logger;
+        }
 
         public int CurrentPageNumber
         {
@@ -31,8 +38,8 @@ namespace ownTrackDownloader
             if (_currentPageNumber == 51) _currentPageNumber = 1;
 
             var url = $"http://zaycev.net/{rubric}/more.html?page={_currentPageNumber}";
+            _logger.LogInformation("Обработка страницы с Zaycev.net: " + url);
 
-           
             var response = await _clientHttp.GetAsync(url);
 
             var html = await response.Content.ReadAsStringAsync();
@@ -47,6 +54,12 @@ namespace ownTrackDownloader
     {
         private List<Track> _tracks = new List<Track>();
         private HttpClient _clientHttp = new HttpClient();
+        private ILogger _logger;
+
+        public TracksGetter(ILogger logger)
+        {
+            _logger = logger;
+        }
 
         public List<Track> GetTracks(string pageContent)
         {
@@ -84,6 +97,7 @@ namespace ownTrackDownloader
 
         public async Task<byte[]> GetTrack(string url)
         {
+            _logger.LogInformation("Скачиваем трэк с Zaycev.net: "+ url);
             using (var r = await _clientHttp.GetAsync(url).ConfigureAwait(false))
             {
                 var responseString = await r.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -102,6 +116,12 @@ namespace ownTrackDownloader
     {
         private HttpClient _clientHttp = new HttpClient();
         private ConfigurationBuilder conf = new ConfigurationBuilder();
+        private ILogger _logger;
+
+        public TrackUploader(ILogger logger)
+        {
+            _logger = logger;
+        }
 
         public async Task<System.Net.HttpStatusCode> Upload(Track track, byte[] audio)
         {
@@ -139,8 +159,8 @@ namespace ownTrackDownloader
            // full_path = GlobalSettings.mediaDirectory + track.Deviceid + "\\" + track.Recid + ".mp3"; //prod
 
             if (!Directory.Exists(path)) Directory.CreateDirectory(path);
-            
 
+            _logger.LogInformation("Сохраняем на диск: " + full_path);
             File.WriteAllBytes(full_path, audio);
         }
 

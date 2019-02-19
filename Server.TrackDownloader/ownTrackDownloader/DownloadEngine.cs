@@ -13,10 +13,10 @@ namespace ownTrackDownloader
         {
             GlobalSettings.ReadFromJson();
 
-            PageGetter pageGetter = new PageGetter();
-            TracksGetter tracksGetter = new TracksGetter();
+            PageGetter pageGetter = new PageGetter(logger);
+            TracksGetter tracksGetter = new TracksGetter(logger);
             TracksChecker tracksChecker = new TracksChecker();
-            TrackUploader trackUploader = new TrackUploader();
+            TrackUploader trackUploader = new TrackUploader(logger);
 
             try
             {
@@ -24,16 +24,20 @@ namespace ownTrackDownloader
                 {
 
                     //получаем контент страницы с нужного раздела
-                    var pageContent = await pageGetter.NextPage(ZaycevRubric.top);
                     logger.LogInformation("Обработка страницы с Zaycev.net");
+                    var pageContent = await pageGetter.NextPage(ZaycevRubric.top);
+
                     //вычленяем из ответа трэки
+                    logger.LogInformation("Вычленяем из html ответа трэки");
                     List<Track> tracks = tracksGetter.GetTracks(pageContent.ToString());
 
                     //удаляем из списка те трэки которые у нас уже есть
+                    logger.LogInformation("Удаляем из списка те трэки которые у нас уже есть");
                     tracks = tracksChecker.CheckForNew(tracks);
 
                     if (tracks.Count > 0)
                     {
+                        logger.LogInformation("Обработка трэков со страницы - скачиваем, генерим uuid, сохраняем на сервере, пишем в бд");
                         foreach (Track track in tracks)
                         {
 
@@ -48,8 +52,6 @@ namespace ownTrackDownloader
 
                             //вносим запись в бд таблицу tracks
                             trackUploader.BDTrackInsert(track);
-                            logger.LogInformation("Внесена запись в бд: "+ track.Recid);
-
                         }
                     }
                 } while (true);
