@@ -10,51 +10,51 @@
 import CoreData
 import Foundation
 
-
-
 class CoreDataManager: NSObject {
-	
+
 	// Singleton
 	static let instance = CoreDataManager()
-	
+
 	private override init() {}
-	
+
 	// Entity for Name
 	func entityForName(entityName: String) -> NSEntityDescription {
 		return NSEntityDescription.entity(forEntityName: entityName, in: self.managedObjectContext)!
 	}
-	
-	func getAllEntitiesFor(entityName:String) -> [Any] {
-		let request:NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName:entityName)
+
+	func getAllEntitiesFor(entityName: String) -> [Any] {
+		let request: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: entityName)
 		var fetchRequest = [Any]()
 		do {
 			fetchRequest = try self.managedObjectContext.fetch(request)
 		} catch {
-			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении всех сущностей по имени", isError: true, errorMessage: error.localizedDescription)
-			CoreDataManager.instance.saveContext()
+			if UserDefaults.standard.bool(forKey: "writeLog"){
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении всех сущностей по имени", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
+			}
 			fatalError("Failed to fetch : \(error)")
 		}
 		return fetchRequest
 	}
-	
+
 	// MARK: - Core Data stack
 	lazy var applicationDocumentsDirectory: NSURL = {
 		let urls = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
 		return urls[urls.count-1] as NSURL
 	}()
-	
+
 	lazy var managedObjectModel: NSManagedObjectModel = {
 		let modelURL = Bundle.main.url(forResource: "DataModel", withExtension: "momd")!
 		return NSManagedObjectModel(contentsOf: modelURL)!
 	}()
-	
+
 	lazy var persistentStoreCoordinator: NSPersistentStoreCoordinator = {
 		let coordinator = NSPersistentStoreCoordinator(managedObjectModel: self.managedObjectModel)
 		let url = self.applicationDocumentsDirectory.appendingPathComponent("SingleViewCoreData.sqlite")
 		var failureReason = "There was an error creating or loading the application's saved data."
 		DispatchQueue.global().async {
 		do {
-			let options = [NSMigratePersistentStoresAutomaticallyOption:true, NSInferMappingModelAutomaticallyOption:true]
+			let options = [NSMigratePersistentStoresAutomaticallyOption: true, NSInferMappingModelAutomaticallyOption: true]
 			try coordinator.addPersistentStore(ofType: NSSQLiteStoreType, configurationName: nil, at: url, options: options)
 		} catch {
 			var dict = [String: AnyObject]()
@@ -70,7 +70,7 @@ class CoreDataManager: NSObject {
 		}
 		return coordinator
 	}()
-	
+
 	lazy var managedObjectContext: NSManagedObjectContext = {
 		let coordinator = self.persistentStoreCoordinator
 		var managedObjectContext = NSManagedObjectContext(concurrencyType: .mainQueueConcurrencyType)
@@ -78,32 +78,34 @@ class CoreDataManager: NSObject {
 		managedObjectContext.retainsRegisteredObjects = true
 		return managedObjectContext
 	}()
-	
+
 	private lazy var privateManagedObjectContext: NSManagedObjectContext = {
 		let moc = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
 		moc.parent = self.managedObjectContext
 		return moc
 	}()
-	
+
 	// End of data stack
-	//MARK: Support Functions
+	// MARK: Support Functions
 	// возвращает количество записей в таблице
-	func chekCountOfEntitiesFor(entityName:String) -> Int {
-		let request:NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName:entityName)
+	func chekCountOfEntitiesFor(entityName: String) -> Int {
+		let request: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest(entityName: entityName)
 		var count = 0
-		do{
+		do {
 			count = try self.managedObjectContext.count(for: request)
-		}catch {
+		} catch {
 			print("Error with get count of entities")
-			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении записей в локальной БД", isError: true, errorMessage: error.localizedDescription)
-			CoreDataManager.instance.saveContext()
+			if UserDefaults.standard.bool(forKey: "writeLog"){
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении записей в локальной БД", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
+			}
 		}
-		
+
 		return count
 	}
-	
+
 	// удаляет историю прослушивания трека с заданным trackId
-	func deleteHistoryFor(trackID:String) {
+	func deleteHistoryFor(trackID: String) {
 		let fetchRequest: NSFetchRequest<HistoryEntity> = HistoryEntity.fetchRequest()
 		if let result = try? self.managedObjectContext.fetch(fetchRequest) {
 			for object in result {
@@ -112,7 +114,7 @@ class CoreDataManager: NSObject {
 		}
 	}
 	// удаляет из базы трек с заданным trackId
-	func deleteTrackFor(trackID:String) {
+	func deleteTrackFor(trackID: String) {
 		let fetchRequest: NSFetchRequest<TrackEntity> = TrackEntity.fetchRequest()
 		fetchRequest.predicate = NSPredicate(format: "recId = %@", trackID)
 		if let result = try? self.managedObjectContext.fetch(fetchRequest) {
@@ -121,7 +123,7 @@ class CoreDataManager: NSObject {
 			}
 		}
 	}
-	
+
 	// удаление всех сущностей в таблице Track, для миграции из папки Documents
 	func deleteAllTracks() {
 		let fetchRequest: NSFetchRequest<TrackEntity> = TrackEntity.fetchRequest()
@@ -131,9 +133,9 @@ class CoreDataManager: NSObject {
 			}
 		}
 	}
-	
+
 	// задает текущую дату для трека с заданным trackId
-	func setDateForTrackBy(trackId:String) {
+	func setDateForTrackBy(trackId: String) {
 		let fetchRequest: NSFetchRequest<TrackEntity> = TrackEntity.fetchRequest()
 		// устанавливаем предикат для запроса
 		fetchRequest.predicate = NSPredicate(format: "recId = %@", trackId)
@@ -143,9 +145,9 @@ class CoreDataManager: NSObject {
 			}
 		}
 	}
-	
+
 	// увеличивает число проигрываний
-	func setCountOfPlayForTrackBy(trackId:String) {
+	func setCountOfPlayForTrackBy(trackId: String) {
 		let fetchRequest: NSFetchRequest<TrackEntity> = TrackEntity.fetchRequest()
 		// устанавливаем предикат для запроса
 		fetchRequest.predicate = NSPredicate(format: "recId = %@", trackId)
@@ -155,7 +157,7 @@ class CoreDataManager: NSObject {
 			}
 		}
 	}
-	
+
 	func sentHistory () {
 		// если нет неотправленной истории прослушивания - выходим из функции
 		guard CoreDataManager.instance.chekCountOfEntitiesFor(entityName: "HistoryEntity") > 0 else {
@@ -163,26 +165,28 @@ class CoreDataManager: NSObject {
 		}
 		//create a fetch request, telling it about the entity
 		let fetchRequest: NSFetchRequest<HistoryEntity> = HistoryEntity.fetchRequest()
-		
+
 		do {
 			// выполняем запрос и отправляем историю о каждом треке
 			let searchResults = try self.managedObjectContext.fetch(fetchRequest)
-			var buff:String = ""
+			var buff: String = ""
 			for track in searchResults {
 				if track.trackId == buff {
 					print("TRACKS IDs are equal!!! ")
 				}
                 ApiService.shared.saveHistory(historyId: track.recId!, trackId: track.trackId!, isListen: Int(track.isListen))
-				
+
 				buff = track.trackId!
 			}
 		} catch {
 			print("Error with request: \(error)")
-			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при сохранении истории", isError: true, errorMessage: error.localizedDescription)
-			CoreDataManager.instance.saveContext()
+			if UserDefaults.standard.bool(forKey: "writeLog"){
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при сохранении истории", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
+			}
 		}
 	}
-	
+
 	//выбираем из трек для проигрывания
 	func getTrackToPlaing() -> SongObject {
 		//задаем сортировку по возрастанию даты проигрывания
@@ -193,11 +197,11 @@ class CoreDataManager: NSObject {
 		let song = getTrackFromBd(sortDescriptors: [sectionSortDescriptor], predicate: NSPredicate(format: "countPlay = %d", 0))
 		guard song.trackID != nil else {
 			let sectionSortDescriptor = NSSortDescriptor(key: "playingDate", ascending: true)
-			return getTrackFromBd(sortDescriptors:  [sectionSortDescriptor], predicate: NSPredicate(format: "countPlay > %d", 0))
+			return getTrackFromBd(sortDescriptors: [sectionSortDescriptor], predicate: NSPredicate(format: "countPlay > %d", 0))
 		}
 		return song
 	}
-	
+
 	// Возвращает трек из БД с учетом заданных сортировки и условий
 	func getTrackFromBd(sortDescriptors: [NSSortDescriptor], predicate: NSPredicate  ) -> SongObject {
 		// создание запроса
@@ -216,56 +220,60 @@ class CoreDataManager: NSObject {
 			}
 			//выбираем первую запись
 			let track = searchResults.first
-			
+
 			song.name = track?.trackName
 			song.artistName = track?.artistName
 			song.trackLength = track?.trackLength
 			song.trackID = track?.recId
 			song.path = track?.path
-			
+
 		} catch {
 			print("Error with request: \(error)")
-			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении трека из БД", isError: true, errorMessage: error.localizedDescription)
-			CoreDataManager.instance.saveContext()
+			if UserDefaults.standard.bool(forKey: "writeLog"){
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении трека из БД", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
+			}
 		}
 		return song
 	}
-	
+
 	// запрос groupBy для получения кол-ва проигрываний
 	func getGroupedTracks () -> NSArray {
 		// создаем запрос и устанавливаем конфигурации для запроса
-		let fetchRequest:NSFetchRequest<NSFetchRequestResult> = NSFetchRequest()
+		let fetchRequest: NSFetchRequest<NSFetchRequestResult> = NSFetchRequest()
 		let entityDescription = NSEntityDescription.entity(forEntityName: "TrackEntity", in: self.managedObjectContext)
 		fetchRequest.resultType = .dictionaryResultType
 		fetchRequest.entity = entityDescription
 		// создаем выражение для propertiesToFetch
 		let keyPathExpression = NSExpression.init(forKeyPath: "countPlay")
 		let countExpression = NSExpression(forFunction: "count:", arguments: [keyPathExpression])
-		
+
 		let expressionDescription = NSExpressionDescription()
 		expressionDescription.name = "count"
-		
+
 		expressionDescription.expression = countExpression
 		expressionDescription.expressionResultType = .integer32AttributeType
-		
+
 		// устанавливаем значения propertiesToFetch и propertiesToGroupBy для запроса groupby
 		fetchRequest.propertiesToFetch = ["countPlay", expressionDescription]
 		fetchRequest.propertiesToGroupBy = ["countPlay"]
-		
+
 		var resultsArray = NSArray()
-		do{
+		do {
 			//выполняем запрос
 			let res = try self.managedObjectContext.fetch(fetchRequest)
 			resultsArray = res as NSArray
 		} catch {
 			print(error.localizedDescription)
-			
-			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении количества проигрываний", isError: true, errorMessage: error.localizedDescription)
-			CoreDataManager.instance.saveContext()
+
+			if UserDefaults.standard.bool(forKey: "writeLog"){
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении количества проигрываний", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
+			}
 		}
 		return resultsArray
 	}
-	
+
 	// возвращает соличество сущностей в таблице TrackEntity
 	func getCountOfTracks() -> Int {
 		// создаем запрос
@@ -277,56 +285,63 @@ class CoreDataManager: NSObject {
 			count = searchResults.count
 		} catch {
 			print("Error with request: \(error)")
-			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении количества сущностей таблицы TrackEntity", isError: true, errorMessage: error.localizedDescription)
-			CoreDataManager.instance.saveContext()
+			if UserDefaults.standard.bool(forKey: "writeLog"){
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении количества сущностей таблицы TrackEntity", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
+			}
 		}
 		return count
 	}
-	
+
 	// получает трек с найбольшим кол-вом проигрываний
-	func getOldTrack (onlyListen: Bool) -> SongObject? {
+	func getOldTrack (onlyListen: Bool) -> [SongObject?] {
 		// устанавливаем сортировку по кол-ву поигрываний и по дате
 		let countSortDescriptor = NSSortDescriptor(key: "countPlay", ascending: false)
 		let dateSortDescriptor = NSSortDescriptor(key: "playingDate", ascending: true)
 		let sortDescriptors = [countSortDescriptor, dateSortDescriptor]
-		
+
 		// создаем запрос к базе с сортировкой
 		let fetchRequest: NSFetchRequest<TrackEntity> = TrackEntity.fetchRequest()
 		fetchRequest.sortDescriptors = sortDescriptors
 //		задаем предикат
-		if(onlyListen){
+		if(onlyListen) {
 			fetchRequest.predicate = NSPredicate(format: "countPlay > %d", 0)
-		}else {
+		} else {
 			fetchRequest.predicate = NSPredicate(format: "countPlay >= %d", 0)
 		}
-		fetchRequest.fetchLimit = 1
-		let song = SongObject()
+		fetchRequest.fetchLimit = 2
+		var songs = [SongObject]()
 		do {
 			// выполняем запрос и проверяем кол-во результатов
 			let searchResults = try self.managedObjectContext.fetch(fetchRequest)
 			guard searchResults.count != 0 else {
-				return nil
+				return [nil]
 			}
 			//берем первый обьект из результата
-			let track = searchResults.first
+			for result in searchResults{
+				let song = SongObject()
+				
+				song.name = result.trackName
+				song.artistName = result.artistName
+				song.trackLength = result.trackLength
+				song.trackID = result.recId
+				song.path = result.path
+				songs.append(song)
+			}
 			
-			song.name = track?.trackName
-			song.artistName = track?.artistName
-			song.trackLength = track?.trackLength
-			song.trackID = track?.recId
-			song.path = track?.path
-			
+
 		} catch {
 			print("Error with request: \(error)")
-			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении трека с наибольшим количество проигрываний", isError: true, errorMessage: error.localizedDescription)
-			CoreDataManager.instance.saveContext()
+			if UserDefaults.standard.bool(forKey: "writeLog"){
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении трека с наибольшим количество проигрываний", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
+			}
 		}
-		return song
+		return songs
 	}
-	
 
     // возвращает время начала проигрывания трека с заданным trackId
-    func getDateForTrackBy(trackId:String) -> NSDate? {
+    func getDateForTrackBy(trackId: String) -> NSDate? {
         let fetchRequest: NSFetchRequest<TrackEntity> = TrackEntity.fetchRequest()
         // устанавливаем предикат для запроса
         fetchRequest.predicate = NSPredicate(format: "recId = %@", trackId)
@@ -337,7 +352,7 @@ class CoreDataManager: NSObject {
         }
         return nil
     }
-	
+
 	//выбираем все прослушанные треки
 	func getListenTracks() -> [SongObject] {
 		//задаем сортировку по убыванию количества проигрываний
@@ -369,63 +384,64 @@ class CoreDataManager: NSObject {
 			}
 		} catch {
 			print("Error with request: \(error)")
-			CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении всех прослушанных треков", isError: true, errorMessage: error.localizedDescription)
-			CoreDataManager.instance.saveContext()
+			if UserDefaults.standard.bool(forKey: "writeLog"){
+				CoreDataManager.instance.setLogRecord(eventDescription: "Ошибка при получении всех прослушанных треков", isError: true, errorMessage: error.localizedDescription)
+				CoreDataManager.instance.saveContext()
+			}
 		}
 		return listenTracks
 	}
-	
-	func setLogRecord(eventDescription: String, isError: Bool, errorMessage: String){
-		let entityDescription = NSEntityDescription.entity(forEntityName: "LogEntity", in: self.managedObjectContext)
-		let managedObject = NSManagedObject(entity: entityDescription!, insertInto: self.managedObjectContext)
-		let date = Date()
-		do{
+
+	func setLogRecord(eventDescription: String, isError: Bool, errorMessage: String) {
+		do {
+
+			let entityDescription = NSEntityDescription.entity(forEntityName: "LogEntity", in: self.managedObjectContext)
+			let managedObject = NSManagedObject(entity: entityDescription!, insertInto: self.managedObjectContext)
+			let date = Date()
 			managedObject.setValue(date, forKey: "eventDate")
 			managedObject.setValue(eventDescription, forKey: "eventDescription")
-			managedObject.setValue(Thread.current.description, forKey: "eventThread")
-			if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable{
-				managedObject.setValue(true, forKey:"hasInternet")
-			}
-			else{
-				managedObject.setValue(false, forKey:"hasInternet")
+			managedObject.setValue(Thread.current.debugDescription, forKey: "eventThread")
+			if currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable {
+				managedObject.setValue(true, forKey: "hasInternet")
+			} else {
+				managedObject.setValue(false, forKey: "hasInternet")
 			}
 			managedObject.setValue(isError, forKey: "isError")
 			managedObject.setValue(errorMessage, forKey: "errorMessage")
-		}catch{
+		} catch {
 			print("Ошибка сохранения лога \(error.localizedDescription)")
 		}
 	}
-	
-	func getLogRecords() -> [LogObject]{
+
+	func getLogRecords() -> [LogObject] {
 		let sectionSortDescriptor = NSSortDescriptor(key: "eventDate", ascending: false)
 		let sortDescriptors = [sectionSortDescriptor]
 		let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "LogEntity") //TrackEntity.fetchRequest()
 		fetchRequest.sortDescriptors = sortDescriptors
 		var logsArray = [LogObject]()
-		do{
+		do {
 			let logResults = try self.managedObjectContext.fetch(fetchRequest)
-			guard logResults.count != 0 else{
+			guard logResults.count != 0 else {
 				return logsArray
 			}
 			let logEntity = logResults as! [LogEntity]
-			for logItem in logEntity{
+			for logItem in logEntity {
 				let log = LogObject()
 				log.eventDate = logItem.eventDate! as Date
 				log.eventDescription = logItem.eventDescription!
-				log.eventThread = logItem.eventThread!
+				log.eventThread = logItem.eventThread ?? ""
 				log.hasInternet = logItem.hasInternet
 				log.isError = logItem.isError
 				log.errorMessage = logItem.errorMessage ?? ""
 				logsArray.append(log)
 			}
-		}
-		catch{
+		} catch {
 			print("Error with get log block: \(error)")
 		}
 		return logsArray
 	}
-	
-	func deleteLogRecords(){
+
+	func deleteLogRecords() {
 		let fetchRequest: NSFetchRequest<LogEntity> = LogEntity.fetchRequest()
 		if let result = try? self.managedObjectContext.fetch(fetchRequest) {
 			for object in result {
@@ -438,7 +454,7 @@ class CoreDataManager: NSObject {
 	// функция сохранения контекста
 	func saveContext () {
 		if managedObjectContext.hasChanges {
-			DispatchQueue.main.async{
+			DispatchQueue.main.async {
 				do {
 					try self.managedObjectContext.save()
 				} catch {
@@ -452,5 +468,5 @@ class CoreDataManager: NSObject {
 			}
 		}
 	}
-	
+
 }

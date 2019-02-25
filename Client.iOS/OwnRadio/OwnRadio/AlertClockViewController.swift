@@ -12,7 +12,7 @@ import UIKit
 class AlertClockViewController: UIViewController {
 
 	@IBOutlet weak var timePicker: UIDatePicker!
-    
+
 	@IBOutlet weak var mondayBTN: UIButton!
 	@IBOutlet weak var saturdayBTN: UIButton!
 	@IBOutlet weak var sundayBTN: UIButton!
@@ -23,8 +23,7 @@ class AlertClockViewController: UIViewController {
 	@IBOutlet weak var currentPlaySongLbl: UILabel!
     @IBOutlet weak var setBudButton: UIButton!
     @IBOutlet weak var infoLabel: UILabel!
-	
-	
+
 	let userDefaults = UserDefaults.standard
 	var daysSelected = [Bool]()
 	var selectedTime = Date()
@@ -32,32 +31,30 @@ class AlertClockViewController: UIViewController {
 	var mainController: RadioViewController!
 	var budSchedule = [Date]()
 	var timer: DispatchSourceTimer?
-	
+
 	var remoteAudioControls: RemoteAudioControls?
-	
+
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
 	let budTracksUrlString = FileManager.applicationSupportDir().appending("/AlarmTracks/")
-	
+
 	override func viewDidLoad() {
         super.viewDidLoad()
 		let dateformatter = DateFormatter()
 		dateformatter.timeStyle = DateFormatter.Style.short
 		timePicker.date = (userDefaults.object(forKey: "alarmClockTime") as? Date ?? Date())!
-		
-		if self.userDefaults.data(forKey: "PlayingSongObject") != nil{
+
+		if self.userDefaults.data(forKey: "PlayingSongObject") != nil {
 			let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
 			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
 			currentPlaySongLbl.text = songObject.name
-		}
-		else{
+		} else {
 			currentPlaySongLbl.text = ""
 		}
-		
 
 		daysSelected = userDefaults.array(forKey: "selectedDaysArray") as? [Bool] ?? [Bool]([false, false, false, false, false, false, false])
-		if daysSelected.count > 0{
-			for (index, value) in daysSelected.enumerated(){
-				switch index{
+		if daysSelected.count > 0 {
+			for (index, value) in daysSelected.enumerated() {
+				switch index {
 				case 1:
 					mondayBTN.isSelected = value
 				case 2:
@@ -77,40 +74,36 @@ class AlertClockViewController: UIViewController {
 				}
 			}
 		}
-		if userDefaults.bool(forKey: "budState"){
+		if userDefaults.bool(forKey: "budState") {
 			setBudButton.setImage(UIImage(named: "budBlue"), for: .normal)
             budSchedule = userDefaults.object(forKey: "budSchedule") as? [Date] ?? [Date]()
-            if budSchedule.count != 0 || userDefaults.bool(forKey: "budState"){
+            if budSchedule.count != 0 || userDefaults.bool(forKey: "budState") {
 				getMinDatediff(needDisplay: true)
-            }
-            else{
+            } else {
                 infoLabel.text = ""
             }
-		}
-		else{
+		} else {
 			setBudButton.setImage(UIImage(named: "budGray"), for: .normal)
 			infoLabel.text = ""
 		}
-		
+
 		// Do any additional setup after loading the view.
     }
-	
 
-	
 	override func viewWillDisappear(_ animated: Bool) {
 		userDefaults.set(timePicker.date, forKey: "alarmClockTime")
 		userDefaults.set(daysSelected, forKey: "selectedDaysArray")
 		if let rootController = UIApplication.shared.keyWindow?.rootViewController {
 			let navigationController = rootController as! UINavigationController
-			
-			if userDefaults.bool(forKey: "budState"){
+
+			if userDefaults.bool(forKey: "budState") {
 				if let radioViewContr = navigationController.topViewController  as? RadioViewController {
 					radioViewContr.alertClock = timer
 				}
 			}
 		}
 	}
-	
+
 	override func remoteControlReceived(with event: UIEvent?) {
 		guard let remoteControls = remoteAudioControls else {
 			print("Remote controls not set")
@@ -118,65 +111,58 @@ class AlertClockViewController: UIViewController {
 		}
 		remoteControls.remoteControlReceived(with: event)
 	}
-	
-	@IBAction func weekDaySelect(sender: UIButton){
+
+	@IBAction func weekDaySelect(sender: UIButton) {
 		sender.isSelected = !sender.isSelected
 		switch sender {
 		case mondayBTN:
-			if sender.isSelected{
-				daysSelected[1] = true;
-			}
-			else{
-				daysSelected[1] = false;
+			if sender.isSelected {
+				daysSelected[1] = true
+			} else {
+				daysSelected[1] = false
 			}
 		case tuesdayBTN:
-			if sender.isSelected{
-				daysSelected[2] = true;
-			}
-			else{
-				daysSelected[2] = false;
+			if sender.isSelected {
+				daysSelected[2] = true
+			} else {
+				daysSelected[2] = false
 			}
 		case wednesdayBTN:
-			if sender.isSelected{
-				daysSelected[3] = true;
-			}
-			else{
-				daysSelected[3] = false;
+			if sender.isSelected {
+				daysSelected[3] = true
+			} else {
+				daysSelected[3] = false
 			}
 		case thursdayBTN:
-			if sender.isSelected{
-				daysSelected[4] = true;
-			}
-			else{
-				daysSelected[4] = false;
+			if sender.isSelected {
+				daysSelected[4] = true
+			} else {
+				daysSelected[4] = false
 			}
 		case fridayBTN:
-			if sender.isSelected{
-				daysSelected[5] = true;
-			}
-			else{
-				daysSelected[5] = false;
+			if sender.isSelected {
+				daysSelected[5] = true
+			} else {
+				daysSelected[5] = false
 			}
 		case saturdayBTN:
-			if sender.isSelected{
-				daysSelected[6] = true;
-			}
-			else{
-				daysSelected[6] = false;
+			if sender.isSelected {
+				daysSelected[6] = true
+			} else {
+				daysSelected[6] = false
 			}
 		case sundayBTN:
-			if sender.isSelected{
-				daysSelected[0] = true;
-			}
-			else{
-				daysSelected[0] = false;
+			if sender.isSelected {
+				daysSelected[0] = true
+			} else {
+				daysSelected[0] = false
 			}
 		default:
-			break;
+			break
 		}
 	}
-	
-	func appendDayToSchedule(additionalDays: Int){
+
+	func appendDayToSchedule(additionalDays: Int) {
 		let timePickerValue = timePicker.date
 		let calendar = Calendar.current
 		let components = calendar.dateComponents([.hour, .minute], from: timePickerValue)
@@ -185,7 +171,7 @@ class AlertClockViewController: UIViewController {
 		currentDateComponents.minute = components.minute
 		let currentDate = Calendar.current.date(from: currentDateComponents)
 		var budDate = Date(timeInterval: Double(additionalDays * 86400), since: currentDate ?? Date())
-		if calendar.dateComponents([.second], from: Date(), to: budDate).second! < 0 && additionalDays == 0{
+		if calendar.dateComponents([.second], from: Date(), to: budDate).second! < 0 && additionalDays == 0 {
 			budDate = Date(timeInterval: Double(7 * 86400), since: currentDate ?? Date())
 		}
 		budSchedule.append(budDate)
@@ -193,28 +179,27 @@ class AlertClockViewController: UIViewController {
 
 	@IBAction func oneTapAction(_ sender: Any) {
 		//Обновление состояния таймера по нажатию на экран
-		if UserDefaults.standard.bool(forKey: "timerState"){
-			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey:  "updateTimerDate")
+		if UserDefaults.standard.bool(forKey: "timerState") {
+			UserDefaults.standard.set(Int(Date().timeIntervalSince1970), forKey: "updateTimerDate")
 		}
 	}
-	
-    
+
 	@IBAction func setBudButtonClick(_ sender: Any) {
-        
-        if !userDefaults.bool(forKey: "budState") && self.userDefaults.data(forKey: "PlayingSongObject") != nil{
+
+        if !userDefaults.bool(forKey: "budState") && self.userDefaults.data(forKey: "PlayingSongObject") != nil {
 			budSchedule = [Date]()
 //			if player.isPlaying{
 //				copyCurrentTrackToAlarmDir()
 //			}
-			
+
 			setBudButton.setImage(UIImage(named: "budBlue"), for: .normal)
 			userDefaults.set(true, forKey: "budState")
-			
+
 			let currentDayOfWeek = Calendar.current.component(.weekday, from: Date())
-			let selectedDaysCount = daysSelected.filter{$0 == true}.count
-			if selectedDaysCount == 0{
+			let selectedDaysCount = daysSelected.filter {$0 == true}.count
+			if selectedDaysCount == 0 {
 				daysSelected[currentDayOfWeek - 1] = true
-				switch currentDayOfWeek-1{
+				switch currentDayOfWeek-1 {
 				case 1:
 					mondayBTN.isSelected = true
 				case 2:
@@ -233,36 +218,45 @@ class AlertClockViewController: UIViewController {
 					break
 				}
 			}
-			
-			for (index, element) in daysSelected.enumerated() where element == true{
-				if index + 1 >= currentDayOfWeek{
+
+			for (index, element) in daysSelected.enumerated() where element == true {
+				if index + 1 >= currentDayOfWeek {
 					let additionalDays = (index + 1) - currentDayOfWeek
 					appendDayToSchedule(additionalDays: additionalDays)
-				}
-				else{
+				} else {
 					let additionalDays = (index + 1) + (7 - currentDayOfWeek)
 					appendDayToSchedule(additionalDays: additionalDays)
 				}
 			}
 			userDefaults.set(budSchedule, forKey: "budSchedule")
 			let minInterval = getMinDatediff(needDisplay: true)
-			if minInterval[1] >= 0{
+			if minInterval[1] >= 0 {
 				startTimer(timeInterval: TimeInterval(minInterval[1]), minIndex: minInterval[0])
 			}
-			
-			userDefaults.set(Int(Date().timeIntervalSince1970), forKey:  "setBudDate")
-			
+
+			userDefaults.set(Int(Date().timeIntervalSince1970), forKey: "setBudDate")
+
 			let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
 			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
-			DispatchQueue.global(qos: .utility).async{
-				CopyManager.copyCurrentTrackToDir(song: songObject, copyTo: self.budTracksUrlString)
-				print("Текущий трек скопирован в директорию будильника")
+			do {
+				let items = try FileManager.default.contentsOfDirectory(atPath: budTracksUrlString)
+				if !items.contains(songObject.trackID + ".mp3") {
+					DispatchQueue.global(qos: .utility).async {
+						CopyManager.copyCurrentTrackToDir(song: songObject, copyTo: self.budTracksUrlString)
+						print("Текущий трек скопирован в директорию будильника")
+					}
+				}
+			} catch {
+				if UserDefaults.standard.bool(forKey: "writeLog"){
+					CoreDataManager.instance.setLogRecord(eventDescription: "Не удалось получить данные о файлах в директории будильника", isError: true, errorMessage: error.localizedDescription)
+					CoreDataManager.instance.saveContext()
+					
+				}
 			}
-		}
-		else if self.userDefaults.data(forKey: "PlayingSongObject") == nil{
+
+		} else if self.userDefaults.data(forKey: "PlayingSongObject") == nil {
 			infoLabel.text = "Нет прослушиваемого трека"
-		}
-		else{
+		} else {
 			setBudButton.setImage(UIImage(named: "budGray"), for: .normal)
 			userDefaults.set(false, forKey: "budState")
 			budSchedule = [Date]()
@@ -272,29 +266,28 @@ class AlertClockViewController: UIViewController {
 		}
 		userDefaults.set(timePicker.date, forKey: "alarmClockTime")
 		userDefaults.set(daysSelected, forKey: "selectedDaysArray")
-		
+
 	}
 
-	
-	private func startTimer(timeInterval: TimeInterval, minIndex: Int){
+	private func startTimer(timeInterval: TimeInterval, minIndex: Int) {
 		let queue = DispatchQueue.main
 		timer?.cancel()
 		timer = DispatchSource.makeTimerSource(queue: queue)
-		
+
 		//timer?.scheduleRepeating(deadline: .now() + .seconds(Int(timeInterval)), interval: timeInterval)
 		timer?.scheduleOneshot(deadline: .now() + .seconds(Int(timeInterval)))
-		timer?.setEventHandler{
+		timer?.setEventHandler {
 			self.timerAction(currentMinIndex: minIndex)
 		}
 		timer?.resume()
 	}
-	
-	private func stopTimer(){
+
+	private func stopTimer() {
 		timer?.cancel()
 		timer = nil
 	}
-	
-	func timerAction(currentMinIndex: Int) -> Void{
+
+	func timerAction(currentMinIndex: Int) {
 		//Обновление расписания
 		let newScheduleDate = Date(timeInterval: 7 * 86400, since: budSchedule[currentMinIndex]) // будильник ставится через неделю
 		budSchedule[currentMinIndex] = newScheduleDate
@@ -302,9 +295,9 @@ class AlertClockViewController: UIViewController {
 		let minInterval = getMinDatediff(needDisplay: false)
 		stopTimer()
 		startTimer(timeInterval: TimeInterval(minInterval[1]), minIndex: minInterval[0])
-		
+
 		//Проигрывание сохраненного трека если будильник установлен
-		if userDefaults.bool(forKey: "budState"){
+		if userDefaults.bool(forKey: "budState") {
 			let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
 			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
 			let songFileName = songObject.path
@@ -312,26 +305,25 @@ class AlertClockViewController: UIViewController {
 //			let trackPath = NSURL(fileURLWithPath: songFilePath) as URL
 			var trackPath: URL
 			var isCorrect: Bool = false
-			
+
 			let fileManager = FileManager.default
-			if fileManager.fileExists(atPath: self.tracksUrlString + songFileName!){
+			if fileManager.fileExists(atPath: self.tracksUrlString + songFileName!) {
 				trackPath = NSURL(fileURLWithPath: self.tracksUrlString + songFileName!) as URL
 				isCorrect = true
-			}
-			else{
+			} else {
 				isCorrect = CopyManager.copyTrackToCache(trackPath: budTracksUrlString + songFileName!, trackName: songFileName!)
 				trackPath = NSURL(fileURLWithPath: self.tracksUrlString + songFileName!) as URL
 			}
-			
-			if self.mainController != nil && isCorrect{
+
+			if self.mainController != nil && isCorrect {
 				self.mainController.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: 0, needUpdateUI: true)
 			}
 		}
 	}
-	
-	func getMinDatediff(needDisplay: Bool) -> [Int]{
+
+	func getMinDatediff(needDisplay: Bool) -> [Int] {
         var dateDiffs = [Int]()
-        for date in budSchedule{
+        for date in budSchedule {
             let dateDiff = Calendar.current.dateComponents([.second], from: Date(), to: date).second
             dateDiffs.append(dateDiff!)
         }
@@ -341,15 +333,15 @@ class AlertClockViewController: UIViewController {
         let bellMonth = String(bellDate.month!)
         let bellHour = String(bellDate.hour!)
         let bellMinute = String(bellDate.minute!)
-		
-		if needDisplay{
+
+		if needDisplay {
 			infoLabel.text = "Будильник зазвонит " + bellDay + "." + bellMonth + "\n в " + bellHour + ":" + bellMinute
 		}
-		
+
 		let returnedArr = [minDiffIndex, dateDiffs[minDiffIndex!]]
 		return returnedArr as! [Int]
     }
-    
+
     /*
     // MARK: - Navigation
 
@@ -359,37 +351,36 @@ class AlertClockViewController: UIViewController {
         // Pass the selected object to the new view controller.
     }
     */
-	
+
 	//Копирование играющего трека в директорию для будильника
-	func copyCurrentTrackToAlarmDir(){
+	func copyCurrentTrackToAlarmDir() {
 		let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
 		let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
 		let songFileName = songObject.path
 		if songFileName != ""{
 			let pathToTrack = tracksUrlString + songFileName!
-			
+
 			var isDir: ObjCBool = true
-			if FileManager.default.fileExists(atPath: budTracksUrlString, isDirectory: &isDir){
-				if !isDir.boolValue{
+			if FileManager.default.fileExists(atPath: budTracksUrlString, isDirectory: &isDir) {
+				if !isDir.boolValue {
 					createDirectory(path: budTracksUrlString)
 				}
-			}
-			else{
+			} else {
 				createDirectory(path: budTracksUrlString)
 			}
-			
+
 			let items = try! FileManager.default.contentsOfDirectory(atPath: budTracksUrlString)
 			// Удаляем старый трек
-			for item in items{
+			for item in items {
 				try! FileManager.default.removeItem(atPath: budTracksUrlString + item)
 			}
 			// Копируем новый
 			try! FileManager.default.copyItem(atPath: pathToTrack, toPath: budTracksUrlString + songFileName!)
-				
+
 		}
 	}
-	
-	func createDirectory(path: String){
+
+	func createDirectory(path: String) {
 		try! FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: false, attributes: nil)
 	}
 }

@@ -9,11 +9,10 @@
 import Foundation
 import CoreData
 
-
 extension HistoryEntity {
 
     @nonobjc public class func fetchRequest() -> NSFetchRequest<HistoryEntity> {
-        return NSFetchRequest<HistoryEntity>(entityName: "HistoryEntity");
+        return NSFetchRequest<HistoryEntity>(entityName: "HistoryEntity")
     }
 
     @NSManaged public var isListen: Int32

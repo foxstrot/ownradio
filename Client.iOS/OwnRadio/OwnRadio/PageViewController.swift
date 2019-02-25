@@ -11,29 +11,27 @@ import Alamofire
 
 class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UIPageViewControllerDataSource {
 
-	
 	var timerAutoSkip: DispatchSourceTimer!
 	var timerRunPlayer: DispatchSourceTimer!
 	var reachability = NetworkReachabilityManager(host: "http://api.ownradio.ru/v5")
-	
+
 	var pageControl = UIPageControl()
 	lazy var orderedViewControllers: [UIViewController] = {
 		return [self.newVc(viewController: "firstSlide"),
 				self.newVc(viewController: "secondSlide"),
 				self.newVc(viewController: "thirdSlide")]
 	}()
-	
-	
+
     override func viewDidLoad() {
         super.viewDidLoad()
-		
+
 		self.dataSource = self
 		self.delegate = self
-		
-		if let firstViewController = orderedViewControllers.first{
+
+		if let firstViewController = orderedViewControllers.first {
 			setViewControllers([firstViewController], direction: .forward, animated: true, completion: nil)
 		}
-		
+
 		configurePageControl()
 		reachability?.listener = { [unowned self] status in
 			if status != NetworkReachabilityManager.NetworkReachabilityStatus.notReachable {
@@ -41,28 +39,28 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
 			}
 		}
 		reachability?.startListening()
-		
+
         // Do any additional setup after loading the view.
     }
 
 	override func viewDidAppear(_ animated: Bool) {
-		if timerAutoSkip != nil{
+		if timerAutoSkip != nil {
 			timerAutoSkip.cancel()
 		}
 		runAutoskip()
 	}
 	//Инициализация таймера перелистываний
-	func runAutoskip(){
+	func runAutoskip() {
 		let queue = DispatchQueue(label: "AutoSkipTimer", attributes: .concurrent)
 		timerAutoSkip = DispatchSource.makeTimerSource(queue: queue)
 		timerAutoSkip.scheduleRepeating(deadline: .now() + 10, interval: .seconds(10))
 		timerAutoSkip.setEventHandler(handler: {
 			DispatchQueue.main.sync {
 				self.goToNextPage(animated: true)
-				if self.pageControl.currentPage == self.orderedViewControllers.count - 1{
+				if self.pageControl.currentPage == self.orderedViewControllers.count - 1 {
 					self.pageControl.currentPage = 0
 					self.runPlayerView()
-				}else{
+				} else {
 					self.pageControl.currentPage = self.pageControl.currentPage + 1
 				}
 			}
@@ -70,23 +68,23 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
 		timerAutoSkip.resume()
 	}
 	//перелистывание страницы
-	func goToNextPage(animated: Bool){
+	func goToNextPage(animated: Bool) {
 		guard let currentViewController = self.viewControllers?.first else {return}
 		guard let nextViewController = dataSource?.pageViewController(self, viewControllerAfter: currentViewController) else {return}
 		self.setViewControllers([nextViewController], direction: .forward, animated: animated, completion: nil)
 	}
-	
+
 	override func viewDidDisappear(_ animated: Bool) {
-		if timerAutoSkip != nil{
+		if timerAutoSkip != nil {
 			timerAutoSkip.cancel()
 		}
 	}
-	
+
 	//Инициализация слайда
 	func newVc(viewController: String) -> UIViewController {
 		return UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: viewController)
 	}
-	
+
 	//Создание и конфигурирование индикатора с точками
 	func configurePageControl() {
 		pageControl = UIPageControl(frame: CGRect(x: 0, y: UIScreen.main.bounds.maxY - 50, width: UIScreen.main.bounds.width, height: 50))
@@ -97,26 +95,26 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
 		self.pageControl.currentPageIndicatorTintColor = UIColor.black
 		self.view.addSubview(pageControl)
 	}
-	
+
 	func pageViewController(_ pageViewController: UIPageViewController, didFinishAnimating finished: Bool, previousViewControllers: [UIViewController], transitionCompleted completed: Bool) {
 		let pageContentViewController = pageViewController.viewControllers![0]
 		self.pageControl.currentPage = orderedViewControllers.index(of: pageContentViewController)!
-		
-		if timerRunPlayer != nil{
+
+		if timerRunPlayer != nil {
 			timerRunPlayer.cancel()
 		}
-		
-		if self.pageControl.currentPage == orderedViewControllers.count - 1{
+
+		if self.pageControl.currentPage == orderedViewControllers.count - 1 {
 			self.runPlayerView()
 		}
-		if timerAutoSkip != nil{
+		if timerAutoSkip != nil {
 			timerAutoSkip.cancel()
 			runAutoskip()
 		}
 	}
-	
+
 	//Инициализация таймера запуска основного view
-	func runPlayerView(){
+	func runPlayerView() {
 		let queue = DispatchQueue(label: "AutoSkipTimer", attributes: .concurrent)
 		timerRunPlayer = DispatchSource.makeTimerSource(queue: queue)
 		timerRunPlayer.scheduleOneshot(deadline: .now() + 1)
@@ -124,57 +122,57 @@ class PageViewController: UIPageViewController, UIPageViewControllerDelegate, UI
 			DispatchQueue.main.async {
 				let storyboard: UIStoryboard = UIStoryboard(name: "Main", bundle: nil)
 				let viewController = storyboard.instantiateViewController(withIdentifier: "RadioViewController")
-				self.navigationController?.pushViewController(viewController, animated: true)
+				self.navigationController?.pushViewController(viewController, animated: false)
 			}
 		})
 		timerRunPlayer.resume()
 	}
-	
+
 	func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-		guard let viewControllerIndex = orderedViewControllers.index(of: viewController) else{
+		guard let viewControllerIndex = orderedViewControllers.index(of: viewController) else {
 			return nil
 		}
-		
+
 		let previousIndex = viewControllerIndex - 1
-		
-		guard previousIndex >= 0 else{
+
+		guard previousIndex >= 0 else {
 			return orderedViewControllers.last
 		}
-		
-		guard orderedViewControllers.count > previousIndex else{
+
+		guard orderedViewControllers.count > previousIndex else {
 			return nil
 		}
 		return orderedViewControllers[previousIndex]
 	}
-	
+
 	func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
 		guard let viewControllerIndex = orderedViewControllers.index(of: viewController) else {
 			return nil
 		}
-		
+
 		let nextIndex = viewControllerIndex + 1
 		let orderedViewControllersCount = orderedViewControllers.count
-		
-		guard orderedViewControllersCount != nextIndex else{
+
+		guard orderedViewControllersCount != nextIndex else {
 			return orderedViewControllers.first
 		}
-		
-		guard orderedViewControllersCount > nextIndex else{
+
+		guard orderedViewControllersCount > nextIndex else {
 			return nil
 		}
-		
+
 		return orderedViewControllers[nextIndex]
-		
+
 	}
 	func downloadTracks() {
 		guard currentReachabilityStatus != NSObject.ReachabilityStatus.notReachable else {
 			return
 		}
 		DispatchQueue.global(qos: .utility).async {
-			Downloader.sharedInstance.load(isSelfFlag: false){print("First download run")}
+			Downloader.sharedInstance.load(isSelfFlag: false) {print("First download run")}
 		}
 	}
-	
+
     /*
     // MARK: - Navigation
 

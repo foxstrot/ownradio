@@ -10,15 +10,11 @@ import UIKit
 
 class LogTableViewCell: UITableViewCell {
 
-
     @IBOutlet weak var dateLbl: UILabel!
     @IBOutlet weak var descriptionLbl: UILabel!
     @IBOutlet weak var threadLbl: UILabel!
     @IBOutlet weak var networkLbl: UILabel!
-    
-	
-    
-	
+
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code

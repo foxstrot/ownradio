@@ -9,7 +9,6 @@
 import Foundation
 import CoreData
 
-
 public class HistoryEntity: NSManagedObject {
 	convenience init() {
 		self.init(entity: CoreDataManager.instance.entityForName(entityName: "HistoryEntity"), insertInto: CoreDataManager.instance.managedObjectContext)
