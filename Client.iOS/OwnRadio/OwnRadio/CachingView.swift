@@ -9,35 +9,34 @@
 import UIKit
 
 class CachingView: UIView {
-	
+
 	@IBOutlet var activityIndicator: UIActivityIndicatorView!
-	
-	
+
 	class func instanceFromNib() -> UIView {
 		return UINib(nibName: "CachingView", bundle: nil).instantiate(withOwner: nil, options: nil)[0] as! UIView
 	}
-	
+
 	override func awakeFromNib() {
 		super.awakeFromNib()
 		animatedAppear()
 		activityIndicator.startAnimating()
 	}
-	
+
 	override func removeFromSuperview() {
 		animatedRemovingFromSuperview()
 	}
-	
+
 	func animatedRemovingFromSuperview () {
 		DispatchQueue.main.async {
 			UIView.animate(withDuration: 0.8, animations: {
 				self.activityIndicator.stopAnimating()
 				self.alpha = 0
-			}) { (bollValue) in
+			}) { (_) in
 				super.removeFromSuperview()
 			}
 		}
 	}
-	
+
 	func animatedAppear() {
 		DispatchQueue.main.async {
 			self.alpha = 0
@@ -46,5 +45,5 @@ class CachingView: UIView {
 			}
 		}
 	}
-	
+
 }
