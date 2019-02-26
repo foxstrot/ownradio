@@ -761,8 +761,11 @@ public class MediaPlayerService extends Service implements MediaPlayer.OnComplet
 		if (track != null)
 			return true;
 		do {
-			track = trackDataAccess.GetMostOldTrack();
-//			Intent i = new Intent(ActionTrackInfoUpdate);
+			track = trackDataAccess.GetMostNewNotListenTrack();
+			if (track == null){
+				track = trackDataAccess.GetOldListenedTrack();
+//			Intent i = new Intent(ActionTrackInfoUpdate)
+			};
 //			getApplicationContext().sendBroadcast(i);
 			if (track != null) {
 				startPosition = 0;
