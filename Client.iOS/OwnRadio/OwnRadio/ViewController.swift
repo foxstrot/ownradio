@@ -13,6 +13,7 @@ import Alamofire
 import CloudKit
 import CallKit
 import CoreBluetooth
+import UserNotifications
 
 @available(iOS 10.0, *)
 class RadioViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, RemoteAudioControls {
@@ -90,7 +91,7 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	let currentTrackPathUrl = FileManager.applicationSupportDir().appending("/currentTrackPath/")
 	let budTracksUrlString = FileManager.applicationSupportDir().appending("/AlarmTracks/")
 
-	var alertClock: DispatchSourceTimer?
+	var alertClock: Timer?
 	var timer: DispatchSourceTimer?
 	var bluetoothWaitTimer: DispatchSourceTimer?
 
@@ -245,7 +246,6 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 				isCorrect = CopyManager.copyTrackToCache(trackPath: currentTrackPathUrl + songFileName!, trackName: songFileName!)
 				trackPath = NSURL(fileURLWithPath: tracksUrlString + songFileName!) as URL
 			}
-
 			if !UserDefaults.standard.bool(forKey: "budState") { //Если будильник не установлен
 				try? UserDefaults.standard.set(PropertyListEncoder().encode(songObject), forKey: "PlayingSongObject")
 				UserDefaults.standard.synchronize()
@@ -258,7 +258,13 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 
 			let playFromTime = UserDefaults.standard.double(forKey: "playingDuration")
 			if isCorrect {
-				self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime, needUpdateUI: true)
+				self.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: playFromTime, needUpdateUI: false)
+				if player.playerItem != nil {
+					self.player.pauseSong {
+						print("Song paused")
+						self.updateUI()
+					}
+				}
 			}
 		} else if UserDefaults.standard.bool(forKey: "listenRunning") && songObject.path != nil { //Супер костыль
 
@@ -303,6 +309,8 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		NotificationCenter.default.addObserver(self, selector: #selector(self.appTerminate), name: NSNotification.Name.UIApplicationWillTerminate, object: nil)
 		//обновление системной информации
 		NotificationCenter.default.addObserver(self, selector: #selector(updateSysInfo(_:)), name: NSNotification.Name(rawValue: "updateSysInfo"), object: nil)
+		
+		NotificationCenter.default.addObserver(self, selector: #selector(self.appEnterForeground), name: NSNotification.Name.UIApplicationWillEnterForeground, object: nil)
 	}
 
 	func playTrackByUrl(trackURL: URL, song: SongObject, seekTo: Float64, needUpdateUI: Bool) {
@@ -370,13 +378,18 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 		} else {
 			timerButton.setImage(UIImage(named: "timGrayImage"), for: .normal)
 		}
-		if UserDefaults.standard.bool(forKey: "budState") {
-			budButton.setImage(UIImage(named: "budBlueImage"), for: .normal)
-			updateUI()
-		} else {
-			budButton.setImage(UIImage(named: "budGrayImage"), for: .normal)
+		if UserDefaults.standard.bool(forKey: "budPushGranted"){
+			self.budButton.isEnabled = true
+			if UserDefaults.standard.bool(forKey: "budState") {
+				budButton.setImage(UIImage(named: "budBlueImage"), for: .normal)
+				updateUI()
+			} else {
+				budButton.setImage(UIImage(named: "budGrayImage"), for: .normal)
+			}
+		}else{
+			self.budButton.isEnabled = false
 		}
-		updateUI()
+		//updateUI()
 	}
 
 	//когда приложение скрыто - отписываемся от уведомлений
@@ -525,6 +538,21 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 			CoreDataManager.instance.saveContext()
 		}
 	}
+	
+	func appEnterForeground(){
+		UNUserNotificationCenter.current().requestAuthorization(options: [.alert], completionHandler: {(granted, error) in
+			if granted{
+				DispatchQueue.main.async {
+					self.budButton.isEnabled = true
+				}
+			}
+			else{
+				DispatchQueue.main.async {
+					self.budButton.isEnabled = false
+				}
+			}
+		})
+	}
 
 	func audioRouteChangeListener(notification: NSNotification) {
 		let audioRouteChangeReason = notification.userInfo![AVAudioSessionRouteChangeReasonKey] as! UInt
@@ -643,64 +671,70 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
 	//обновление UI
 	func updateUI() {
 		DispatchQueue.main.async { [unowned self] in
-
-        if self.isStartListening == true {
-            self.trackNameLbl.text = self.player.playingSong.name
-            self.authorNameLbl.text = self.player.playingSong.artistName
-        }
-		self.trackIDLbl.text = self.player.playingSong.trackID
-		//self.isNowPlaying.text = String(self.player.isPlaying)
-
-		if UserDefaults.standard.bool(forKey: "timerState") {
-			self.timerButton.setImage(UIImage(named: "timBlueImage"), for: .normal)
-		} else {
-			self.timerButton.setImage(UIImage(named: "timGrayImage"), for: .normal)
-		}
-
-		if UserDefaults.standard.bool(forKey: "budState") {
-			self.budButton.setImage(UIImage(named: "budBlueImage"), for: .normal)
-		} else {
-			self.budButton.setImage(UIImage(named: "budGrayImage"), for: .normal)
-		}
-
-			if CoreDataManager.instance.getCountOfTracks() < 3 && CoreDataManager.instance.getCountOfTracks() != 0 {
-//			self.playPauseBtn.isEnabled = false
-			self.nextButton.isEnabled = false
-			self.cachingView.removeFromSuperview()
-			} else if CoreDataManager.instance.getCountOfTracks() < 1 {
-				self.playPauseBtn.isEnabled = true
-				self.view.addSubview(self.cachingView)
-
-		} else {
-			self.playPauseBtn.isEnabled = true
-			self.nextButton.isEnabled = true
-			self.cachingView.removeFromSuperview()
-		}
-
-		//обновляение прогресс бара
-
-		//		self.timeObserverToken =
-		 self.timeObserverToken = self.player.player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1.0, 1), queue: DispatchQueue.main) { [unowned self] (time) in
-            if self.player.isPlaying == true {
-                if self.player.playingSong.trackLength != nil {
-                	self.progressView.setProgress(Float(CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!)), animated: false)
-					UserDefaults.standard.set(time.seconds.description, forKey: "lastTrackPosition")
-					UserDefaults.standard.set(self.player.playingSong.trackID as String, forKey: "lastTrack")
-					if Int(time.seconds) % 15 == 0 {
-						UserDefaults.standard.set(self.player.playerItem.currentTime().seconds, forKey: "playingDuration")
-						UserDefaults.standard.synchronize()
-					}
-					let dateFormatter = DateComponentsFormatter()
-					dateFormatter.allowedUnits = [.minute, .second]
-					let currentTime = dateFormatter.string(from: TimeInterval(time.seconds))
-					let trackDuration = self.player.playingSong.trackLength
-					let elapsedTime = dateFormatter.string(from: TimeInterval(trackDuration! - time.seconds))
-					self.current_time.text = currentTime
-					self.elapsed_time.text = "-\(elapsedTime ?? "")"
-
-//				self.progressView.progress = (CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!))
-                }
+			if self.isStartListening == true {
+				self.trackNameLbl.text = self.player.playingSong.name
+				self.authorNameLbl.text = self.player.playingSong.artistName
 			}
+			self.trackIDLbl.text = self.player.playingSong.trackID
+			//self.isNowPlaying.text = String(self.player.isPlaying)
+
+			if UserDefaults.standard.bool(forKey: "timerState") {
+				self.timerButton.setImage(UIImage(named: "timBlueImage"), for: .normal)
+			} else {
+				self.timerButton.setImage(UIImage(named: "timGrayImage"), for: .normal)
+			}
+			
+			if UserDefaults.standard.bool(forKey: "budPushGranted"){
+				self.budButton.isEnabled = true
+				if UserDefaults.standard.bool(forKey: "budState") {
+					self.budButton.setImage(UIImage(named: "budBlueImage"), for: .normal)
+				} else {
+					self.budButton.setImage(UIImage(named: "budGrayImage"), for: .normal)
+				}
+			}
+			else{
+				self.budButton.isEnabled = false
+			}
+			
+
+				if CoreDataManager.instance.getCountOfTracks() < 3 && CoreDataManager.instance.getCountOfTracks() != 0 {
+	//			self.playPauseBtn.isEnabled = false
+				self.nextButton.isEnabled = false
+				self.cachingView.removeFromSuperview()
+				} else if CoreDataManager.instance.getCountOfTracks() < 1 {
+					self.playPauseBtn.isEnabled = true
+					self.view.addSubview(self.cachingView)
+
+			} else {
+				self.playPauseBtn.isEnabled = true
+				self.nextButton.isEnabled = true
+				self.cachingView.removeFromSuperview()
+			}
+
+			//обновляение прогресс бара
+
+			//		self.timeObserverToken =
+			 self.timeObserverToken = self.player.player.addPeriodicTimeObserver(forInterval: CMTimeMakeWithSeconds(1.0, 1), queue: DispatchQueue.main) { [unowned self] (time) in
+				if self.player.isPlaying == true {
+					if self.player.playingSong.trackLength != nil {
+						self.progressView.setProgress(Float(CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!)), animated: false)
+						UserDefaults.standard.set(time.seconds.description, forKey: "lastTrackPosition")
+						UserDefaults.standard.set(self.player.playingSong.trackID as String, forKey: "lastTrack")
+						if Int(time.seconds) % 15 == 0 {
+							UserDefaults.standard.set(self.player.playerItem.currentTime().seconds, forKey: "playingDuration")
+							UserDefaults.standard.synchronize()
+						}
+						let dateFormatter = DateComponentsFormatter()
+						dateFormatter.allowedUnits = [.minute, .second]
+						let currentTime = dateFormatter.string(from: TimeInterval(time.seconds))
+						let trackDuration = self.player.playingSong.trackLength
+						let elapsedTime = dateFormatter.string(from: TimeInterval(trackDuration! - time.seconds))
+						self.current_time.text = currentTime
+						self.elapsed_time.text = "-\(elapsedTime ?? "")"
+
+	//				self.progressView.progress = (CGFloat(time.seconds) / CGFloat((self.player.playingSong.trackLength)!))
+					}
+				}
 			} as AnyObject?
 		}
 
@@ -783,11 +817,17 @@ class RadioViewController: UIViewController, UITableViewDataSource, UITableViewD
         isStartListening = true
 
 		if player.isPlaying == true {
-			self.player.player.pause()
+			self.player.pauseSong {
+				print("Song paused")
+			}
 		}
 //		self.progressView.isHidden = true
 		self.progressView.setProgress(0.0, animated: false)
-
+		if !player.isPlaying{
+			self.player.isPlaying = true
+			UserDefaults.standard.set(true, forKey: "trackPlayingNow")
+			UserDefaults.standard.synchronize()
+		}
 		self.player.skipSong { [unowned self] in
 				self.updateUI()
 		}

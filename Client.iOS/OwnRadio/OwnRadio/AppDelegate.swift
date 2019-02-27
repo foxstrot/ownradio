@@ -10,10 +10,12 @@ import UIKit
 import Fabric
 import Crashlytics
 import CoreBluetooth
+import UserNotifications
+
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
-
+	var bgTask: UIBackgroundTaskIdentifier = UIBackgroundTaskInvalid
 	var window: UIWindow?
 	//Задаём ориентацию экрана по умолчанию
 	var orientationLock = UIInterfaceOrientationMask.portrait
@@ -24,15 +26,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		let userDefaults = UserDefaults.standard
 		//для получения отчетов об ошибках на фабрик
 		Fabric.with([Crashlytics.self, Answers.self])
-
+		userDefaults.set(false, forKey: "budState")
 		//если устройству не назначен deviceId - генерируем новый
 //		if userDefaults.object(forKey: "UUIDDevice") == nil {
 //			let UUID = NSUUID().uuidString.lowercased() //"17096171-1C39-4290-AE50-907D7E62F36A" //
 //			userDefaults.set(UUID, forKey: "UUIDDevice")
 //			userDefaults.synchronize()
 //		}
+		//Регаем уведомления на будильник
+		
+		UNUserNotificationCenter.current().requestAuthorization(options: [.alert], completionHandler: {(granted, error) in
+			if granted{
+				userDefaults.set(true, forKey: "budPushGranted")
+				DispatchQueue.main.async {
+					application.registerForRemoteNotifications()
+				}
+			}
+			else{
+				userDefaults.set(false, forKey: "budPushGranted")
+			}
+		})
 
-		//Проверяем в первый ли раз было запущено приложение
+		//Проверяем в первый ли раз было запущено приложение(Перенесено в StartupViewController)
 
 		//Регистрируем настройки по умолчанию (не меняя имеющиеся значения, если они уже есть)
 		userDefaults.register(defaults: ["maxMemorySize": 10])
@@ -47,6 +62,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		userDefaults.register(defaults: ["isSubscribed": false])
 		userDefaults.register(defaults: ["runCaching": false])
 		userDefaults.register(defaults: ["runCaching" : false])
+		userDefaults.register(defaults: ["bellOnce" : false])
 		// создаем папку Tracks если ее нет
 		var applicationSupportPath = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
 		let tracksPath = applicationSupportPath.appendingPathComponent("Tracks")
@@ -91,12 +107,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 				}
 			}
 		}
-//		UIApplication.shared.setMinimumBackgroundFetchInterval(2)
 		userDefaults.set(false, forKey: "runCaching")
-		userDefaults.set(false, forKey: "writeLog") // Флаг записи лога
+		userDefaults.set(true, forKey: "writeLog") // Флаг записи лога
 		userDefaults.synchronize()
 		return true
 	}
+
 
 	var bgSessionCompleteHandler:(() -> Void)?
 
@@ -127,7 +143,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
 		return self.orientationLock
 	}
-
+	
 	func applicationWillResignActive(_ application: UIApplication) {
 		// Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
 		// Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
@@ -138,10 +154,41 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 		// If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
 //		UserDefaults.standard.set(false, forKey: "timerState")
 //		UserDefaults.standard.set(0, forKey: "timerDurationSeconds")
+		UNUserNotificationCenter.current().requestAuthorization(options: [.alert], completionHandler: {(granted, error) in
+			if granted{
+				UserDefaults.standard.set(true, forKey: "budPushGranted")
+				DispatchQueue.main.async {
+					application.registerForRemoteNotifications()
+				}
+			}
+			else{
+				UserDefaults.standard.set(false, forKey: "budPushGranted")
+			}
+		})
+
+		
+		if UserDefaults.standard.bool(forKey: "budState"){
+			self.bgTask = application.beginBackgroundTask(withName: "AlertClockTask", expirationHandler: nil)
+		}
 	}
 
 	func applicationWillEnterForeground(_ application: UIApplication) {
 		// Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
+		if self.bgTask != UIBackgroundTaskInvalid{
+			application.endBackgroundTask(bgTask)
+		}
+		UNUserNotificationCenter.current().requestAuthorization(options: [.alert], completionHandler: {(granted, error) in
+			if granted{
+				UserDefaults.standard.set(true, forKey: "budPushGranted")
+				DispatchQueue.main.async {
+					application.registerForRemoteNotifications()
+				}
+			}
+			else{
+				UserDefaults.standard.set(false, forKey: "budPushGranted")
+			}
+		})
+		UserDefaults.standard.synchronize()
 	}
 
 	func applicationDidBecomeActive(_ application: UIApplication) {
@@ -157,6 +204,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 //			}
 //		}
 	}
+	
 
 	func applicationWillTerminate(_ application: UIApplication) {
 		// Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.

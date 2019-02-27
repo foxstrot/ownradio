@@ -1166,7 +1166,7 @@
                                             <rect key="frame" x="0.0" y="0.0" width="400" height="43.5"/>
                                             <autoresizingMask key="autoresizingMask"/>
                                             <subviews>
-                                                <button hidden="YES" opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="leading" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2eb-6b-E5a">
+                                                <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="leading" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2eb-6b-E5a">
                                                     <rect key="frame" x="22" y="5" width="373" height="31"/>
                                                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                                     <state key="normal" title="Log">
@@ -2024,7 +2024,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="cNn-BM-gyL" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="109" y="1149"/>
+            <point key="canvasLocation" x="-146" y="1157"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="NLB-79-Sbc">

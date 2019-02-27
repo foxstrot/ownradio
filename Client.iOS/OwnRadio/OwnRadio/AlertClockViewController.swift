@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import UserNotifications
+import UserNotificationsUI
 
 @available(iOS 10.0, *)
 class AlertClockViewController: UIViewController {
@@ -30,19 +32,23 @@ class AlertClockViewController: UIViewController {
 	var player: AudioPlayerManager!
 	var mainController: RadioViewController!
 	var budSchedule = [Date]()
-	var timer: DispatchSourceTimer?
-
+	var timer: Timer?
+	var bellOnce: Bool = false
 	var remoteAudioControls: RemoteAudioControls?
 
 	let tracksUrlString =  FileManager.applicationSupportDir().appending("/Tracks/")
 	let budTracksUrlString = FileManager.applicationSupportDir().appending("/AlarmTracks/")
 
+	var backgroundTaskIdentifier: UIBackgroundTaskIdentifier?
+	
 	override func viewDidLoad() {
         super.viewDidLoad()
+		//userDefaults.set(false, forKey: "budState")
+		
 		let dateformatter = DateFormatter()
 		dateformatter.timeStyle = DateFormatter.Style.short
 		timePicker.date = (userDefaults.object(forKey: "alarmClockTime") as? Date ?? Date())!
-
+		
 		if self.userDefaults.data(forKey: "PlayingSongObject") != nil {
 			let songObjectEncoded = self.userDefaults.data(forKey: "PlayingSongObject")
 			let songObject = try! PropertyListDecoder().decode(SongObject.self, from: songObjectEncoded!)
@@ -162,7 +168,7 @@ class AlertClockViewController: UIViewController {
 		}
 	}
 
-	func appendDayToSchedule(additionalDays: Int) {
+	func appendDayToSchedule(additionalDays: Int, runOnce: Bool) {
 		let timePickerValue = timePicker.date
 		let calendar = Calendar.current
 		let components = calendar.dateComponents([.hour, .minute], from: timePickerValue)
@@ -171,8 +177,10 @@ class AlertClockViewController: UIViewController {
 		currentDateComponents.minute = components.minute
 		let currentDate = Calendar.current.date(from: currentDateComponents)
 		var budDate = Date(timeInterval: Double(additionalDays * 86400), since: currentDate ?? Date())
-		if calendar.dateComponents([.second], from: Date(), to: budDate).second! < 0 && additionalDays == 0 {
+		if calendar.dateComponents([.second], from: Date(), to: budDate).second! < 0 && additionalDays == 0 && !runOnce{
 			budDate = Date(timeInterval: Double(7 * 86400), since: currentDate ?? Date())
+		}else if calendar.dateComponents([.second], from: Date(), to: budDate).second! < 0 && additionalDays == 0 && runOnce{
+			budDate = Date(timeInterval: Double(1 * 86400), since: currentDate ?? Date())
 		}
 		budSchedule.append(budDate)
 	}
@@ -198,34 +206,43 @@ class AlertClockViewController: UIViewController {
 			let currentDayOfWeek = Calendar.current.component(.weekday, from: Date())
 			let selectedDaysCount = daysSelected.filter {$0 == true}.count
 			if selectedDaysCount == 0 {
-				daysSelected[currentDayOfWeek - 1] = true
-				switch currentDayOfWeek-1 {
-				case 1:
-					mondayBTN.isSelected = true
-				case 2:
-					tuesdayBTN.isSelected = true
-				case 3:
-					wednesdayBTN.isSelected = true
-				case 4:
-					thursdayBTN.isSelected = true
-				case 5:
-					fridayBTN.isSelected = true
-				case 6:
-					saturdayBTN.isSelected = true
-				case 0:
-					sundayBTN.isSelected = true
-				default:
-					break
-				}
+				//daysSelected[currentDayOfWeek - 1] = true
+//				switch currentDayOfWeek-1 {
+//				case 1:
+//					mondayBTN.isSelected = true
+//				case 2:
+//					tuesdayBTN.isSelected = true
+//				case 3:
+//					wednesdayBTN.isSelected = true
+//				case 4:
+//					thursdayBTN.isSelected = true
+//				case 5:
+//					fridayBTN.isSelected = true
+//				case 6:
+//					saturdayBTN.isSelected = true
+//				case 0:
+//					sundayBTN.isSelected = true
+//				default:
+//					break
+//				}
+				bellOnce = true
+				userDefaults.set(true, forKey: "bellOnce")
 			}
-
-			for (index, element) in daysSelected.enumerated() where element == true {
-				if index + 1 >= currentDayOfWeek {
-					let additionalDays = (index + 1) - currentDayOfWeek
-					appendDayToSchedule(additionalDays: additionalDays)
-				} else {
-					let additionalDays = (index + 1) + (7 - currentDayOfWeek)
-					appendDayToSchedule(additionalDays: additionalDays)
+			else{
+				bellOnce = false
+				userDefaults.set(false, forKey: "bellOnce")
+			}
+			if bellOnce{
+				appendDayToSchedule(additionalDays: 0, runOnce: true)
+			}else{
+				for (index, element) in daysSelected.enumerated() where element == true {
+					if index + 1 >= currentDayOfWeek {
+						let additionalDays = (index + 1) - currentDayOfWeek
+						appendDayToSchedule(additionalDays: additionalDays, runOnce: false)
+					} else {
+						let additionalDays = (index + 1) + (7 - currentDayOfWeek)
+						appendDayToSchedule(additionalDays: additionalDays, runOnce: false)
+					}
 				}
 			}
 			userDefaults.set(budSchedule, forKey: "budSchedule")
@@ -270,21 +287,27 @@ class AlertClockViewController: UIViewController {
 	}
 
 	private func startTimer(timeInterval: TimeInterval, minIndex: Int) {
-		let queue = DispatchQueue.main
-		timer?.cancel()
-		timer = DispatchSource.makeTimerSource(queue: queue)
-
-		//timer?.scheduleRepeating(deadline: .now() + .seconds(Int(timeInterval)), interval: timeInterval)
-		timer?.scheduleOneshot(deadline: .now() + .seconds(Int(timeInterval)))
-		timer?.setEventHandler {
+		
+//		let triggerDate = Date().addingTimeInterval(timeInterval)
+//		let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: triggerDate)
+//		let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+//
+//		let content = UNMutableNotificationContent()
+//		content.title = "Будильник"
+//		content.subtitle = "\(components.hour!.description):\((components.minute! + 1).description)"
+//		let request = UNNotificationRequest(identifier: "AlertClock", content: content, trigger: trigger)
+//		UNUserNotificationCenter.current().add(request)
+		
+		timer = Timer.scheduledTimer(withTimeInterval: timeInterval, repeats: false){_ in
 			self.timerAction(currentMinIndex: minIndex)
 		}
-		timer?.resume()
 	}
 
 	private func stopTimer() {
-		timer?.cancel()
-		timer = nil
+		if self.timer != nil{
+			self.timer?.invalidate()
+			self.timer = nil
+		}
 	}
 
 	func timerAction(currentMinIndex: Int) {
@@ -294,7 +317,7 @@ class AlertClockViewController: UIViewController {
 		userDefaults.set(budSchedule, forKey: "budSchedule")
 		let minInterval = getMinDatediff(needDisplay: false)
 		stopTimer()
-		startTimer(timeInterval: TimeInterval(minInterval[1]), minIndex: minInterval[0])
+		
 
 		//Проигрывание сохраненного трека если будильник установлен
 		if userDefaults.bool(forKey: "budState") {
@@ -316,8 +339,26 @@ class AlertClockViewController: UIViewController {
 			}
 
 			if self.mainController != nil && isCorrect {
-				self.mainController.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: 0, needUpdateUI: true)
+				DispatchQueue.main.async {
+					self.mainController.playTrackByUrl(trackURL: trackPath, song: songObject, seekTo: 0, needUpdateUI: true)
+				}
 			}
+			if !userDefaults.bool(forKey: "bellOnce"){
+				startTimer(timeInterval: TimeInterval(minInterval[1]), minIndex: minInterval[0])
+			}
+			else{
+				userDefaults.set(false, forKey: "budState")
+			}
+			
+			let triggerDate = Date()
+			let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: triggerDate)
+			let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+			
+			let content = UNMutableNotificationContent()
+			content.title = "Будильник"
+			content.subtitle = "\(components.hour!.description):\((components.minute! + 1).description)"
+			let request = UNNotificationRequest(identifier: "AlertClock", content: content, trigger: trigger)
+			UNUserNotificationCenter.current().add(request)
 		}
 	}
 
@@ -383,4 +424,6 @@ class AlertClockViewController: UIViewController {
 	func createDirectory(path: String) {
 		try! FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: false, attributes: nil)
 	}
+	
 }
+
