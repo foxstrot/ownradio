@@ -245,17 +245,21 @@ function player(){
 
 					prm.play = !prm.play;
 
-					if(prm.play){
-            pauseBut.style.display = "block";
-            playBut.style.display = "none";
-						obj.audio.play();
-						obj.play.classList.add('pause');
-					}else{
-            pauseBut.style.display = "none";
-            playBut.style.display = "block";
-						obj.audio.pause();
-						obj.play.classList.remove('pause');
-					}
+          if(prm.play){
+            if(pauseBut != null && playBut != null) {
+              pauseBut.style.display = "block";
+              playBut.style.display = "none";
+            }
+            obj.audio.play();
+            obj.play.classList.add('pause');
+          }else{
+            if(pauseBut != null && playBut != null) {
+              pauseBut.style.display = "none";
+              playBut.style.display = "block";
+            }
+            obj.audio.pause();
+            obj.play.classList.remove('pause');
+          }
 
 
 

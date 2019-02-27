@@ -100,7 +100,7 @@ if( is_admin() )
 
 				add_settings_field(
             'box_view',
-            'Box view:',
+            'Player view:',
             array( $this, 'box_view_callback' ),
             'my-setting-admin',
             'setting_section_id'
@@ -129,21 +129,31 @@ if( is_admin() )
      */
     public function print_section_info()
     {
-        print 'Enter parameters below:';
+      print 'This is a radio plugin. Here you can only skeep or pause the song. To display radio on you website use this shortcode: [ownradio_new_player].';
     }
 
 
 		public function box_view_callback()
     {
-        printf(
-            '
-						<select id="box_view" name="my_option_name[box_view]">
-						  <option value="small">Small player</option>
-						  <option value="big">Extended player</option>
-						</select>
-						',
-            isset( $this->options['box_view'] ) ? esc_attr( $this->options['box_view']) : ''
-        );
+      if(get_option('my_option_name')['box_view'] == "small") {
+        $smallSelected = "selected";
+        $bigSelected = "";
+      } else if(get_option('my_option_name')['box_view'] == "big"){
+        $smallSelected = "";
+        $bigSelected = "selected";
+      } else {
+        $smallSelected = "";
+        $bigSelected = "selected";
+      }
+      printf(
+          '
+					<select id="box_view" name="my_option_name[box_view]">
+					  <option value="small">Small player</option>
+					  <option value="big">Extended player</option>
+					</select>
+					',
+          isset( $this->options['box_view'] ) ? esc_attr( $this->options['box_view']) : ''
+      );
     }
 
 		static $netvoxlab_ownradio_add_script;
@@ -211,117 +221,117 @@ if( is_admin() )
      self::$netvoxlab_ownradio_add_script = true;
 
 
-     		 if ($boxView == "small") {
-     			 $hiddenClass = "hidden";
-     			 $boxWidth = "400px";
-     			 $boxHeight = "40px";
-     			 $position = "block";
-           $netvoxlab_ownradio_wfm_sign = '
+     if ($boxView == "small") {
+       $hiddenClass = "hidden";
+       $boxWidth = "400px";
+       $boxHeight = "40px";
+       $position = "block";
+       $netvoxlab_ownradio_wfm_sign = '
 
-                   <div class="ownRadioPlayer-new-track small-player" id="ownRadio-player" style="background-color: rgba(211, 235, 255, 1); margin:10px;width:'.$boxWidth.'; height:'.$boxHeight.'">
+               <div class="ownRadioPlayer-new-track small-player" id="ownRadio-player" style="background-color: rgba(211, 235, 255, 1); margin:10px;width:'.$boxWidth.'; height:'.$boxHeight.'">
 
-                      <img src="'.$logo.'" class="logo-pic '.$hiddenClass.'" style="width:180px; height:80px"/>
+                  <img src="'.$logo.'" class="logo-pic '.$hiddenClass.'" style="width:180px; height:80px"/>
 
-                        <div class="ownRadioPlayer-play" id="radioPlay"></div>
-                       <div class="track-det small-det">
-                         <div class="ownRadioPlayer-group small-group" id="radioName" style="white-space: unset;"></div>
-                         <div class="det-break"> - </div>
-                         <div class="ownRadioPlayer-name small-name" id="radioGroup"></div>
+                    <div class="ownRadioPlayer-play" id="radioPlay"></div>
+                   <div class="track-det small-det">
+                     <div class="ownRadioPlayer-group small-group" id="radioName" style="white-space: unset;"></div>
+                     <div class="det-break"> - </div>
+                     <div class="ownRadioPlayer-name small-name" id="radioGroup"></div>
+                   </div>
+
+
+
+                    <div class="ownRadioPlayer-nextButton small-next" id="radioNext"><div class="ownRadioPlayer-next"></div></div>
+
+                     <div class="progress-block '.$hiddenClass.'" style="width: 95%; margin-top: 40px;">
+
+                       <div class="ownProgress-bar" id="radioProgress">
+                         <div class="bar" id="myBar"></div>
                        </div>
 
-
-
-                        <div class="ownRadioPlayer-nextButton small-next" id="radioNext"><div class="ownRadioPlayer-next"></div></div>
-
-                         <div class="progress-block '.$hiddenClass.'" style="width: 95%; margin-top: 40px;">
-
-                           <div class="ownProgress-bar" id="radioProgress">
-                             <div class="bar" id="myBar"></div>
-                           </div>
-
-                           <div class="time-block">
-                             <div id="current-time"></div>
-                             <div id="track-time"></div>
-                           </div>
-
+                       <div class="time-block">
+                         <div id="current-time"></div>
+                         <div id="track-time"></div>
                        </div>
 
+                   </div>
 
-                     <div class="'.$hiddenClass.' desc_block right-side">
 
-                       <div class="extended-class" style="padding: 20px">
+                 <div class="'.$hiddenClass.' desc_block right-side">
 
-                         <div class="" style="color: black">
-                          <h2>Просто радио.</h2>
-                           <div class="app-desc">Это радио, а не проигрыватель и поэтому здесь нельзя вернуться к ранее проигранному треку, нельзя перематывать, можно лишь пропустить.то что вам не нравится.</div>
-                            <div class="flex media">
-                              <a class="btn appstore" href="https://itunes.apple.com/app/ownradio/id1179868370?mt=8">	<img src="'.$appBut.'"/></a>
-                             <a class="btn appstore" href="https://itunes.apple.com/app/ownradio/id1179868370?mt=8"><img src="'.$googleBut.'"/></a>
-                            </div>
-                          </div>
-                       </div>
+                   <div class="extended-class" style="padding: 20px">
 
-                     </div>
-                 </div>
-
-              ';
-     		 } else {
-     			 $hiddenClass = "flex";
-     			 $boxWidth = "600px";
-     			 $boxHeight = "450px";
-     			 $position = "block";
-           $netvoxlab_ownradio_wfm_sign = '
-
-                   <div class="ownRadioPlayer-new-track" id="ownRadio-player" style="background-color: rgba(211, 235, 255, 1); margin:10px;width:'.$boxWidth.'; height:'.$boxHeight.'">
-
-                      <div class="player-block left-side">
-                        <img src="'.$logo.'" class="logo-pic" style="width:180px; height:80px"/>
-                       <div class="track-det">
-                         <div class="ownRadioPlayer-group" id="radioName" style="white-space: unset;"></div>
-                         <div class="ownRadioPlayer-name" id="radioGroup"></div>
-                       </div>
-
-                       <div style="display: '.$position.'; width: 100%; text-align: -webkit-center !important;">
-
-                         <div id="radioPlay" class="play-but">
-                           <img src="'.$pauseBut.'" class="image-block"  id="radioPlayB" style="width:80px; height:80px"/>
-                           <img src="'.$playBut.'" class="image-block " id="radioPause" style="width:80px; height:80px"/>
-                         </div>
-                          <img src="'.$nextBut.'" class="image-block" id="radioNext" style="width:50px; height:50px"/>
-
-                         <div class="progress-block"style="width: 95%; margin-top: 40px;">
-
-                           <div class="ownProgress-bar" id="radioProgress">
-                             <div class="bar" id="myBar"></div>
-                           </div>
-
-                           <div class="time-block">
-                             <div id="current-time"></div>
-                             <div id="track-time"></div>
-                           </div>
-                         </div>
-                       </div>
+                     <div class="" style="color: black">
+                      <h2>Просто радио.</h2>
+                       <div class="app-desc">Это радио, а не проигрыватель и поэтому здесь нельзя вернуться к ранее проигранному треку, нельзя перематывать, можно лишь пропустить.то что вам не нравится.</div>
+                        <div class="flex media">
+                          <a class="btn appstore" href="https://itunes.apple.com/app/ownradio/id1179868370?mt=8">	<img src="'.$appBut.'"/></a>
+                          <a class="btn appstore" href="https://itunes.apple.com/app/ownradio/id1179868370?mt=8"><img src="'.$googleBut.'"/></a>
+                        </div>
                       </div>
+                   </div>
 
-                     <div class="'.$hiddenClass.' desc_block right-side">
+                 </div>
+             </div>
 
-                       <div class="extended-class" style="padding: 20px">
+          ';
+     } else {
+       $hiddenClass = "flex";
+       $boxWidth = "600px";
+       $boxHeight = "450px";
+       $position = "block";
+       $netvoxlab_ownradio_wfm_sign = '
 
-                         <div class="" style="color: black">
-                          <h2>Просто радио.</h2>
-                           <div class="app-desc">Это радио, а не проигрыватель и поэтому здесь нельзя вернуться к ранее проигранному треку, нельзя перематывать, можно лишь пропустить.то что вам не нравится.</div>
-                            <div class="flex media">
-                              <a class="btn appstore" href="https://itunes.apple.com/app/ownradio/id1179868370?mt=8">	<img src="'.$appBut.'"/></a>
-                             <a class="btn appstore" href="https://itunes.apple.com/app/ownradio/id1179868370?mt=8"><img src="'.$googleBut.'"/></a>
-                            </div>
-                          </div>
+               <div class="ownRadioPlayer-new-track ownRadio-player" id="ownRadio-player" style="background-color: rgba(211, 235, 255, 1); margin:10px;width:'.$boxWidth.'; height:'.$boxHeight.'">
+
+                  <div class="player-block left-side">
+                    <img src="'.$logo.'" class="logo-pic" style="width:180px; height:80px"/>
+                   <div class="track-det">
+                     <div class="ownRadioPlayer-group" id="radioName" style="white-space: unset;"></div>
+                     <div class="ownRadioPlayer-name" id="radioGroup"></div>
+                   </div>
+
+                   <div style="display: '.$position.'; width: 100%; text-align: -webkit-center !important;">
+
+                     <div id="radioPlay" class="play-but radioPlay">
+                       <img src="'.$pauseBut.'" class="image-block"  id="radioPlayB" style="width:80px; height:80px"/>
+                       <img src="'.$playBut.'" class="image-block " id="radioPause" style="width:80px; height:80px"/>
+                     </div>
+                      <img src="'.$nextBut.'" class="image-block radioNext" id="radioNext" style="width:50px; height:50px"/>
+
+                     <div class="progress-block"style="width: 95%; margin-top: 40px;">
+
+                       <div class="ownProgress-bar" id="radioProgress">
+                         <div class="bar" id="myBar"></div>
                        </div>
 
+                       <div class="time-block">
+                         <div id="current-time"></div>
+                         <div id="track-time"></div>
+                       </div>
                      </div>
-                 </div>
+                   </div>
+                  </div>
 
-              ';
-     		 }
+                 <div class="'.$hiddenClass.' desc_block right-side">
+
+                   <div class="extended-class" style="padding: 20px">
+
+                     <div class="" style="color: black">
+                      <h2>Просто радио.</h2>
+                       <div class="app-desc">Это радио, а не проигрыватель и поэтому здесь нельзя вернуться к ранее проигранному треку, нельзя перематывать, можно лишь пропустить.то что вам не нравится.</div>
+                        <div class="flex media">
+                          <a class="btn appstore" href="https://itunes.apple.com/app/ownradio/id1179868370?mt=8">	<img src="'.$appBut.'"/></a>
+                         <a class="btn appstore" href="https://itunes.apple.com/app/ownradio/id1179868370?mt=8"><img src="'.$googleBut.'"/></a>
+                        </div>
+                      </div>
+                   </div>
+
+                 </div>
+             </div>
+
+          ';
+     }
 
 
 		 return $content . $netvoxlab_ownradio_wfm_sign ;
