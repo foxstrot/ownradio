@@ -11,6 +11,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Map;
 
 import okhttp3.ResponseBody;
@@ -49,7 +51,7 @@ public class DownloadTracks extends AsyncTask<Map<String, String>, Void, Boolean
 				
 				if (writtenToDisk == true) {
 					fileLength = new File(trackURL).length();
-					
+
 					ContentValues track = new ContentValues();
 					track.put("id", trackMap[0].get("id"));
 					track.put("trackurl", trackURL);

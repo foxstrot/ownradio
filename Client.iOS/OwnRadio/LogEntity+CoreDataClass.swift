@@ -9,7 +9,6 @@
 import Foundation
 import CoreData
 
-
 public class LogEntity: NSManagedObject {
 	convenience init() {
 		self.init(entity: CoreDataManager.instance.entityForName(entityName: "LogEntity"), insertInto: CoreDataManager.instance.managedObjectContext)

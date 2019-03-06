@@ -67,6 +67,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -215,7 +216,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 	protected void onCreate(Bundle savedInstanceState) {
 		//Меняем тему, используемую при запуске приложения, на основную
 		setTheme(R.style.AppTheme);
-
 		super.onCreate(savedInstanceState);
 		this.requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_main_new);
@@ -488,6 +488,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 				startActivity(settingsActivity);
 			}
 		});
+
+		String[] fileName = filePath.list();
+		for (String file: fileName){
+			Log.d("File", file);
+		}
+
 		
 	}
 	

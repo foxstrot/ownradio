@@ -16,33 +16,30 @@ class LogDetailsTableViewController: UITableViewController {
     @IBOutlet weak var hasinternetLbl: UILabel!
     @IBOutlet weak var threadLbl: UILabel!
 	@IBOutlet weak var errorMessageLbl: UILabel!
-	
-	
+
     override func viewDidLoad() {
         super.viewDidLoad()
-		if logItem != nil{
+		if logItem != nil {
             let dateFormatter = DateFormatter()
             dateFormatter.dateFormat = "yyyy.MM.dd HH:mm:ss"
             dateLbl.text = dateFormatter.string(from: self.logItem.eventDate)
             descriptionLbl.text = logItem.eventDescription.description
             hasinternetLbl.text = logItem.hasInternet.description
             var thread = matches(for: "number = \\d+, name = \\w+", in: logItem.eventThread.description)
-            if thread.count == 1{
+            if thread.count == 1 {
                 threadLbl.text = thread[0]
-            }
-            else{
+            } else {
                 thread = matches(for: "number = \\d+", in: logItem.eventThread.description)
-				if thread.count == 1{
+				if thread.count == 1 {
 					threadLbl.text = thread[0]
-				}
-				else{
+				} else {
 					threadLbl.text = ""
 				}
             }
 			errorMessageLbl.sizeToFit()
 			errorMessageLbl.text = logItem.errorMessage.description
 		}
-		
+
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 
@@ -61,13 +58,11 @@ class LogDetailsTableViewController: UITableViewController {
         // #warning Incomplete implementation, return the number of rows
 		if logItem != nil && logItem.errorMessage != ""{
 			return 5
-		}
-		else if logItem != nil && logItem.errorMessage == ""{
+		} else if logItem != nil && logItem.errorMessage == ""{
 			return 4
-		}
-		else {return 0}
+		} else {return 0}
     }
-    
+
     func matches(for regex: String, in text: String) -> [String] {
         do {
             let regex = try NSRegularExpression(pattern: regex)
