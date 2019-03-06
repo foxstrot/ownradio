@@ -1,27 +1,27 @@
 <?php
 /**
- * The template for displaying the header
+ * The header for our theme
+ *
+ * This is the template that displays all of the <head> section and everything up until <div id="content">
+ *
+ * @link https://developer.wordpress.org/themes/basics/template-files/#template-partials
+ *
+ * @package Creativeily
  */
+
 ?><!DOCTYPE html>
-<html>
+<html <?php language_attributes(); ?> class="no-js no-svg">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width">
-    <title><?php bloginfo(); ?></title>
-    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet">
-    <link rel="stylesheet" href="<?php echo get_stylesheet_directory_uri(); ?>/style.css?v2017.05.26">
-    <script src="https://vk.com/js/api/openapi.js?146" type="text/javascript"></script>
-    <script type="text/javascript">
-        VK.init({
-            apiId: 5978191,
-            onlyWidgets: true
-        });
-    </script>
-    <?php wp_head(); ?>
+<meta charset="<?php bloginfo( 'charset' ); ?>">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="profile" href="http://gmpg.org/xfn/11">
+<?php wp_head(); ?> 
 </head>
 
 <body <?php body_class(); ?>>
-    <div class="container">
-        <header class="page-header">
-            <img src="<?php echo get_stylesheet_directory_uri(); ?>/images/logo.svg" width="170" height="120" alt="logo">
-        </header>
+<div id="page" class="site<?php if(is_active_sidebar( 'sidebar-1' ) && !is_page()) echo ' has-sidebar'; ?><?php if(is_page()) echo ' creativeily-page'; ?>">
+
+	<?php get_template_part( 'template-parts/header/header', 'image' ); ?>
+
+	<div class="site-content-contain" id="start" style="display: none">
+		<div id="content" class="site-content">
